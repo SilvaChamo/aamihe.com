@@ -1,8 +1,8 @@
 .direction-section {
   width: 100%;
-  padding: 6rem 0 4rem;
+  padding: 6rem 0 0; /* Removido padding-bottom para colar a barra de estatísticas no fundo */
   background-color: #ffffff;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   position: relative;
 }
 
@@ -23,7 +23,7 @@
 
 .direction-title {
   font-family: 'Roboto Slab', serif;
-  font-size: clamp(2.5rem, 5vw, 3.2rem);
+  font-size: clamp(2.2rem, 4vw, 2.6rem); /* Reduzido de 3.2rem */
   font-weight: 800;
   color: #1a1a1a;
   margin-bottom: 1.5rem;
@@ -85,7 +85,7 @@
 /* Arrows */
 .slider-arrow {
   position: absolute;
-  top: 70px; /* Alinhado ao centro da imagem de 140px */
+  top: 80px; /* Alinhado ao centro da imagem de 160px */
   transform: translateY(-50%);
   width: 45px;
   height: 45px;
@@ -116,8 +116,8 @@
 }
 
 .member-image-wrapper {
-  width: 140px;
-  height: 140px;
+  width: 160px; /* Aumentado de 140px */
+  height: 160px; /* Aumentado de 140px */
   margin-bottom: 0;
   position: relative;
   display: flex;
@@ -215,9 +215,16 @@
 
 /* Stats Bar */
 .direction-stats-bar {
-  background-color: #f8f9fa;
-  padding: 4rem 0;
+  background-color: #f4f4f4; /* Cinza suave como solicitado */
+  padding: 3rem 0;
   border-top: 1px solid #eeeeee;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.direction-stats-bar .direction-container {
+  max-width: 100%; /* Ocupa a largura total agora */
+  padding: 0 4rem;
 }
 
 .stats-list {
@@ -230,12 +237,29 @@
 .stats-item {
   text-align: center;
   flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Linha separadora entre as colunas */
+.stats-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60px; /* Altura controlada para não ocupar tudo */
+  background-color: #dddddd;
 }
 
 .stats-number {
   display: block;
   font-family: 'Roboto Slab', serif;
-  font-size: 3rem;
+  font-size: 2.2rem; /* Reduzido de 2.8rem */
   font-weight: 800;
   color: #561713;
   line-height: 1;
@@ -243,7 +267,7 @@
 }
 
 .stats-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem; /* Reduzido de 0.85rem */
   font-weight: 700;
   color: #888888;
   text-transform: uppercase;

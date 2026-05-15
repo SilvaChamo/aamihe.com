@@ -19,7 +19,7 @@
 }
 
 body {
-  font-family: inherit;
+  font-family: 'Roboto Slab', serif; /* Fonte padrão por defeito em toda a página */
   color: var(--text);
   background-color: var(--white);
   line-height: 1.6;

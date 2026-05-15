@@ -121,7 +121,7 @@
 }
 
 .nav-link {
-  font-weight: normal; /* Removido o bold */
+  font-weight: 500; /* Bold suave */
   font-size: 14px; /* Reduzido para 14px */
   color: var(--text);
   letter-spacing: 0.5px;

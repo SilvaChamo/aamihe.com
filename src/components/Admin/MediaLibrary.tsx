@@ -16,7 +16,9 @@ import {
   Check,
   Plus,
   AlertCircle,
-  FileDown
+  FileDown,
+  Eye,
+  Edit3
 } from 'lucide-react';
 import './MediaLibrary.css';
 
@@ -56,6 +58,10 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
   const [estimatedSize, setEstimatedSize] = useState<number | null>(null);
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
   const [pendingBlob, setPendingBlob] = useState<{ blob: Blob; mimeType: string; extension: string } | null>(null);
+  
+  // Preview Modal State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<StorageFile | null>(null);
   
   // Metadata States
   const [metadata, setMetadata] = useState({
@@ -139,6 +145,16 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
       caption: '',
       description: ''
     });
+  };
+
+  const openPreview = (file: StorageFile) => {
+    setPreviewImage(file);
+    setIsPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    setIsPreviewOpen(false);
+    setPreviewImage(null);
   };
 
   const saveMetadata = async () => {
@@ -315,6 +331,38 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                       <span className="media-select-text">Selecionar</span>
                     </div>
                   )}
+                  <div className="media-item-actions">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDetails(file);
+                      }}
+                      className="media-action-button edit"
+                      title="Editar"
+                    >
+                      <Edit3 className="media-action-icon" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPreview(file);
+                      }}
+                      className="media-action-button view"
+                      title="Ver"
+                    >
+                      <Eye className="media-action-icon" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSingle(file.name);
+                      }}
+                      className="media-action-button delete"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="media-action-icon" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

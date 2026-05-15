@@ -200,21 +200,21 @@
 
 @media (min-width: 1024px) {
   .media-grid.with-sidebar {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
   
   .media-grid:not(.with-sidebar) {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
 @media (min-width: 1280px) {
   .media-grid.with-sidebar {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
   
   .media-grid:not(.with-sidebar) {
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 

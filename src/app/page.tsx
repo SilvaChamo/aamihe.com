@@ -7,6 +7,7 @@ import CountriesCarousel from '@/components/CountriesCarousel';
 import AboutSection from '@/components/AboutSection';
 import ConferenceSection from '@/components/ConferenceSection';
 import DirectionSection from '@/components/DirectionSection';
+import NewsletterSection from '@/components/NewsletterSection';
 import NewsSection from '@/components/NewsSection';
 import { useLanguage } from '@/context/LanguageContext';
 import './page.css';
@@ -23,6 +24,7 @@ export default function Home() {
         <AboutSection />
         <ConferenceSection />
         <DirectionSection />
+        <NewsletterSection />
         <NewsSection />
       </main>
       <Footer />
