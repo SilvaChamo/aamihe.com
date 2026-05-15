@@ -2,9 +2,85 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/context/LanguageContext';
 import './Footer.css';
 
+const translations = {
+  pt: {
+    desc: 'A AAIMES é uma associação de instituições de ensino superior da Igreja Metodista Unida ou relacionadas, unanimemente criada numa conferência das instituições de ensino superior da Igreja Metodista Unida em África, em Setembro de 2014.',
+    linksTitle: 'Links Diretos',
+    links: [
+      { name: 'Direcção', href: '/direccao' },
+      { name: 'Galeria de fotos', href: '/galeria' },
+      { name: 'Documentos', href: '/documentos' },
+      { name: 'Eventos', href: '/eventos' },
+      { name: 'Países Membros', href: '/paises' },
+      { name: 'Universidades filiais', href: '/universidades' },
+      { name: 'Arquivo', href: '/arquivo' },
+    ],
+    visitTitle: 'Visite-nos',
+    visitDesc: 'Pode encontrar nossos escritórios em todos os países associados, em Moçambique estamos:',
+    address: 'Pestana Rovuma Hotel, Maputo',
+    newsletterTitle: 'Newsletter',
+    newsletterDesc: 'Registe-se para receber as nossas news letter',
+    placeholderEmail: 'Seu endereço electrónico',
+    btnGo: 'Ir',
+    gdpr: 'Aceite termos e condições',
+    followTitle: 'Segue-nos',
+    rights: 'Todos os direitos reservados.'
+  },
+  en: {
+    desc: 'AAMIHE is an association of higher education institutions of the United Methodist Church or related, unanimously created at a conference of the higher education institutions of the United Methodist Church in Africa, in September 2014.',
+    linksTitle: 'Quick Links',
+    links: [
+      { name: 'Direction', href: '/direccao' },
+      { name: 'Photo Gallery', href: '/galeria' },
+      { name: 'Documents', href: '/documentos' },
+      { name: 'Events', href: '/eventos' },
+      { name: 'Member Countries', href: '/paises' },
+      { name: 'Affiliated Universities', href: '/universidades' },
+      { name: 'Archive', href: '/arquivo' },
+    ],
+    visitTitle: 'Visit Us',
+    visitDesc: 'You can find our offices in all associated countries, in Mozambique we are at:',
+    address: 'Pestana Rovuma Hotel, Maputo',
+    newsletterTitle: 'Newsletter',
+    newsletterDesc: 'Register to receive our newsletters',
+    placeholderEmail: 'Your email address',
+    btnGo: 'Go',
+    gdpr: 'Accept terms and conditions',
+    followTitle: 'Follow Us',
+    rights: 'All rights reserved.'
+  },
+  fr: {
+    desc: 'L\'AAMIHE est une association d\'institutions d\'enseignement supérieur de l\'Église Méthodiste Unie ou apparentées, créée à l\'unanimité lors d\'une conférence des institutions d\'enseignement supérieur de l\'Église Méthodiste Unie en Afrique, en septembre 2014.',
+    linksTitle: 'Links Directs',
+    links: [
+      { name: 'Direction', href: '/direccao' },
+      { name: 'Galerie de photos', href: '/galeria' },
+      { name: 'Documents', href: '/documentos' },
+      { name: 'Événements', href: '/eventos' },
+      { name: 'Pays Membres', href: '/paises' },
+      { name: 'Universités Affiliées', href: '/universidades' },
+      { name: 'Archives', href: '/arquivo' },
+    ],
+    visitTitle: 'Visitez-nous',
+    visitDesc: 'Vous pouvez trouver nos bureaux dans tous les pays associés, au Mozambique nous sommes à :',
+    address: 'Pestana Rovuma Hotel, Maputo',
+    newsletterTitle: 'Newsletter',
+    newsletterDesc: 'Inscrivez-vous para receber nos newsletters',
+    placeholderEmail: 'Votre adresse e-mail',
+    btnGo: 'Aller',
+    gdpr: 'Accepter les termes et conditions',
+    followTitle: 'Suivez-nous',
+    rights: 'Tous droits réservés.'
+  }
+};
+
 export default function Footer() {
+  const { locale } = useLanguage();
+  const t = translations[locale];
+
   return (
     <footer className="footer" id="footer">
         <div className="container footer-container">
@@ -14,34 +90,30 @@ export default function Footer() {
               <Image src="/Logo-Small.png.webp" alt="AAMIHE Logo" width={263} height={72} />
             </div>
             <p className="footer-desc">
-              A AAIMES é uma associação de instituições de ensino superior da Igreja Metodista Unida ou relacionadas, unanimemente criada numa conferência das instituições de ensino superior da Igreja Metodista Unida em África, em Setembro de 2014.
+              {t.desc}
             </p>
           </div>
           
           {/* Column 2 */}
           <div className="footer-col col-2">
-            <h4 className="footer-title">Links Diretos</h4>
+            <h4 className="footer-title">{t.linksTitle}</h4>
             <ul className="footer-links">
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Direccao">Direcção</Link></li>
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Galeria_de_fotos.htm">Galeria de fotos</Link></li>
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Documentos%20gerais.htm">Documentos</Link></li>
-              <li><Link href="/eventos">Eventos</Link></li>
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Paises%20membros.htm">Países Membros</Link></li>
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Universidades%20filiadas.htm">Universidades filiais</Link></li>
-              <li><Link href="file:///Users/macbook/Desktop/APP/gestao/aamihe/site/Arquivo.htm">Arquivo</Link></li>
+              {t.links.map((link, idx) => (
+                <li key={idx}><Link href={link.href}>{link.name}</Link></li>
+              ))}
             </ul>
           </div>
           
           {/* Column 3 */}
           <div className="footer-col col-3">
-            <h4 className="footer-title">Visite-nos</h4>
+            <h4 className="footer-title">{t.visitTitle}</h4>
             <ul className="footer-contact">
-              <li className="text">Pode encontrar nossos escritórios em todos os países associados, em Moçambique estamos:</li>
+              <li className="text">{t.visitDesc}</li>
               <li className="address">
                 <svg aria-hidden="true" width="12" height="12" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z"></path></svg>
                 <div className="oceanwp-info-wrap">
                   <span className="oceanwp-contact-title">Address:</span>
-                  <span className="oceanwp-contact-text">Pestana Rovuma Hotel , Maputo</span>
+                  <span className="oceanwp-contact-text">{t.address}</span>
                 </div>
               </li>
               <li className="phone">
@@ -63,24 +135,24 @@ export default function Footer() {
           
           {/* Column 4 */}
           <div className="footer-col col-4">
-            <h4 className="footer-title">Newsletter</h4>
+            <h4 className="footer-title">{t.newsletterTitle}</h4>
             <div className="oceanwp-newsletter-form">
-              <div className="oceanwp-mail-text">Registe-se para receber as nossas news letter</div>
+              <div className="oceanwp-mail-text">{t.newsletterDesc}</div>
               <form className="newsletter-form">
                 <div className="email-wrap">
-                  <input type="email" placeholder="Seu endereço electrónico" aria-label="Seu endereço electrónico" />
-                  <button type="submit" className="button btn">Ir</button>
-                </div>
-                <div className="gdpr-wrap">
-                  <label>
-                    <input type="checkbox" name="GDPR" value="1" />
-                    Aceite termos e condiçõe
-                  </label>
+                  <input type="email" placeholder={t.placeholderEmail} aria-label={t.placeholderEmail} />
+                  <button type="submit" className="button btn">{t.btnGo}</button>
                 </div>
               </form>
+              <div className="gdpr-wrap">
+                <label>
+                  <input type="checkbox" name="GDPR" value="1" />
+                  {t.gdpr}
+                </label>
+              </div>
             </div>
             
-            <h4 className="footer-title">Segue-nos</h4>
+            <h4 className="footer-title">{t.followTitle}</h4>
             <div className="footer-social">
               <ul className="oceanwp-social-icons">
                 <li className="oceanwp-twitter">
@@ -110,7 +182,7 @@ export default function Footer() {
         
         <div className="footer-bottom">
           <div className="container">
-            <p>&copy; {new Date().getFullYear()} AAMIHE. Todos os direitos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} AAMIHE. {t.rights}</p>
           </div>
         </div>
       </footer>

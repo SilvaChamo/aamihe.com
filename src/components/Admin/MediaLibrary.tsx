@@ -485,6 +485,20 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
         </div>
       )}
 
+      {/* IMAGE PREVIEW MODAL */}
+      {isPreviewOpen && previewImage && (
+        <div className="media-preview-modal">
+          <div className="media-preview-content">
+            <button onClick={closePreview} className="media-preview-close"><X className="media-close-icon" /></button>
+            <img src={getPublicUrl(previewImage.name)} className="media-preview-full-image" alt={previewImage.name} />
+            <div className="media-preview-info">
+              <h3 className="media-preview-title">{previewImage.name}</h3>
+              <p className="media-preview-meta">{formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CUSTOM SAVE CONFIRMATION POPUP (ENTRECAMPOS STYLE) */}
       {isSaveConfirmOpen && (
         <div className="media-save-confirm">

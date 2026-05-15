@@ -233,6 +233,67 @@
   border-color: #2271b1;
 }
 
+.media-item-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.media-item:hover .media-item-actions {
+  opacity: 1;
+}
+
+.media-action-button {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.media-action-button.edit {
+  background: #2271b1;
+  color: white;
+}
+
+.media-action-button.edit:hover {
+  background: #135e96;
+}
+
+.media-action-button.view {
+  background: white;
+  color: #2271b1;
+}
+
+.media-action-button.view:hover {
+  background: #f0f0f1;
+}
+
+.media-action-button.delete {
+  background: #dc2626;
+  color: white;
+}
+
+.media-action-button.delete:hover {
+  background: #b91c1c;
+}
+
+.media-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .media-item.selected {
   box-shadow: inset 0 0 0 4px #2271b1;
   border-color: #2271b1;
@@ -868,4 +929,65 @@
 
 .media-save-confirm-cancel:hover {
   color: #1d2327;
+}
+
+/* Preview Modal */
+.media-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.media-preview-content {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.media-preview-close {
+  position: absolute;
+  top: -48px;
+  right: 0;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.media-preview-full-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.media-preview-info {
+  margin-top: 16px;
+  text-align: center;
+  color: white;
+}
+
+.media-preview-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.media-preview-meta {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
 }

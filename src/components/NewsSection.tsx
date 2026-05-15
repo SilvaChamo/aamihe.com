@@ -9,7 +9,6 @@ const newsData = {
       id: 1,
       date: '15 Mai, 2024',
       title: 'Conferência Anual de Educação Metodista',
-      excerpt: 'Líderes educacionais de toda a África reúnem-se para discutir o futuro do ensino superior...',
       image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800',
       category: 'Educação',
     },
@@ -17,7 +16,6 @@ const newsData = {
       id: 2,
       date: '10 Mai, 2024',
       title: 'Novas Bolsas de Estudo Disponíveis',
-      excerpt: 'A AAIMES anuncia novo programa de bolsas para estudantes de teologia e ciências...',
       image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800',
       category: 'Estudantes',
     },
@@ -25,9 +23,15 @@ const newsData = {
       id: 3,
       date: '05 Mai, 2024',
       title: 'Impacto Social nas Comunidades Locais',
-      excerpt: 'Como as nossas instituições estão a transformar a realidade das comunidades através de projetos...',
       image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800',
       category: 'Comunidade',
+    },
+    {
+      id: 4,
+      date: '01 Mai, 2024',
+      title: 'Lançamento do Novo Portal Académico',
+      image: 'https://images.unsplash.com/photo-1434031211128-0c29b692f139?auto=format&fit=crop&q=80&w=800',
+      category: 'Tecnologia',
     },
   ],
   fr: [
@@ -35,7 +39,6 @@ const newsData = {
       id: 1,
       date: '15 Mai, 2024',
       title: 'Conférence Annuelle sur l\'Éducation Méthodiste',
-      excerpt: 'Les leaders de l\'éducation de toute l\'Afrique se réunissent pour discuter de l\'avenir...',
       image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800',
       category: 'Éducation',
     },
@@ -43,7 +46,6 @@ const newsData = {
       id: 2,
       date: '10 Mai, 2024',
       title: 'Nouvelles Bourses d\'Études Disponibles',
-      excerpt: 'L\'AAIMES annonce un nouveau programme de bourses pour les étudiants en théologie...',
       image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800',
       category: 'Étudiants',
     },
@@ -51,9 +53,15 @@ const newsData = {
       id: 3,
       date: '05 Mai, 2024',
       title: 'Impact Social dans les Communautés Locales',
-      excerpt: 'Comment nos institutions transforment la réalité des communautés à travers des projets...',
       image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800',
       category: 'Communauté',
+    },
+    {
+      id: 4,
+      date: '01 Mai, 2024',
+      title: 'Lancement du Nouveau Portail Académique',
+      image: 'https://images.unsplash.com/photo-1434031211128-0c29b692f139?auto=format&fit=crop&q=80&w=800',
+      category: 'Technologie',
     },
   ],
   en: [
@@ -61,7 +69,6 @@ const newsData = {
       id: 1,
       date: 'May 15, 2024',
       title: 'Annual Methodist Education Conference',
-      excerpt: 'Educational leaders from across Africa gather to discuss the future of higher education...',
       image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800',
       category: 'Education',
     },
@@ -69,7 +76,6 @@ const newsData = {
       id: 2,
       date: 'May 10, 2024',
       title: 'New Scholarships Available',
-      excerpt: 'AAMIHE announces a new scholarship program for theology and science students...',
       image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800',
       category: 'Students',
     },
@@ -77,9 +83,15 @@ const newsData = {
       id: 3,
       date: 'May 05, 2024',
       title: 'Social Impact in Local Communities',
-      excerpt: 'How our institutions are transforming community reality through social projects...',
       image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800',
       category: 'Community',
+    },
+    {
+      id: 4,
+      date: 'May 01, 2024',
+      title: 'Launch of the New Academic Portal',
+      image: 'https://images.unsplash.com/photo-1434031211128-0c29b692f139?auto=format&fit=crop&q=80&w=800',
+      category: 'Technology',
     },
   ],
 };
@@ -128,7 +140,6 @@ export default function NewsSection() {
               <div className="news-card-content">
                 <span className="news-card-date">{item.date}</span>
                 <h3 className="news-card-title">{item.title}</h3>
-                <p className="news-card-excerpt">{item.excerpt}</p>
                 <a href={`/noticias/${item.id}`} className="news-card-link">
                   {t.more} <span className="arrow">→</span>
                 </a>

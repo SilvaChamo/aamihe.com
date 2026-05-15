@@ -25,6 +25,10 @@
   gap: 15px;
 }
 
+.col-2 {
+  padding-left: 35px; /* Aumentado para 35px (20 + 15) */
+}
+
 .footer-logo {
   margin-bottom: 10px;
 }
@@ -38,9 +42,20 @@
   font-size: 16px;
   font-weight: 700;
   position: relative;
-  padding-left: 10px;
-  border-left: 3px solid #cca876; /* Gold/brown accent from image */
-  margin-bottom: 10px;
+  padding-left: 15px; /* Aumentado para dar espaço ao pseudo-elemento */
+  margin-bottom: 15px;
+  line-height: 1; /* Garante que a altura seja controlada */
+  display: flex;
+  align-items: center;
+}
+
+.footer-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 100%; /* Agora herda a altura do texto/line-height */
+  background-color: #cca876;
 }
 
 .footer-links li {
@@ -124,10 +139,13 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  align-items: flex-start;
 }
 
 .email-wrap {
   display: flex;
+  width: 100%;
 }
 
 .email-wrap input {

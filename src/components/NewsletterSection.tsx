@@ -1,6 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/context/LanguageContext';
+import { useEffect, useState, useRef } from 'react';
 import './NewsletterSection.css';
 
 const translations = {
@@ -14,7 +15,7 @@ const translations = {
   },
   en: {
     title: 'JOIN THE TEAM',
-    description: 'Be part of our inspiring community! Send your membership request to join our team and contribute to strengthening our academic and spiritual journey. Fill in your details below to get started.',
+    description: 'Be part of our inspiring community! Send your membership request to join our team and contribute to strengthening our academic and spiritual journey.',
     placeholderName: 'Your name',
     placeholderEmail: 'Your email',
     placeholderContact: 'Your contact',
@@ -22,7 +23,7 @@ const translations = {
   },
   fr: {
     title: 'REJOIGNEZ L\'ÉQUIPE',
-    description: 'Faites partie de notre communauté inspirante ! Envoyez votre demande d\'adhésion para rejoindre notre équipe et contribuer au renforcement de notre parcours académique et spirituel. Remplissez vos coordonnées ci-dessous pour commencer.',
+    description: 'Faites partie de notre comunidade inspirante ! Envoyez votre demande d\'adhésion pour rejoindre notre équipe et contribuer au renforcement de notre parcours académique et spirituel.',
     placeholderName: 'Votre nom',
     placeholderEmail: 'Votre email',
     placeholderContact: 'Votre contact',
@@ -33,10 +34,35 @@ const translations = {
 export default function NewsletterSection() {
   const { locale } = useLanguage();
   const t = translations[locale];
+  const sectionRef = useRef<HTMLElement>(null);
+  const [parallaxY, setParallaxY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const scrollPosition = window.innerHeight - rect.top;
+        if (scrollPosition > 0) {
+          // Calcula o movimento relativo à entrada da secção no ecrã
+          setParallaxY(scrollPosition * 0.15);
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Inicializa a posição
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <section className="newsletter-section">
+    <section className="newsletter-section" ref={sectionRef}>
+      {/* Camada de Fundo com Parallax Seguro */}
+      <div 
+        className="newsletter-parallax-bg" 
+        style={{ transform: `translateY(${parallaxY - 100}px)` }} // Offset inicial para cobrir tudo
+      ></div>
       <div className="newsletter-overlay"></div>
+      
       <div className="newsletter-container">
         <h2 className="newsletter-title">{t.title}</h2>
         

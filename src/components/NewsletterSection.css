@@ -1,18 +1,27 @@
 .newsletter-section {
   position: relative;
-  padding: 3rem 1rem; /* Reduzido de 5rem */
-  background-image: url('/gallery/BgNoticias.jpeg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: scroll; /* Alterado de fixed para rolar com a página */
+  padding: 3rem 1rem 4.5rem; /* Aumentado padding-bottom ligeiramente */
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 300px; /* Reduzido de 400px */
+  min-height: 350px;
   text-align: center;
-  overflow: hidden;
+  overflow: hidden; /* Importante para o parallax não sair da caixa */
   margin-top: 0;
+}
+
+.newsletter-parallax-bg {
+  position: absolute;
+  top: -200px; /* Margem extra aumentada para cobrir todo o movimento */
+  left: 0;
+  width: 100%;
+  height: calc(100% + 400px); /* Muito mais alto para garantir cobertura total */
+  background-image: url('/gallery/BgNoticias.jpeg');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+  will-change: transform;
 }
 
 .newsletter-overlay {
@@ -21,7 +30,6 @@
   left: 0;
   width: 100%;
   height: 100%;
-  /* Gradiente radial idêntico ao do banner principal */
   background: radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%);
   z-index: 1;
 }
@@ -43,12 +51,12 @@
 }
 
 .newsletter-description {
-  font-family: inherit; /* Segue o padrão global (Inter) */
+  font-family: inherit;
   font-size: 1rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.9);
   max-width: 900px;
-  margin: 0 auto 2.5rem; /* Espaço antes do formulário */
+  margin: 0 auto 2.5rem;
 }
 
 .newsletter-form {
@@ -76,7 +84,7 @@
 .newsletter-submit {
   flex: 0 0 auto;
   padding: 0.9rem 2rem;
-  background-color: #561713; /* Bordô institucional */
+  background-color: #561713;
   color: #ffffff;
   border: none;
   border-radius: 4px;
@@ -89,7 +97,7 @@
 }
 
 .newsletter-submit:hover {
-  background-color: #cca876; /* Ouro institucional no hover */
+  background-color: #cca876;
   color: #561713;
 }
 

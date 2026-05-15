@@ -36,9 +36,9 @@
   opacity: 0;
   transition: opacity 1s ease-in-out;
   z-index: 0;
-  
+
   /* Imagens dinâmicas por idioma com gradiente circular pequeno para leitura */
-  background-image: 
+  background-image:
     radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%),
     var(--hero-bg-image);
   background-position: center;
@@ -54,10 +54,12 @@
 .hero-banner__title {
   margin: 0;
   font-size: clamp(1.65rem, 5vw, 2.65rem);
-  font-weight: 900; /* Mais bold como pedido */
+  font-weight: 900;
+  /* Mais bold como pedido */
   color: #cca876;
   line-height: 1.15;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8); /* Sombra com pouco espalhamento */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  /* Sombra com pouco espalhamento */
 }
 
 .hero-banner__description {
@@ -66,7 +68,8 @@
   max-width: 36rem;
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.94);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Sombra também na descrição */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  /* Sombra também na descrição */
 }
 
 /* Três fases iguais por ciclo: dissolve entre cada mensagem */
@@ -74,15 +77,19 @@
   0% {
     opacity: 0;
   }
+
   6% {
     opacity: 1;
   }
+
   28% {
     opacity: 1;
   }
+
   36% {
     opacity: 0;
   }
+
   100% {
     opacity: 0;
   }

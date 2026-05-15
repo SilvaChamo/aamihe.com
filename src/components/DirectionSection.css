@@ -1,6 +1,7 @@
 .direction-section {
   width: 100%;
-  padding: 6rem 0 0; /* Removido padding-bottom para colar a barra de estatísticas no fundo */
+  padding: 6rem 0 0;
+  /* Removido padding-bottom para colar a barra de estatísticas no fundo */
   background-color: #ffffff;
   font-family: inherit;
   position: relative;
@@ -16,14 +17,16 @@
 .direction-header {
   text-align: center;
   margin-bottom: 4rem;
-  max-width: 1000px; /* Aumentado de 800px para esticar o texto */
+  max-width: 1000px;
+  /* Aumentado de 800px para esticar o texto */
   margin-left: auto;
   margin-right: auto;
 }
 
 .direction-title {
   font-family: 'Roboto Slab', serif;
-  font-size: clamp(2.2rem, 4vw, 2.6rem); /* Reduzido de 3.2rem */
+  font-size: clamp(2.2rem, 4vw, 2.6rem);
+  /* Reduzido de 3.2rem */
   font-weight: 800;
   color: #1a1a1a;
   margin-bottom: 1.5rem;
@@ -39,7 +42,8 @@
 }
 
 .direction-subtitle {
-  font-family: 'Roboto Slab', serif; /* Alterado para Roboto Slab conforme solicitado */
+  font-family: 'Roboto Slab', serif;
+  /* Alterado para Roboto Slab conforme solicitado */
   font-size: 1.1rem;
   line-height: 1.8;
   color: #555555;
@@ -50,7 +54,8 @@
 /* Slider Layout */
 .direction-slider-wrapper {
   position: relative;
-  margin-bottom: 2rem; /* Reduzido de 5rem para subir o botão */
+  margin-bottom: 2rem;
+  /* Reduzido de 5rem para subir o botão */
   display: flex;
   align-items: center;
   padding: 0 3rem;
@@ -85,7 +90,8 @@
 /* Arrows */
 .slider-arrow {
   position: absolute;
-  top: 80px; /* Alinhado ao centro da imagem de 160px */
+  top: 80px;
+  /* Alinhado ao centro da imagem de 160px */
   transform: translateY(-50%);
   width: 45px;
   height: 45px;
@@ -99,7 +105,7 @@
   cursor: pointer;
   z-index: 10;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .slider-arrow:hover {
@@ -116,8 +122,10 @@
 }
 
 .member-image-wrapper {
-  width: 160px; /* Aumentado de 140px */
-  height: 160px; /* Aumentado de 140px */
+  width: 160px;
+  /* Aumentado de 140px */
+  height: 160px;
+  /* Aumentado de 140px */
   margin-bottom: 0;
   position: relative;
   display: flex;
@@ -136,7 +144,8 @@
 
 .member-details {
   text-align: center;
-  margin-top: 25px; /* 15px da sombra + 10px de gap visual */
+  margin-top: 25px;
+  /* 15px da sombra + 10px de gap visual */
   margin-bottom: 10px;
   width: 100%;
 }
@@ -170,7 +179,8 @@
 
 .lang-line {
   height: 1px;
-  width: 25px; /* Largura reduzida para ser bem pequena */
+  width: 25px;
+  /* Largura reduzida para ser bem pequena */
   background-color: #dddddd;
   flex-shrink: 0;
 }
@@ -188,7 +198,8 @@
   display: flex;
   justify-content: center;
   gap: 1.5rem;
-  margin-bottom: 3rem; /* Reduzido de 6rem */
+  margin-bottom: 3rem;
+  /* Reduzido de 6rem */
 }
 
 .btn-direction-readmore {
@@ -198,7 +209,8 @@
   background-color: #561713;
   color: #ffffff;
   padding: 0.8rem 2.5rem;
-  border-radius: 4px; /* Igual ao Sobre Nós */
+  border-radius: 4px;
+  /* Igual ao Sobre Nós */
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
@@ -208,14 +220,16 @@
 }
 
 .btn-direction-readmore:hover {
-  background-color: #cca876; /* Igual ao hover do Sobre Nós */
+  background-color: #cca876;
+  /* Igual ao hover do Sobre Nós */
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Stats Bar */
 .direction-stats-bar {
-  background-color: #f4f4f4; /* Cinza suave como solicitado */
+  background-color: #f4f4f4;
+  /* Cinza suave como solicitado */
   padding: 3rem 0;
   border-top: 1px solid #eeeeee;
   margin-bottom: 0;
@@ -223,7 +237,8 @@
 }
 
 .direction-stats-bar .direction-container {
-  max-width: 100%; /* Ocupa a largura total agora */
+  max-width: 100%;
+  /* Ocupa a largura total agora */
   padding: 0 4rem;
 }
 
@@ -252,14 +267,16 @@
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
-  height: 60px; /* Altura controlada para não ocupar tudo */
+  height: 60px;
+  /* Altura controlada para não ocupar tudo */
   background-color: #dddddd;
 }
 
 .stats-number {
   display: block;
   font-family: 'Roboto Slab', serif;
-  font-size: 2.2rem; /* Reduzido de 2.8rem */
+  font-size: 2.2rem;
+  /* Reduzido de 2.8rem */
   font-weight: 800;
   color: #561713;
   line-height: 1;
@@ -267,7 +284,8 @@
 }
 
 .stats-label {
-  font-size: 0.75rem; /* Reduzido de 0.85rem */
+  font-size: 0.75rem;
+  /* Reduzido de 0.85rem */
   font-weight: 700;
   color: #888888;
   text-transform: uppercase;
@@ -286,16 +304,16 @@
   .direction-section {
     padding: 4rem 0 0;
   }
-  
+
   .direction-header {
     margin-bottom: 3rem;
   }
-  
+
   .stats-list {
     flex-wrap: wrap;
     gap: 3rem;
   }
-  
+
   .stats-item {
     flex: 0 0 40%;
   }
@@ -305,16 +323,16 @@
   .direction-members-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .direction-actions-center {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .stats-item {
     flex: 0 0 100%;
   }
-  
+
   .stats-number {
     font-size: 2.5rem;
   }
