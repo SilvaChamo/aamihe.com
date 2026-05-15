@@ -1,0 +1,108 @@
+.hero-banner {
+  --hero-banner-slide-height: 500px;
+  --hero-dissolve-cycle: 21s;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  color: #fff;
+  background-color: #1a1a1a;
+  background-image:
+    radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%),
+    url('/images/hero-banner-bg.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.hero-banner__viewport {
+  position: relative;
+  height: var(--hero-banner-slide-height);
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.hero-banner__slide {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.5rem 1.25rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  z-index: 0;
+  
+  /* Imagens dinâmicas por idioma com gradiente circular pequeno para leitura */
+  background-image: 
+    radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%),
+    var(--hero-bg-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.hero-banner__slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.hero-banner__title {
+  margin: 0;
+  font-size: clamp(1.65rem, 5vw, 2.65rem);
+  font-weight: 900; /* Mais bold como pedido */
+  color: #cca876;
+  line-height: 1.15;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8); /* Sombra com pouco espalhamento */
+}
+
+.hero-banner__description {
+  margin: 0;
+  font-size: clamp(0.92rem, 2.1vw, 1.1rem);
+  max-width: 36rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Sombra também na descrição */
+}
+
+/* Três fases iguais por ciclo: dissolve entre cada mensagem */
+@keyframes hero-banner-dissolve {
+  0% {
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  28% {
+    opacity: 1;
+  }
+  36% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-banner__viewport {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem 1rem 2.5rem;
+  }
+
+  .hero-banner__slide {
+    position: relative;
+    inset: auto;
+    opacity: 1;
+    animation: none;
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,171 @@
+/* Sobreposição: metade da zona da bandeira sobrepõe o banner. */
+.countries-carousel-section {
+  --countries-cards-visible: 5;
+  --countries-gap: 15px; /* Alterado para 15px */
+  --countries-flag-h: 100px; /* Reduzido ligeiramente */
+  --countries-label-h: 34px;
+  position: relative;
+  z-index: 2;
+  margin-top: -60px; /* Margem negativa para subir sobre o banner */
+  padding: 0 12px 40px;
+  background: transparent;
+}
+
+.countries-carousel {
+  position: relative;
+  max-width: 1240px; /* Aumentado para caberem 5 colunas */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--countries-gap);
+}
+
+.countries-carousel__viewport {
+  flex: 1;
+  min-width: 0;
+  max-width: 1130px; /* Trava a largura para caberem exatamente 5 colunas de 214px + gaps */
+  margin: 0 auto; /* Centraliza */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Esconde no Firefox */
+  -ms-overflow-style: none; /* Esconde no IE */
+}
+
+.countries-carousel__viewport::-webkit-scrollbar {
+  display: none; /* Esconde no Chrome/Safari */
+}
+
+.countries-carousel__track {
+  display: flex;
+  gap: var(--countries-gap);
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px 0 12px; /* Removido o padding lateral de 2px para não quebrar a largura */
+  align-items: stretch;
+}
+
+.countries-carousel__card {
+  box-sizing: border-box;
+  flex: 0 0 214px; /* Tamanho fixo em pixel */
+  width: 214px;
+  min-width: 214px;
+  max-width: 214px;
+  scroll-snap-align: start;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.countries-carousel__image-wrap {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--countries-flag-h);
+  flex-shrink: 0;
+  background: #e8e8e8;
+}
+
+.countries-carousel__image {
+  object-fit: cover; /* Preencher o cartão sem bordas ou margens */
+}
+
+.countries-carousel__label {
+  box-sizing: border-box;
+  margin: 0;
+  min-height: var(--countries-label-h);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(43, 47, 52, 0.92);
+  line-height: 1.2;
+}
+
+/* Quadrados alinhados ao centro da faixa de cartões (referência). */
+.countries-carousel__arrow {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 40px; /* Reduzido para ser menor que as originais */
+  height: 40px; /* Reduzido para ser menor que as originais */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: #cca876;
+  background: rgba(86, 23, 19, 0.92);
+  border-radius: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+  padding: 0;
+}
+
+.countries-carousel__arrow:hover {
+  background: rgba(86, 23, 19, 1);
+  color: #e8c892;
+}
+
+.countries-carousel__arrow:focus-visible {
+  outline: 2px solid #cca876;
+  outline-offset: 2px;
+}
+
+.countries-carousel__btn--prev {
+  left: -20px; /* Movido para fora */
+}
+
+.countries-carousel__btn--next {
+  right: -20px; /* Movido para fora */
+}
+
+.countries-carousel__arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 1180px) {
+  .countries-carousel-section {
+    --countries-card-w: calc((100vw - 134px) / 4); /* Ajustado para 4 colunas exatas */
+  }
+}
+
+@media (max-width: 720px) {
+  .countries-carousel-section {
+    --countries-flag-h: 64px;
+    --countries-label-h: 30px;
+    --countries-gap: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    --countries-card-w: calc((100vw - 168px) / var(--countries-cards-visible));
+  }
+
+  .countries-carousel__arrow {
+    width: var(--countries-flag-h);
+    height: var(--countries-flag-h);
+  }
+
+  .countries-carousel__arrow svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .countries-carousel__label {
+    font-size: 10px;
+    padding: 5px 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  .countries-carousel-section {
+    --countries-flag-h: 52px;
+    --countries-label-h: 26px;
+    --countries-card-w: calc((100vw - 148px) / var(--countries-cards-visible));
+  }
+}

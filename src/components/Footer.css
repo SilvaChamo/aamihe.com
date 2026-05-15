@@ -1,0 +1,225 @@
+.footer {
+  background-color: #343a40;
+  color: #adb5bd;
+  padding: 60px 0 0 0;
+  font-size: 14px;
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding-bottom: 10px; /* Reduced from 20px */
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding-left: 30px; /* Increased from 20px as requested */
+  padding-right: 20px;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.footer-logo {
+  margin-bottom: 10px;
+}
+
+.footer-desc {
+  line-height: 1.6;
+}
+
+.footer-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  position: relative;
+  padding-left: 10px;
+  border-left: 3px solid #cca876; /* Gold/brown accent from image */
+  margin-bottom: 10px;
+}
+
+.footer-links li {
+  margin-bottom: 10px;
+  list-style: none;
+}
+
+.footer-links a {
+  color: #adb5bd;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: all 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.footer-links a::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #adb5bd;
+  border-radius: 50%; /* Circle instead of square */
+  flex-shrink: 0;
+}
+
+.footer-links a:hover {
+  color: #fff;
+  transform: translateX(8px); /* Move text to the right on hover */
+}
+
+.footer-links a:hover::before {
+  border-color: #cca876; /* Change circle color on hover */
+  background-color: #cca876;
+}
+
+.footer-contact li {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  list-style: none;
+}
+
+.footer-contact svg {
+  color: #cca876;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.oceanwp-info-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.oceanwp-contact-title {
+  color: #fff;
+  font-weight: 700;
+}
+
+.oceanwp-contact-text {
+  color: #adb5bd;
+}
+
+.oceanwp-contact-text a {
+  color: #adb5bd;
+  text-decoration: none;
+}
+
+.oceanwp-newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oceanwp-mail-text {
+  margin-bottom: 5px;
+}
+
+.newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.email-wrap {
+  display: flex;
+}
+
+.email-wrap input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #fff; /* White background like in image */
+  color: #333;
+  border-radius: 4px 0 0 4px;
+  font-size: 14px;
+}
+
+.email-wrap .button {
+  padding: 10px 20px;
+  background-color: #cca876; /* Gold/brown accent */
+  color: #fff;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gdpr-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #adb5bd;
+  font-size: 12px;
+}
+
+.gdpr-wrap label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-social {
+  margin-top: 10px;
+}
+
+.footer-social .oceanwp-social-icons {
+  display: flex;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.footer-social .oceanwp-social-icons li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #adb5bd;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer-social .oceanwp-social-icons li a:hover {
+  background-color: #cca876;
+  color: #fff;
+  border-color: #cca876;
+  transform: translateY(-3px); /* Subtle lift on hover */
+}
+
+.footer-social .oceanwp-social-icons svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer-bottom {
+  background-color: #2b3035;
+  padding: 10px 0; /* Reduced from 20px */
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+  }
+}

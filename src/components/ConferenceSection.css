@@ -1,0 +1,116 @@
+.conference-section {
+  position: relative;
+  padding: 6rem 200px; /* Aumentado para 200px de padding horizontal como pedido */
+  background-image: url('/images/IMG_Bg2.jpg'); /* Usando a imagem local fornecida pelo usuário */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed; /* Efeito parallax se suportado */
+  color: #fff;
+  text-align: center;
+}
+
+.conference-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(86, 23, 19, 0.85) 0%, rgba(26, 26, 26, 0.9) 100%);
+  z-index: 1;
+}
+
+.conference-container {
+  position: relative;
+  width: 100%; /* Ocupa 100% da largura da seção de ponta a ponta */
+  max-width: 100%;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.conference-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.conference-subtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #cca876;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.conference-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-roboto-slab), serif;
+  line-height: 1.2;
+  letter-spacing: 0.05em; /* Letras mais esticadas */
+}
+
+.conference-text {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.8;
+  letter-spacing: 0.02em; /* Letras ligeiramente mais esticadas */
+  max-width: 100%; /* Removido o limite de 700px para ocupar a largura toda */
+}
+
+.conference-box {
+  background: rgba(26, 13, 4, 0.85); /* Ainda mais escuro, quase preto, mas mantendo o tom castanho */
+  backdrop-filter: blur(5px); /* Adicionado desfoque para suavizar ainda mais */
+  padding: 2rem 200px 50px; /* 50px de padding em baixo */
+  border-bottom: 3px solid #cca876; /* Linha dourada em baixo como pedido */
+  margin-top: 1.5rem;
+  margin-left: -200px; /* Margem negativa para esticar na largura total da seção */
+  margin-right: -200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.conference-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.conference-date-label {
+  font-size: 1rem;
+  color: #cca876; /* Tom dourado */
+  font-weight: 600;
+}
+
+.conference-date {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.conference-location {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.conference-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #cca876;
+  color: #fff;
+  padding: 0.6rem 1.5rem; /* Reduzido o padding como pedido */
+  border-radius: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.conference-btn:hover {
+  background: #561713;
+  transform: translateY(-2px);
+}

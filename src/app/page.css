@@ -1,0 +1,37 @@
+main {
+  background-color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.content-section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.content-section h2 {
+  color: #561713;
+  margin-bottom: 20px;
+}
+
+.content-section p {
+  color: #75828c;
+  margin-bottom: 30px;
+}
+
+.btn-primary {
+  display: inline-block;
+  background-color: #cca876;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #b39265;
+}

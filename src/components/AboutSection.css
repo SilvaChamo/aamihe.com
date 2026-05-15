@@ -1,0 +1,105 @@
+.about-section {
+  padding: 1rem 1.5rem 4rem; /* Reduzido o padding superior para aproximar do carrossel */
+  background-color: #fcfcfc; /* Fundo quase branco para destacar os cards */
+}
+
+.about-container {
+  max-width: 1130px; /* Travado em 1130px para alinhar perfeitamente com as bandeiras */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.about-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .about-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.about-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-bottom: 4px solid #cca876; /* Faixa dourada/marrom embaixo do card como na foto */
+  border-radius: 4px;
+  padding: 1.5rem 2rem; /* Reduzido o preenchimento vertical de 2.5rem para 1.5rem */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.about-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.about-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.about-card-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-family: var(--font-roboto-slab), serif; /* Usando a fonte do projeto */
+}
+
+.about-card-text {
+  margin: 0;
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* Button styles */
+.about-actions-center {
+  display: flex;
+  justify-content: center;
+}
+
+.about-btn-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #561713; /* Cor do banner */
+  color: #fff;
+  padding: 0.5rem 2rem; /* Reduzido o padding vertical de 0.85rem para 0.5rem */
+  border-radius: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.about-btn-readmore:hover {
+  background: #cca876; /* Muda para dourado no hover */
+  color: #fff;
+}
+
+.about-btn-readmore svg {
+  transition: transform 0.3s ease;
+}
+
+.about-btn-readmore:hover svg {
+  transform: translateX(5px);
+}
