@@ -26,19 +26,6 @@ body {
   min-height: 100vh;
 }
 
-/* Efeito de Movimento (Reveal on Scroll) */
-.reveal {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 1s ease-out, transform 0.8s ease-out;
-  will-change: opacity, transform;
-}
-
-.reveal.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .site-root {
   min-height: 100vh;
   display: flex;
@@ -85,4 +72,17 @@ ul {
 
 .section {
   padding: 60px 0;
+}
+
+/* Scroll Reveal Animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+.reveal.active-reveal {
+  opacity: 1;
+  transform: translateY(0);
 }

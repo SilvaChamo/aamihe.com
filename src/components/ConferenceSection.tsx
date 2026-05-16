@@ -59,6 +59,9 @@ export default function ConferenceSection() {
                 {t.btn}
               </a>
             </div>
+
+            {/* Linha de destaque no fundo */}
+            <div className="conference-box-accent"></div>
           </div>
         </div>
       </div>

@@ -72,16 +72,17 @@
 
 .news-card-category {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
-  background: #561713;
-  color: #ffffff;
-  padding: 0.3rem 0.8rem;
-  border-radius: 50px;
-  font-size: 0.7rem;
+  top: 15px;
+  left: 15px;
+  background-color: var(--primary);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 0.65rem; /* Reduzido */
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  border-radius: 0; /* Removido o arredondamento */
+  z-index: 2;
+  letter-spacing: 0.05em;
 }
 
 .news-card-content {

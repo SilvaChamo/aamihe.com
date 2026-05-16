@@ -58,19 +58,69 @@
 }
 
 .conference-box {
-  background: rgba(26, 13, 4, 0.85); /* Ainda mais escuro, quase preto, mas mantendo o tom castanho */
-  backdrop-filter: blur(5px); /* Adicionado desfoque para suavizar ainda mais */
-  padding: 2rem 200px 50px; /* 50px de padding em baixo */
-  border-bottom: 3px solid #cca876; /* Linha dourada em baixo como pedido */
-  margin-top: 1.5rem;
-  margin-left: -200px; /* Margem negativa para esticar na largura total da seção */
-  margin-right: -200px;
+  position: relative;
+  background: rgba(26, 13, 4, 0.95); /* Cor de fundo */
+  border-radius: 16px; /* Arredondamento suave */
+  padding: 2.5rem 2rem 50px;
+  margin-top: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  width: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 900px; /* Transformado em card centralizado para o efeito de borda brilhar */
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* Efeito de Borda Animada - Largura do feixe aumentada e cores clarificadas */
+.conference-box::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent,
+    #cca876 5%, 
+    #cca876 35%, 
+    transparent 45%,
+    #a63d33 55%, 
+    #a63d33 85%, 
+    transparent 95%
+  );
+  animation: rotate-border 5s linear infinite; /* Ligeiramente mais lento para elegância */
+  z-index: -2;
+}
+
+/* Fundo interno para criar a espessura da borda */
+.conference-box::after {
+  content: '';
+  position: absolute;
+  inset: 2px; /* Espessura da borda */
+  background: rgba(26, 13, 4, 0.98);
+  border-radius: 14px;
+  z-index: -1;
+}
+
+/* Linha de baixo mantida conforme pedido */
+.conference-box-accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #cca876;
+  z-index: 3;
+}
+
+@keyframes rotate-border {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .conference-details {
