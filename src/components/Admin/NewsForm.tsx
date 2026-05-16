@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNews } from '@/context/NewsContext';
 import { ChevronUp, Calendar, Eye, Key } from 'lucide-react';
+import VisualEditor from './VisualEditor';
+import MediaModal from './MediaModal';
 import './NewsForm.css';
 
 const CATEGORIES = ['Institucional', 'Educação', 'Desenvolvimento', 'Eventos'];
@@ -17,6 +19,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
   const router = useRouter();
   const { addNews, updateNews } = useNews();
   const [loading, setLoading] = useState(false);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -30,7 +33,12 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        content: initialData.content || '',
+        summary: initialData.summary || ''
+      }));
     }
   }, [initialData]);
 
@@ -72,15 +80,14 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
           <div className="wp-box">
             <div className="wp-box-header">
-              <h2>Conteúdo</h2>
+              <h2>Conteúdo Visual</h2>
             </div>
-            <div className="wp-box-content">
-              <textarea 
-                className="wp-textarea" 
-                rows={15}
-                placeholder="Escreva o conteúdo da notícia..."
+            <div className="wp-box-content" style={{ padding: 0 }}>
+              <VisualEditor 
+                key={initialData?.id || 'new'}
                 value={formData.content}
-                onChange={(e) => setFormData({...formData, content: e.target.value})}
+                onChange={(val) => setFormData({...formData, content: val})}
+                placeholder="Escreva o conteúdo da notícia aqui..."
               />
             </div>
           </div>
@@ -159,25 +166,35 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
             </div>
             <div className="wp-box-content">
               {formData.image ? (
-                <>
-                  <img src={formData.image} alt="Preview" className="featured-image-preview" />
-                  <input 
-                    type="text" 
-                    className="wp-input" 
-                    value={formData.image}
-                    onChange={(e) => setFormData({...formData, image: e.target.value})}
-                    placeholder="URL da imagem..."
-                    style={{ marginBottom: '10px' }}
+                <div style={{ position: 'relative' }}>
+                  <img 
+                    src={formData.image} 
+                    alt="Preview" 
+                    className="featured-image-preview" 
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setIsMediaModalOpen(true)}
                   />
-                  <button type="button" className="btn-link danger" onClick={() => setFormData({...formData, image: ''})}>Remover imagem</button>
-                </>
+                  <div style={{ marginTop: '10px' }}>
+                    <button type="button" className="btn-link" onClick={() => setIsMediaModalOpen(true)}>Substituir imagem</button>
+                    <br />
+                    <button type="button" className="btn-link danger" onClick={() => setFormData({...formData, image: ''})}>Remover imagem</button>
+                  </div>
+                </div>
               ) : (
-                <button type="button" className="btn-link" onClick={() => setFormData({...formData, image: '/gallery/Ocean-acidification-training.jpeg.webp'})}>Definir imagem de destaque</button>
+                <button type="button" className="btn-link" onClick={() => setIsMediaModalOpen(true)}>Definir imagem de destaque</button>
               )}
             </div>
           </div>
+
+          {/* Media Selector Modal */}
+          <MediaModal 
+            isOpen={isMediaModalOpen}
+            onClose={() => setIsMediaModalOpen(false)}
+            onSelect={(url) => setFormData({...formData, image: url})}
+          />
         </div>
       </form>
     </div>
+
   );
 }

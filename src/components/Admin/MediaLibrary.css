@@ -6,7 +6,7 @@
 }
 
 .media-library.modal {
-  height: 80vh;
+  height: 100%;
 }
 
 /* Toolbar */
@@ -46,12 +46,12 @@
 }
 
 .media-toolbar-button:hover {
-  color: #2271b1;
+  color: #561713;
 }
 
 .media-toolbar-button.active {
   background: #f0f0f1;
-  color: #2271b1;
+  color: #561713;
   border-radius: 3px;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .media-search-input:focus {
-  border-color: #2271b1;
+  border-color: #561713;
 }
 
 /* Content */
@@ -169,7 +169,7 @@
 .media-loading-icon {
   width: 32px;
   height: 32px;
-  color: #2271b1;
+  color: #561713;
   animation: spin 1s linear infinite;
 }
 
@@ -230,7 +230,7 @@
 }
 
 .media-item:hover {
-  border-color: #2271b1;
+  border-color: #561713;
 }
 
 .media-item-actions {
@@ -263,7 +263,7 @@
 }
 
 .media-action-button.edit {
-  background: #2271b1;
+  background: #561713;
   color: white;
 }
 
@@ -273,7 +273,7 @@
 
 .media-action-button.view {
   background: white;
-  color: #2271b1;
+  color: #561713;
 }
 
 .media-action-button.view:hover {
@@ -295,8 +295,8 @@
 }
 
 .media-item.selected {
-  box-shadow: inset 0 0 0 4px #2271b1;
-  border-color: #2271b1;
+  box-shadow: inset 0 0 0 4px #561713;
+  border-color: #561713;
 }
 
 .media-item-image {
@@ -309,7 +309,7 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  background: #2271b1;
+  background: #561713;
   color: white;
   padding: 2px;
   border-radius: 2px;
@@ -337,7 +337,7 @@
 }
 
 .media-select-text {
-  background: #2271b1;
+  background: #561713;
   color: white;
   padding: 4px 12px;
   font-size: 12px;
@@ -353,8 +353,8 @@
 
 .media-load-more-button {
   padding: 8px 32px;
-  border: 1px solid #2271b1;
-  color: #2271b1;
+  border: 1px solid #561713;
+  color: #561713;
   font-size: 14px;
   font-weight: bold;
   border-radius: 3px;
@@ -464,7 +464,7 @@
 
 .media-input:focus,
 .media-textarea:focus {
-  border-color: #2271b1;
+  border-color: #561713;
 }
 
 .media-textarea {
@@ -484,8 +484,8 @@
   flex: 1;
   height: 36px;
   background: white;
-  border: 1px solid #2271b1;
-  color: #2271b1;
+  border: 1px solid #561713;
+  color: #561713;
   border-radius: 3px;
   font-size: 14px;
   font-weight: bold;
@@ -499,7 +499,7 @@
 .media-save-button {
   flex: 1;
   height: 36px;
-  background: #2271b1;
+  background: #561713;
   color: white;
   border-radius: 3px;
   font-size: 14px;

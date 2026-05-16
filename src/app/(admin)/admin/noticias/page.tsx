@@ -103,21 +103,21 @@ export default function NoticiasPage() {
                       <div className="title-with-thumb">
                         <img src={item.image} alt="" className="news-thumb" />
                         <div>
-                          <Link href={`/admin/noticias/editar/${item.id}`} className="news-row-title">
+                          <Link href={`/noticias/${item.id}`} className="news-row-title">
                             {item.title}
                           </Link>
                           <div className="row-actions">
-                            <span className="action-edit">
+                            <span className="edit">
                               <Link href={`/admin/noticias/editar/${item.id}`}>Editar</Link> | 
                             </span>
                             <span className="action-inline-edit">
                               <button onClick={() => handleQuickEdit(item)}>Edição rápida</button> | 
                             </span>
-                            <span className="action-trash">
-                              <button onClick={() => handleDelete(item.id, item.title)}>Lixo</button> | 
+                            <span className="trash">
+                              <button className="submitdelete" onClick={() => handleDelete(item.id, item.title)}>Lixo</button> | 
                             </span>
-                            <span className="action-view">
-                              <Link href={`/noticias/${item.id}`} target="_blank">Ver</Link>
+                            <span className="view">
+                              <a href={`/noticias/${item.id}`} target="_blank" rel="noreferrer">Ver</a>
                             </span>
                           </div>
                         </div>

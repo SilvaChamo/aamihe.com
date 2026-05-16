@@ -3,7 +3,7 @@
 .admin-news-container {
   padding: 20px;
   color: #2c3338;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-family: inherit; /* Herdado do body (Roboto Slab) */
   background: #f0f0f1;
   min-height: 100vh;
 }
@@ -30,9 +30,9 @@
 
 .btn-add-new {
   padding: 4px 10px;
-  border: 1px solid #2271b1;
+  border: 1px solid #561713;
   border-radius: 3px;
-  color: #2271b1;
+  color: #561713;
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
@@ -42,8 +42,8 @@
 
 .btn-add-new:hover {
   background: #f0f0f1;
-  border-color: #135e96;
-  color: #135e96;
+  border-color: #561713;
+  color: #cca876;
 }
 
 .admin-news-toolbar {
@@ -71,17 +71,18 @@
 .btn-apply {
   height: 30px;
   padding: 0 12px;
-  border: 1px solid #2271b1;
+  border: 1px solid #561713;
   border-radius: 3px;
   background: #f6f7f7;
-  color: #2271b1;
+  color: #561713;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .btn-apply:hover {
-  background: #f0f0f1;
+  background: #561713;
+  color: #fff;
 }
 
 .wp-table-container {
@@ -118,11 +119,11 @@
 .col-status { width: 100px; }
 
 .news-row:hover {
-  background: #f6f7f7;
+  background: #fcf9f9;
 }
 
 .news-row-title {
-  color: #2271b1;
+  color: #561713;
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
@@ -131,24 +132,25 @@
 }
 
 .news-row-title:hover {
-  color: #135e96;
+  color: #cca876;
 }
 
 .row-actions {
   visibility: hidden;
-  font-size: 11px;
+  font-size: 13px; /* Aumentado de 11px */
   color: #8c8f94;
   display: flex;
-  gap: 5px;
+  gap: 8px; /* Aumentado gap */
+  margin-top: 5px;
 }
 
 .news-row:hover .row-actions {
   visibility: visible;
 }
 
-.action-edit { color: #2271b1; }
+.action-edit { color: #561713; font-weight: 500; }
 .action-trash { color: #b32d2e; }
-.action-view { color: #2271b1; }
+.action-view { color: #561713; font-weight: 500; }
 
 .row-actions a, .row-actions button {
   text-decoration: none;
@@ -161,7 +163,7 @@
 }
 
 .row-actions a:hover, .row-actions button:hover {
-  color: #135e96;
+  color: #cca876;
 }
 
 .action-trash:hover {
@@ -170,11 +172,12 @@
 
 /* Quick Edit Row */
 .quick-edit-row {
-  background: #f6f7f7 !important;
+  background: #f9f4f4 !important;
 }
 
 .quick-edit-container {
   padding: 15px 20px;
+  border-left: 4px solid #561713;
 }
 
 .quick-edit-title {
@@ -183,6 +186,7 @@
   text-transform: uppercase;
   margin-bottom: 15px;
   display: block;
+  color: #561713;
 }
 
 .quick-edit-grid {

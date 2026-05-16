@@ -12,10 +12,10 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 30px;
-  padding-bottom: 10px; /* Reduced from 20px */
+  padding-bottom: 10px;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding-left: 30px; /* Increased from 20px as requested */
+  padding-left: 20px;
   padding-right: 20px;
 }
 
