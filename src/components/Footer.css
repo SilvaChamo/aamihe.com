@@ -1,7 +1,7 @@
 .footer {
   background-color: #343a40;
   color: #adb5bd;
-  padding: 60px 0 0 0;
+  padding: 0;
   font-size: 14px;
   position: relative;
   width: 100%;
@@ -12,11 +12,9 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 30px;
-  padding-bottom: 10px;
+  padding: 40px 20px 10px;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding-left: 20px;
-  padding-right: 20px;
 }
 
 .footer-col {
@@ -30,7 +28,23 @@
 }
 
 .footer-logo {
-  margin-bottom: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  line-height: 0;
+  display: block;
+}
+
+.footer-logo > span {
+  display: block !important;
+  line-height: 0 !important;
+}
+
+.footer-logo-image {
+  display: block;
+  width: auto;
+  max-width: 220px;
+  height: auto;
+  margin: 0;
 }
 
 .footer-desc {

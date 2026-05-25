@@ -1,36 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useLanguage } from '@/context/LanguageContext';
 import { useNews } from '@/context/NewsContext';
 import './NewsSection.css';
 
-const translations = {
-  pt: {
-    title: 'Notícias & Eventos',
-    more: 'Ler mais',
-    viewAll: 'Ver todas as notícias',
-  },
-  fr: {
-    title: 'Nouvelles & Événements',
-    more: 'Lire la suite',
-    viewAll: 'Voir todas as novas',
-  },
-  en: {
-    title: 'News & Events',
-    more: 'Read more',
-    viewAll: 'View all news',
-  },
+const t = {
+  title: 'Notícias & Eventos',
+  more: 'Ler mais',
+  viewAll: 'Ver todas as notícias',
 };
 
 export default function NewsSection() {
-  const { locale } = useLanguage();
   const { news } = useNews();
-  const t = (translations as any)[locale] || translations.pt;
 
-  // Mostramos apenas os primeiros 4 itens na Home
-  // (Em um cenário real, poderíamos filtrar por idioma se tivéssemos campos separados)
-  const displayedNews = news.slice(0, 4);
+  const displayedNews = news.filter((item) => item.status !== 'draft').slice(0, 4);
 
   return (
     <section className="news-section">

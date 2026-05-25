@@ -1,47 +1,93 @@
 'use client';
 
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BlogPageBanner from '@/components/Blog/BlogPageBanner';
+import BlogPageLayout from '@/components/Blog/BlogPageLayout';
+import BlogEntryCard from '@/components/Blog/BlogEntryCard';
+import BlogPagination from '@/components/Blog/BlogPagination';
+import BlogSidebar from '@/components/Blog/BlogSidebar';
 import { useNews } from '@/context/NewsContext';
-import '@/components/NewsSection.css';
-import './noticias.css';
+import { filterNewsByQuery, filterNewsByYear } from '@/lib/blog-utils';
+import '@/components/Blog/BlogLayout.css';
+
+const PER_PAGE = 4;
 
 export default function NoticiasPage() {
   const { news } = useNews();
-  const published = news.filter((item) => item.status !== 'draft');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeYear, setActiveYear] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const published = useMemo(
+    () => news.filter((item) => item.status !== 'draft'),
+    [news]
+  );
+
+  const filtered = useMemo(() => {
+    let items = published;
+    if (activeYear) items = filterNewsByYear(items, activeYear);
+    if (searchQuery) items = filterNewsByQuery(items, searchQuery);
+    return items;
+  }, [published, activeYear, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PER_PAGE;
+    return filtered.slice(start, start + PER_PAGE);
+  }, [filtered, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, activeYear]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <>
       <Header />
-      <main className="noticias-page">
-        <div className="noticias-hero">
-          <div className="news-container">
-            <h1>Notícias & Eventos</h1>
-            <p>Arquivo de notícias da AAMIHE</p>
-          </div>
-        </div>
+      <main id="main" className="blog-site-main site-main clr" role="main">
+        <BlogPageBanner title="BLOG" />
+        <BlogPageLayout
+          sidebar={
+            <BlogSidebar
+              news={published}
+              onSearchChange={setSearchQuery}
+              onYearFilter={setActiveYear}
+              activeYear={activeYear}
+            />
+          }
+        >
+          <div className="blog-entries-wrap">
+            <div id="blog-entries" className="entries clr">
+              {filtered.length === 0 ? (
+                <p className="blog-empty-state">
+                  Nenhuma notícia encontrada. Tente outra pesquisa ou ano.
+                </p>
+              ) : (
+                paginated.map((item) => (
+                  <BlogEntryCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.title}
+                    image={item.image}
+                    date={item.date}
+                  />
+                ))
+              )}
+            </div>
 
-        <div className="news-container">
-          <div className="news-grid noticias-grid">
-            {published.map((item) => (
-              <article key={item.id} className="news-card">
-                <div className="news-card-image">
-                  <img src={item.image} alt={item.title} />
-                  <span className="news-card-category">{item.category}</span>
-                </div>
-                <div className="news-card-content">
-                  <span className="news-card-date">{item.date}</span>
-                  <h2 className="news-card-title">{item.title}</h2>
-                  {item.summary && <p className="noticias-summary">{item.summary}</p>}
-                  <Link href={`/noticias/${item.id}`} className="news-card-link">
-                    Ler mais <span className="arrow">→</span>
-                  </Link>
-                </div>
-              </article>
-            ))}
+            {filtered.length > 0 && (
+              <BlogPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            )}
           </div>
-        </div>
+        </BlogPageLayout>
       </main>
       <Footer />
     </>

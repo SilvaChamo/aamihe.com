@@ -34,6 +34,21 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: '/blog',
+        destination: '/noticias',
+        permanent: false,
+      },
+      {
+        source: '/Blog',
+        destination: '/noticias',
+        permanent: false,
+      },
+      {
+        source: '/post',
+        destination: '/noticias',
+        permanent: false,
+      },
+      {
         source: '/index.html',
         destination: '/',
         permanent: true,
@@ -60,20 +75,8 @@ const nextConfig: NextConfig = {
         destination: '/conferencia.html',
       },
       {
-        source: '/blog',
-        destination: '/Blog.html',
-      },
-      {
-        source: '/Blog',
-        destination: '/Blog.html',
-      },
-      {
         source: '/contacte-nos',
         destination: '/contacte-nos.html',
-      },
-      {
-        source: '/post',
-        destination: '/post.html',
       },
       {
         source: '/paises',

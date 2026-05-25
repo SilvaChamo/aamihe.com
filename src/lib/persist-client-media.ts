@@ -13,14 +13,19 @@ export async function persistNewsImage(image: string, title = 'Imagem de notíci
   form.append('title', title);
 
   const res = await fetch('/api/admin/media', { method: 'POST', body: form });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
 
-  if (!data.success || !data.media?.url) {
-    throw new Error(data.error || 'Erro ao guardar imagem na galeria');
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || `Erro ao guardar imagem (${res.status})`);
+  }
+
+  const url = data.media?.url ?? (Array.isArray(data.media) ? data.media[0]?.url : null);
+  if (!url) {
+    throw new Error(data.error || 'Resposta inválida do servidor');
   }
 
   dispatchMediaUpdated();
-  return data.media.url;
+  return url;
 }
 
 export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promise<string> {
@@ -39,16 +44,21 @@ export async function uploadMediaFiles(files: File[], subcategory = 'Upload'): P
   }
 
   const res = await fetch('/api/admin/media', { method: 'POST', body: form });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
 
-  if (!data.success) {
-    throw new Error(data.error || 'Erro no upload');
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || `Erro no upload (${res.status})`);
   }
 
   dispatchMediaUpdated();
 
   if (Array.isArray(data.media)) {
-    return data.media.map((m: { url: string }) => m.url);
+    const urls = data.media.map((m: { url?: string }) => m.url).filter(Boolean) as string[];
+    if (urls.length === 0) throw new Error('Upload concluído sem URL');
+    return urls;
+  }
+  if (!data.media?.url) {
+    throw new Error('Resposta inválida do servidor');
   }
   return [data.media.url];
 }

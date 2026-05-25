@@ -87,7 +87,13 @@ export default function Footer() {
           {/* Column 1 */}
           <div className="footer-col col-1">
             <div className="footer-logo">
-              <Image src="/Logo-Small.png.webp" alt="AAMIHE Logo" width={263} height={72} />
+              <Image
+                src="/Logo-Small.png.webp"
+                alt="AAMIHE Logo"
+                width={263}
+                height={72}
+                className="footer-logo-image"
+              />
             </div>
             <p className="footer-desc">
               {t.desc}

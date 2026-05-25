@@ -84,7 +84,14 @@ export default function Header() {
       <div className="main-nav">
         <div className="container main-nav-container">
           <Link href="/" className="logo">
-            <Image src="/Logo-Small.png.webp" alt="AAMIHE Logo" width={150} height={42} />
+            <Image
+              src="/Logo-Small.png.webp"
+              alt="AAMIHE Logo"
+              width={150}
+              height={42}
+              className="logo-image"
+              priority
+            />
           </Link>
           
           <nav className="nav">
@@ -92,7 +99,12 @@ export default function Header() {
             <Link href="/sobre-nos" className={`nav-link ${pathname === '/sobre-nos' ? 'active' : ''}`}>{t.sobre}</Link>
             <Link href="/servicos" className={`nav-link ${pathname === '/servicos' ? 'active' : ''}`}>{t.servicos}</Link>
             <Link href="/conferencia" className={`nav-link ${pathname === '/conferencia' ? 'active' : ''}`}>{t.conferencia}</Link>
-            <Link href="/blog" className={`nav-link ${pathname === '/blog' ? 'active' : ''}`}>{t.blog}</Link>
+            <Link
+              href="/noticias"
+              className={`nav-link ${pathname === '/noticias' || pathname.startsWith('/noticias/') || pathname === '/blog' ? 'active' : ''}`}
+            >
+              {t.blog}
+            </Link>
             <Link href="/contacte-nos" className={`nav-link ${pathname === '/contacte-nos' ? 'active' : ''}`}>{t.contacto}</Link>
           </nav>
           

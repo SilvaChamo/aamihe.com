@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
 import { uploadMediaFile } from '@/lib/persist-client-media';
@@ -16,6 +16,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
   const [activeTab, setActiveTab] = useState<'upload' | 'library'>('upload');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,12 +31,17 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      processFile(file);
+      void processFile(file);
     }
     e.target.value = '';
   };
 
   const processFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Seleccione um ficheiro de imagem (JPG, PNG, WebP, etc.).');
+      return;
+    }
+
     setIsUploading(true);
     try {
       const url = await uploadMediaFile(file, 'Notícias');
@@ -43,7 +49,8 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Erro ao carregar imagem. Tente novamente.');
+      const message = err instanceof Error ? err.message : 'Erro ao carregar imagem. Tente novamente.';
+      alert(message);
     } finally {
       setIsUploading(false);
     }
@@ -63,36 +70,52 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      processFile(file);
+      void processFile(file);
     }
   };
 
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
-    <div className="media-modal-overlay">
-      <div className="media-modal-container">
+    <div className="media-modal-overlay" onClick={onClose}>
+      <div className="media-modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="media-modal-header">
           <div className="media-modal-tabs">
-            <button 
+            <button
+              type="button"
               className={`media-modal-tab ${activeTab === 'upload' ? 'active' : ''}`}
               onClick={() => setActiveTab('upload')}
             >
               Carregar ficheiros
             </button>
-            <button 
+            <button
+              type="button"
               className={`media-modal-tab ${activeTab === 'library' ? 'active' : ''}`}
               onClick={() => setActiveTab('library')}
             >
               Biblioteca multimédia
             </button>
           </div>
-          <button className="media-modal-close" onClick={onClose}>
+          <button type="button" className="media-modal-close" onClick={onClose}>
             <X size={24} />
           </button>
         </div>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="media-modal-file-input"
+          accept="image/*"
+          onChange={handleFileUpload}
+          tabIndex={-1}
+          aria-hidden
+        />
+
         <div className="media-modal-content">
           {activeTab === 'upload' ? (
-            <div 
+            <div
               className={`media-upload-zone ${isDragging ? 'dragging' : ''} ${isUploading ? 'uploading' : ''}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -111,10 +134,9 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
                     </div>
                     <h3>Largue os ficheiros para carregar</h3>
                     <p>ou</p>
-                    <label className="media-upload-button">
+                    <button type="button" className="media-upload-button" onClick={openFilePicker}>
                       Selecionar ficheiros
-                      <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
-                    </label>
+                    </button>
                     <p className="media-upload-limit">Tamanho máximo do ficheiro: 512 MB.</p>
                   </>
                 )}
@@ -122,12 +144,12 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
             </div>
           ) : (
             <div className="media-library-wrapper">
-              <MediaLibrary 
-                isModal={true} 
+              <MediaLibrary
+                isModal={true}
                 onSelect={(url) => {
                   onSelect(url);
                   onClose();
-                }} 
+                }}
               />
             </div>
           )}
@@ -140,7 +162,9 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
             )}
           </div>
           <div className="media-modal-footer-right">
-            <button type="button" className="media-button-secondary" onClick={onClose}>Cancelar</button>
+            <button type="button" className="media-button-secondary" onClick={onClose}>
+              Cancelar
+            </button>
           </div>
         </div>
       </div>

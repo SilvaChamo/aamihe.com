@@ -24,6 +24,7 @@ import {
   Video
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
+import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import './MediaLibrary.css';
 
 interface MediaLibraryProps {
@@ -48,22 +49,24 @@ interface MediaFile {
 }
 
 const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
-  { value: 'all', label: 'Todos' },
   { value: 'imagens', label: 'Imagens' },
   { value: 'documentos', label: 'Documentos' },
   { value: 'videos', label: 'Vídeos' },
+  { value: 'all', label: 'Todos' },
 ];
+
+const PAGE_BATCH = 48;
 
 export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, fullCatalog }: MediaLibraryProps) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>('imagens');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [visibleCount, setVisibleCount] = useState(70);
+  const [visibleCount, setVisibleCount] = useState(PAGE_BATCH);
   
   // Advanced Editor States
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -91,11 +94,15 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
   const [isUploading, setIsUploading] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
-  const loadImages = async () => {
+  const loadImages = async (filter: 'all' | MediaCategory = typeFilter) => {
     setLoading(true);
     try {
-      const catalogQuery = fullCatalog ? '?catalog=full' : '';
-      const res = await fetch(`/api/admin/media${catalogQuery}`);
+      const params = new URLSearchParams();
+      if (fullCatalog) params.set('catalog', 'full');
+      if (filter !== 'all') params.set('category', filter);
+
+      const query = params.toString();
+      const res = await fetch(`/api/admin/media${query ? `?${query}` : ''}`);
       const data = await res.json();
       if (data.success) {
         const mapped = data.media.map(
@@ -112,7 +119,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
             id: item.id,
             name: item.title,
             url: item.url,
-            category: item.category,
+            category: resolveMediaCategory(item),
             subcategory: item.subcategory,
             source: item.source,
             metadata: {
@@ -127,25 +134,38 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
           if (!byKey.has(key)) byKey.set(key, file);
         }
         setFiles(Array.from(byKey.values()));
+      } else {
+        setFiles([]);
       }
     } catch (err) {
       console.error(err);
+      setFiles([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadImages();
-    const onMediaUpdated = () => loadImages();
+    setVisibleCount(PAGE_BATCH);
+    setActiveFile(null);
+    void loadImages(typeFilter);
+  }, [typeFilter, fullCatalog]);
+
+  useEffect(() => {
+    const onMediaUpdated = () => void loadImages(typeFilter);
     window.addEventListener('mediaUpdated', onMediaUpdated);
     return () => window.removeEventListener('mediaUpdated', onMediaUpdated);
-  }, []);
+  }, [typeFilter, fullCatalog]);
 
   const filteredFiles = useMemo(() => {
     const query = (externalSearchQuery || searchQuery).toLowerCase();
     return files.filter((f) => {
-      const matchesType = typeFilter === 'all' || f.category === typeFilter;
+      const kind = resolveMediaCategory({
+        category: f.category,
+        mime_type: f.metadata?.mimetype,
+        url: f.url,
+      });
+      const matchesType = typeFilter === 'all' || kind === typeFilter;
       const matchesSearch =
         !query ||
         f.name.toLowerCase().includes(query) ||
@@ -349,7 +369,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
   };
 
   return (
-    <div className={`media-library ${isModal ? 'modal' : ''}`}>
+    <div
+      className={`media-library ${isModal ? 'modal' : ''} ${activeFile && !isBulkMode ? 'has-detail-sidebar' : ''}`}
+    >
       {/* Toolbar Superior */}
       <div className="media-toolbar">
         <div className="media-toolbar-left">
@@ -370,27 +392,23 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
             <LayoutGrid className="media-toolbar-icon" />
           </button>
           
-          {!isModal && (
-            <>
-              <input
-                ref={uploadInputRef}
-                type="file"
-                accept="image/*,video/*,.pdf"
-                multiple
-                hidden
-                onChange={handleToolbarUpload}
-              />
-              <button
-                type="button"
-                className="media-upload-button"
-                disabled={isUploading}
-                onClick={() => uploadInputRef.current?.click()}
-              >
-                <Upload className="media-toolbar-icon" />
-                {isUploading ? 'A carregar...' : 'Carregar ficheiros'}
-              </button>
-            </>
-          )}
+          <input
+            ref={uploadInputRef}
+            type="file"
+            accept="image/*,video/*,.pdf"
+            multiple
+            hidden
+            onChange={handleToolbarUpload}
+          />
+          <button
+            type="button"
+            className="media-upload-button"
+            disabled={isUploading}
+            onClick={() => uploadInputRef.current?.click()}
+          >
+            <Upload className="media-toolbar-icon" />
+            {isUploading ? 'A carregar...' : 'Carregar ficheiros'}
+          </button>
 
           {!isBulkMode ? (
             <button 
@@ -411,7 +429,10 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
           <select
             className="media-type-select"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as 'all' | MediaCategory)}
+            onChange={(e) => {
+              setTypeFilter(e.target.value as 'all' | MediaCategory);
+              setVisibleCount(PAGE_BATCH);
+            }}
             aria-label="Filtrar por tipo"
           >
             {TYPE_FILTERS.map((option) => (
@@ -428,7 +449,10 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                 type="text" 
                 placeholder="Pesquisar..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setVisibleCount(PAGE_BATCH);
+                }}
                 className="media-search-input"
               />
             </div>
@@ -591,7 +615,13 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
           
           {!loading && visibleCount < filteredFiles.length && (
             <div className="media-load-more">
-              <button onClick={() => setVisibleCount(prev => prev + 70)} className="media-load-more-button">Carregar mais</button>
+              <button
+                type="button"
+                onClick={() => setVisibleCount((prev) => prev + PAGE_BATCH)}
+                className="media-load-more-button"
+              >
+                Carregar mais ({filteredFiles.length - visibleCount} restantes)
+              </button>
             </div>
           )}
         </div>
