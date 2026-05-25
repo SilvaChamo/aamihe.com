@@ -69,8 +69,10 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
 
 async function processUpload(file: File, subcategory: string, title?: string) {
   const buffer = Buffer.from(await file.arrayBuffer());
-  const category = inferMediaCategory(file.type);
   const mimeType = file.type || 'application/octet-stream';
+  const category = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name)
+    ? 'imagens'
+    : inferMediaCategory(mimeType);
   const record = await uploadFileToStore(buffer, title || file.name, mimeType, category, subcategory);
 
   const db = await getDashboardDb();

@@ -2,12 +2,16 @@ import { dispatchMediaUpdated } from '@/lib/media-events';
 
 export async function persistNewsImage(image: string, title = 'Imagem de notícia'): Promise<string> {
   if (!image) return image;
+  const trimmed = image.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
 
   const form = new FormData();
-  if (image.startsWith('data:')) {
-    form.append('data_url', image);
+  if (trimmed.startsWith('data:')) {
+    form.append('data_url', trimmed);
   } else {
-    form.append('register_url', image);
+    form.append('register_url', trimmed);
   }
   form.append('subcategory', 'Notícias');
   form.append('title', title);
@@ -26,6 +30,11 @@ export async function persistNewsImage(image: string, title = 'Imagem de notíci
 
   dispatchMediaUpdated();
   return url;
+}
+
+export function isImageUploadFile(file: File): boolean {
+  if (file.type.startsWith('image/')) return true;
+  return /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name);
 }
 
 export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promise<string> {

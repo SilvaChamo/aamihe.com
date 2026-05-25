@@ -6,7 +6,7 @@ import { useNews } from '@/context/NewsContext';
 import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
-import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
+import { isImageUploadFile, persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
 import './NewsForm.css';
 
 interface NewsFormProps {
@@ -63,20 +63,28 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     }
   }, [categories, isEdit]);
 
+  const applyFeaturedImage = (url: string) => {
+    setFormData((prev) => ({ ...prev, image: url }));
+  };
+
+  const openFilePicker = () => {
+    featuredImageInputRef.current?.click();
+  };
+
   const handleFeaturedImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      alert('Seleccione um ficheiro de imagem.');
+    if (!isImageUploadFile(file)) {
+      alert('Seleccione um ficheiro de imagem (JPG, PNG, WebP, etc.).');
       return;
     }
 
     setImageUploading(true);
     try {
       const url = await uploadMediaFile(file, 'Notícias');
-      setFormData((prev) => ({ ...prev, image: url }));
+      applyFeaturedImage(url);
     } catch (err) {
       console.error(err);
       alert(err instanceof Error ? err.message : 'Erro ao carregar imagem.');
@@ -90,7 +98,10 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     setLoading(true);
 
     try {
-      const image = formData.image ? await persistNewsImage(formData.image, formData.title) : '';
+      let image = formData.image.trim();
+      if (image && !image.startsWith('http://') && !image.startsWith('https://')) {
+        image = await persistNewsImage(image, formData.title);
+      }
       const payload = { ...formData, image };
 
       if (isEdit && initialData?.id) {
@@ -101,7 +112,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       router.push('/admin/noticias');
     } catch (err) {
       console.error(err);
-      alert('Erro ao guardar notícia');
+      alert(err instanceof Error ? err.message : 'Erro ao guardar notícia');
     } finally {
       setLoading(false);
     }
@@ -109,6 +120,14 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
   return (
     <div className="news-form-container">
+      <input
+        ref={featuredImageInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp,image/*,.jpg,.jpeg,.png,.gif,.webp"
+        className="news-form-file-input"
+        onChange={handleFeaturedImageUpload}
+      />
+
       <div className="news-form-header">
         <h1>{isEdit ? 'Editar notícia' : 'Adicionar nova notícia'}</h1>
       </div>
@@ -157,28 +176,20 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
               <ChevronUp size={16} />
             </div>
             <div className="news-form-panel-body">
-              <input
-                ref={featuredImageInputRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleFeaturedImageUpload}
-              />
               {formData.image ? (
                 <div className="news-form-image-block">
                   <img
                     src={formData.image}
                     alt="Preview"
                     className="news-form-image-preview"
-                    onClick={() => setIsMediaModalOpen(true)}
                   />
                   <button
                     type="button"
                     className="news-form-link"
                     disabled={imageUploading}
-                    onClick={() => featuredImageInputRef.current?.click()}
+                    onClick={openFilePicker}
                   >
-                    {imageUploading ? 'A carregar...' : 'Carregar do computador'}
+                    {imageUploading ? 'A carregar...' : 'Substituir imagem'}
                   </button>
                   <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
                     Escolher da biblioteca
@@ -186,7 +197,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                   <button
                     type="button"
                     className="news-form-link news-form-link-danger"
-                    onClick={() => setFormData({ ...formData, image: '' })}
+                    onClick={() => applyFeaturedImage('')}
                   >
                     Remover imagem
                   </button>
@@ -197,7 +208,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                     type="button"
                     className="news-form-link"
                     disabled={imageUploading}
-                    onClick={() => featuredImageInputRef.current?.click()}
+                    onClick={openFilePicker}
                   >
                     {imageUploading ? 'A carregar...' : 'Carregar do computador'}
                   </button>
@@ -266,7 +277,10 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       <MediaModal
         isOpen={isMediaModalOpen}
         onClose={() => setIsMediaModalOpen(false)}
-        onSelect={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+        onSelect={(url) => {
+          applyFeaturedImage(url);
+          setIsMediaModalOpen(false);
+        }}
       />
     </div>
   );

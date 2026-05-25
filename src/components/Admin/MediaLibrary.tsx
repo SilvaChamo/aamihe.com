@@ -62,7 +62,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
   const [loading, setLoading] = useState(true);
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>('imagens');
+  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>(isModal ? 'all' : 'imagens');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -165,6 +165,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
         mime_type: f.metadata?.mimetype,
         url: f.url,
       });
+      if (isModal && onSelect && kind !== 'imagens') return false;
       const matchesType = typeFilter === 'all' || kind === typeFilter;
       const matchesSearch =
         !query ||
@@ -172,7 +173,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
         f.subcategory.toLowerCase().includes(query);
       return matchesType && matchesSearch;
     });
-  }, [files, searchQuery, externalSearchQuery, typeFilter]);
+  }, [files, searchQuery, externalSearchQuery, typeFilter, isModal, onSelect]);
 
   const paginatedFiles = useMemo(() => {
     return filteredFiles.slice(0, visibleCount);
@@ -474,7 +475,14 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                     if (isBulkMode) {
                       toggleSelect(file.id);
                     } else if (isModal && onSelect) {
-                      onSelect(getPublicUrl(file));
+                      const kind = resolveMediaCategory({
+                        category: file.category,
+                        mime_type: file.metadata?.mimetype,
+                        url: file.url,
+                      });
+                      if (kind === 'imagens') {
+                        onSelect(getPublicUrl(file));
+                      }
                     } else {
                       openDetails(file);
                     }
@@ -496,6 +504,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                       <span className="media-select-text">Selecionar</span>
                     </div>
                   )}
+                  {!(isModal && onSelect) && (
                   <div className="media-item-actions">
                     <button 
                       onClick={(e) => {
@@ -531,6 +540,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                       </button>
                     )}
                   </div>
+                  )}
                 </div>
               ))}
             </div>
