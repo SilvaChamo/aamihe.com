@@ -36,6 +36,23 @@
   align-items: center;
 }
 
+.header-admin-link {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.header-admin-link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .elementor-nav-menu {
   display: flex;
   list-style: none;

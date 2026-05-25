@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
         destination: '/',
         permanent: true,
       },
+      {
+        source: '/admin',
+        destination: '/admin/dashboard',
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
