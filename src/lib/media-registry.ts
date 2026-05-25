@@ -77,13 +77,9 @@ async function finalizeCatalog(items: SiteMediaRecord[]): Promise<SiteMediaRecor
 }
 
 function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
-  return items.sort((a, b) => {
-    const newsRank = (item: SiteMediaRecord) =>
-      item.source === 'news' || item.subcategory === 'Notícias' ? 0 : 1;
-    const rankDiff = newsRank(a) - newsRank(b);
-    if (rankDiff !== 0) return rankDiff;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+  return items.sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 export function upsertMediaRecord(
