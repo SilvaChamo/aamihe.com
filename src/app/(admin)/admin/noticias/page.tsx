@@ -6,10 +6,8 @@ import { useNews } from '@/context/NewsContext';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import './admin-noticias.css';
 
-const CATEGORIES = ['Institucional', 'Educação', 'Desenvolvimento', 'Eventos'];
-
 export default function NoticiasPage() {
-  const { news, deleteNews, updateNews } = useNews();
+  const { news, deleteNews, updateNews, categories } = useNews();
   const [quickEditId, setQuickEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,7 +72,7 @@ export default function NoticiasPage() {
 
           <select className="wp-select">
             <option>Todas as categorias</option>
-            {CATEGORIES.map(cat => <option key={cat}>{cat}</option>)}
+            {categories.map(cat => <option key={cat.slug}>{cat.name}</option>)}
           </select>
           <button className="btn-apply">Filtrar</button>
         </div>
@@ -163,13 +161,13 @@ export default function NoticiasPage() {
                               <div className="field-group">
                                 <label>Categorias</label>
                                 <div style={{ border: '1px solid #8c8f94', background: '#fff', padding: '5px', maxHeight: '80px', overflowY: 'auto' }}>
-                                  {CATEGORIES.map(cat => (
-                                    <label key={cat} style={{ display: 'block', fontSize: '12px', marginBottom: '2px' }}>
+                                  {categories.map(cat => (
+                                    <label key={cat.slug} style={{ display: 'block', fontSize: '12px', marginBottom: '2px' }}>
                                       <input 
                                         type="checkbox" 
-                                        checked={editForm.category === cat}
-                                        onChange={() => setEditForm({...editForm, category: cat})}
-                                      /> {cat}
+                                        checked={editForm.category === cat.name}
+                                        onChange={() => setEditForm({...editForm, category: cat.name})}
+                                      /> {cat.name}
                                     </label>
                                   ))}
                                 </div>

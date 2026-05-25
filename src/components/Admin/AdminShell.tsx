@@ -8,13 +8,13 @@ import {
   Newspaper,
   ImageIcon,
   Settings,
-  Plus,
   ExternalLink,
   ChevronDown,
   Menu,
   X,
   FileUp,
   Video,
+  LogOut,
 } from 'lucide-react';
 import './AdminShell.css';
 
@@ -23,8 +23,12 @@ interface SubmenuEntry {
   href: string;
 }
 
-function routeMatches(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(href + '/');
+function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string | null {
+  const matches = submenu
+    .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+    .sort((a, b) => b.href.length - a.href.length);
+
+  return matches[0]?.href ?? null;
 }
 
 interface SidebarItemProps {
@@ -32,19 +36,27 @@ interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
   active?: boolean;
+  activeSubHref?: string | null;
   submenu?: SubmenuEntry[];
   isOpen?: boolean;
   onToggle?: () => void;
 }
 
-const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false, onToggle }: SidebarItemProps) => {
-  const pathname = usePathname();
-  const isChildActive =
-    submenu?.some((item) => routeMatches(pathname, item.href)) ?? false;
+const SidebarItem = ({
+  href,
+  icon: Icon,
+  label,
+  active,
+  activeSubHref = null,
+  submenu,
+  isOpen = false,
+  onToggle,
+}: SidebarItemProps) => {
+  const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
   const isDashboard = label === 'Dashboard';
+  const mainClassName = ['sidebar-item-main', active ? 'active' : ''].filter(Boolean).join(' ');
 
-  // Expand if child becomes active
   React.useEffect(() => {
     if (isChildActive && !isOpen && onToggle) onToggle();
   }, [isChildActive, isOpen, onToggle]);
@@ -57,7 +69,7 @@ const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false,
     >
       <div className="sidebar-item-content">
         {isDashboard ? (
-          <div className={`sidebar-item-main ${active ? 'active' : ''}`}>
+          <div className={mainClassName}>
             <Link href={href} className="sidebar-item-link">
               <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
               <span className="sidebar-label">{label}</span>
@@ -74,7 +86,7 @@ const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false,
             )}
           </div>
         ) : (
-          <div className={`sidebar-item-main ${active ? 'active' : ''}`}>
+          <div className={mainClassName}>
             <Link href={href} className="sidebar-item-link">
               <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
               <span className="sidebar-label">{label}</span>
@@ -92,7 +104,6 @@ const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false,
           </div>
         )}
 
-        {/* Hover Flyout Submenu */}
         {submenu && isHovered && !isOpen && (
           <div className="sidebar-flyout">
             <div className="sidebar-flyout-title">
@@ -102,7 +113,7 @@ const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false,
               <Link
                 key={item.href}
                 href={item.href}
-                className={`sidebar-flyout-item ${routeMatches(pathname, item.href) ? 'active' : ''}`}
+                className={`sidebar-flyout-item ${activeSubHref === item.href ? 'active' : ''}`}
               >
                 {item.label}
               </Link>
@@ -111,14 +122,13 @@ const SidebarItem = ({ href, icon: Icon, label, active, submenu, isOpen = false,
         )}
       </div>
       
-      {/* Inline Expanded Submenu */}
       {submenu && isOpen && (
         <div className="sidebar-submenu">
           {submenu.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`sidebar-submenu-item ${routeMatches(pathname, item.href) ? 'active' : ''}`}
+              className={`sidebar-submenu-item ${activeSubHref === item.href ? 'active' : ''}`}
             >
               {item.label}
             </Link>
@@ -197,31 +207,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <div className="admin-shell">
       {/* Barra castanha — identidade AAMIHE */}
       <header className="admin-brand-bar">
-        <Link href="/" className="admin-brand-logo">
-          <span className="admin-brand-logo-text">AAMIHE</span>
-        </Link>
-        <span className="admin-brand-tagline">Painel de administração</span>
-      </header>
-
-      {/* Barra cinza — acções rápidas (estilo WordPress) */}
-      <header className="admin-bar">
-        <div className="admin-bar-left">
-          <div className="admin-bar-links">
-            <Link href="/admin/noticias/nova" className="admin-bar-link">
-              <Plus className="admin-bar-link-icon" />
-              <span>Novo</span>
-            </Link>
-            <Link href="/" target="_blank" className="admin-bar-link">
-              <ExternalLink className="admin-bar-link-icon" />
-              <span>Ver Site</span>
-            </Link>
-          </div>
+        <div className="admin-brand-left">
+          <Link href="/admin/dashboard" className="admin-brand-logo">
+            AAMIHE
+          </Link>
+          <Link href="/" target="_blank" className="admin-brand-action">
+            <ExternalLink className="admin-brand-action-icon" />
+            Ver Site
+          </Link>
         </div>
-
-        <div className="admin-bar-right">
-          <span className="admin-bar-user">
-            Administrador
-          </span>
+        <div className="admin-brand-right">
+          <span className="admin-brand-tagline">Painel de administração</span>
+          <Link href="/" className="admin-brand-action">
+            <LogOut className="admin-brand-action-icon" />
+            Sair
+          </Link>
         </div>
       </header>
 
@@ -233,10 +233,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <nav className="admin-sidebar-nav">
             {menuItems.map((item) => {
               const subs = item.submenu;
-              const isChildActive =
-                subs?.some((sub) => routeMatches(pathname, sub.href)) ?? false;
-              const isParentActive = pathname === item.href;
-              const isActive = isParentActive || isChildActive;
+              const activeSubHref = subs ? getActiveSubmenuHref(pathname, subs) : null;
+              const isChildActive = !!activeSubHref;
+              const hasSubmenu = !!subs?.length;
+              const isActive = hasSubmenu
+                ? isChildActive || pathname === item.href
+                : pathname === item.href;
               const shouldBeOpen = openSubmenu === item.label || isChildActive;
               
               return (
@@ -247,6 +249,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   label={item.label}
                   submenu={item.submenu}
                   active={isActive}
+                  activeSubHref={activeSubHref}
                   isOpen={shouldBeOpen}
                   onToggle={() => handleToggleSubmenu(item.label)}
                 />

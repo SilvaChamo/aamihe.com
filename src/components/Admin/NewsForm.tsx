@@ -8,8 +8,6 @@ import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
 import './NewsForm.css';
 
-const CATEGORIES = ['Institucional', 'Educação', 'Desenvolvimento', 'Eventos'];
-
 interface NewsFormProps {
   initialData?: any;
   isEdit?: boolean;
@@ -17,15 +15,15 @@ interface NewsFormProps {
 
 export default function NewsForm({ initialData, isEdit = false }: NewsFormProps) {
   const router = useRouter();
-  const { addNews, updateNews } = useNews();
+  const { addNews, updateNews, categories } = useNews();
   const [loading, setLoading] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Institucional',
+    category: '',
     date: new Date().toLocaleDateString('pt-PT'),
-    image: '/gallery/Ocean-acidification-training.jpeg.webp',
+    image: '',
     content: '',
     summary: '',
     status: 'published' as const
@@ -39,8 +37,13 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
         content: initialData.content || '',
         summary: initialData.summary || ''
       }));
+    } else if (categories.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        category: prev.category || categories[0].name,
+      }));
     }
-  }, [initialData]);
+  }, [initialData, categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,27 +140,6 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
             </div>
           </div>
 
-          {/* Categorias */}
-          <div className="wp-box">
-            <div className="wp-box-header">
-              <h2>Categorias</h2>
-              <ChevronUp size={16} />
-            </div>
-            <div className="wp-box-content">
-              <div className="cat-list">
-                {CATEGORIES.map(cat => (
-                  <label key={cat} className="cat-item">
-                    <input 
-                      type="checkbox" 
-                      checked={formData.category === cat}
-                      onChange={() => setFormData({...formData, category: cat})}
-                    /> {cat}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Imagem de Destaque */}
           <div className="wp-box">
             <div className="wp-box-header">
@@ -183,6 +165,27 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
               ) : (
                 <button type="button" className="btn-link" onClick={() => setIsMediaModalOpen(true)}>Definir imagem de destaque</button>
               )}
+            </div>
+          </div>
+
+          {/* Categorias */}
+          <div className="wp-box">
+            <div className="wp-box-header">
+              <h2>Categorias</h2>
+              <ChevronUp size={16} />
+            </div>
+            <div className="wp-box-content">
+              <div className="cat-list">
+                {categories.map(cat => (
+                  <label key={cat.slug} className="cat-item">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.category === cat.name}
+                      onChange={() => setFormData({...formData, category: cat.name})}
+                    /> {cat.name}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
