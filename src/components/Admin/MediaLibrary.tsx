@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { uploadMediaFiles } from '@/lib/persist-client-media';
+import { canDeleteMedia, mediaCatalogKey } from '@/lib/media-catalog-key';
 import { 
   Trash2, 
   Copy, 
@@ -28,6 +30,8 @@ interface MediaLibraryProps {
   onSelect?: (url: string) => void;
   isModal?: boolean;
   externalSearchQuery?: string;
+  /** Galeria pública: inclui ficheiros em /gallery e arquivo legado */
+  fullCatalog?: boolean;
 }
 
 interface MediaFile {
@@ -36,6 +40,7 @@ interface MediaFile {
   url: string;
   category: MediaCategory;
   subcategory: string;
+  source?: string;
   metadata?: {
     size: number;
     mimetype: string;
@@ -49,7 +54,7 @@ const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
   { value: 'videos', label: 'Vídeos' },
 ];
 
-export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }: MediaLibraryProps) {
+export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, fullCatalog }: MediaLibraryProps) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
@@ -83,26 +88,45 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     description: ''
   });
   const [savingMetadata, setSavingMetadata] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const loadImages = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/media');
+      const catalogQuery = fullCatalog ? '?catalog=full' : '';
+      const res = await fetch(`/api/admin/media${catalogQuery}`);
       const data = await res.json();
       if (data.success) {
-        setFiles(
-          data.media.map((item: { id: string; title: string; url: string; category: MediaCategory; subcategory: string; mime_type: string; size?: number }) => ({
+        const mapped = data.media.map(
+          (item: {
+            id: string;
+            title: string;
+            url: string;
+            category: MediaCategory;
+            subcategory: string;
+            mime_type: string;
+            size?: number;
+            source?: string;
+          }) => ({
             id: item.id,
             name: item.title,
             url: item.url,
             category: item.category,
             subcategory: item.subcategory,
+            source: item.source,
             metadata: {
               size: item.size || 0,
               mimetype: item.mime_type,
             },
-          }))
+          })
         );
+        const byKey = new Map<string, MediaFile>();
+        for (const file of mapped) {
+          const key = `${file.id}::${mediaCatalogKey(file.url)}`;
+          if (!byKey.has(key)) byKey.set(key, file);
+        }
+        setFiles(Array.from(byKey.values()));
       }
     } catch (err) {
       console.error(err);
@@ -188,25 +212,53 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     }
   };
 
-  const deleteSingle = async (id: string) => {
+  const deleteSingle = async (file: MediaFile) => {
+    if (!canDeleteMedia(file)) {
+      alert('Este item do arquivo legado não pode ser eliminado aqui.');
+      return;
+    }
     if (!confirm('Eliminar este item permanentemente?')) return;
     setLoading(true);
-    await fetch(`/api/admin/media?id=${id}`, { method: 'DELETE' });
-    setFiles((prev) => prev.filter((f) => f.id !== id));
-    setActiveFile(null);
-    setIsEditorOpen(false);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/admin/media?id=${encodeURIComponent(file.id)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'Erro ao eliminar');
+        return;
+      }
+      setActiveFile(null);
+      setIsEditorOpen(false);
+      await loadImages();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteBulk = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Eliminar ${selectedIds.size} itens?`)) return;
-    setLoading(true);
     const ids = Array.from(selectedIds);
-    setFiles((prev) => prev.filter((f) => !ids.includes(f.id)));
-    setSelectedIds(new Set());
-    setIsBulkMode(false);
-    setLoading(false);
+    const deletable = files.filter((f) => ids.includes(f.id) && canDeleteMedia(f));
+    if (deletable.length === 0) {
+      alert('Nenhum dos itens seleccionados pode ser eliminado.');
+      return;
+    }
+    if (!confirm(`Eliminar ${deletable.length} item(ns)?`)) return;
+    setLoading(true);
+    try {
+      for (const file of deletable) {
+        const res = await fetch(`/api/admin/media?id=${encodeURIComponent(file.id)}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || `Erro ao eliminar ${file.name}`);
+          break;
+        }
+      }
+      setSelectedIds(new Set());
+      setIsBulkMode(false);
+      await loadImages();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const applyImageEdits = async () => {
@@ -271,6 +323,23 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     }
   };
 
+  const handleToolbarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const list = e.target.files;
+    if (!list?.length) return;
+    const filesToUpload = Array.from(list);
+    setIsUploading(true);
+    try {
+      await uploadMediaFiles(filesToUpload, 'Upload');
+      await loadImages();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'Erro ao carregar ficheiros. Tente novamente.');
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const formatSize = (bytes?: number) => {
     if (!bytes) return '0 B';
     const k = 1024;
@@ -301,6 +370,28 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
             <LayoutGrid className="media-toolbar-icon" />
           </button>
           
+          {!isModal && (
+            <>
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="image/*,video/*,.pdf"
+                multiple
+                hidden
+                onChange={handleToolbarUpload}
+              />
+              <button
+                type="button"
+                className="media-upload-button"
+                disabled={isUploading}
+                onClick={() => uploadInputRef.current?.click()}
+              >
+                <Upload className="media-toolbar-icon" />
+                {isUploading ? 'A carregar...' : 'Carregar ficheiros'}
+              </button>
+            </>
+          )}
+
           {!isBulkMode ? (
             <button 
               onClick={() => setIsBulkMode(true)}
@@ -354,7 +445,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
             <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (
                 <div 
-                  key={file.id}
+                  key={`${file.id}::${mediaCatalogKey(file.url)}`}
                   onClick={() => {
                     if (isBulkMode) {
                       toggleSelect(file.id);
@@ -402,16 +493,19 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                     >
                       <Eye className="media-action-icon" />
                     </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSingle(file.id);
-                      }}
-                      className="media-action-button delete"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="media-action-icon" />
-                    </button>
+                    {canDeleteMedia(file) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSingle(file);
+                        }}
+                        className="media-action-button delete"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="media-action-icon" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -420,7 +514,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
             <div className={`media-list ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (
                 <div
-                  key={file.id}
+                  key={`${file.id}::${mediaCatalogKey(file.url)}`}
                   className={`media-list-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                   onClick={() => {
                     if (isModal && onSelect) {
@@ -476,17 +570,19 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                     >
                       <Eye className="media-action-icon" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSingle(file.id);
-                      }}
-                      className="media-action-button delete"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="media-action-icon" />
-                    </button>
+                    {canDeleteMedia(file) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSingle(file);
+                        }}
+                        className="media-action-button delete"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="media-action-icon" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -531,7 +627,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
               <div className="media-sidebar-actions">
                 <button onClick={() => setIsEditorOpen(true)} className="media-edit-button">Editar Imagem</button>
                 <button onClick={saveMetadata} disabled={savingMetadata} className="media-save-button">{savingMetadata ? '...' : 'Salvar'}</button>
-                <button onClick={() => deleteSingle(activeFile.id)} className="media-delete-button"><Trash2 className="media-delete-icon" /></button>
+                {canDeleteMedia(activeFile) && (
+                  <button type="button" onClick={() => deleteSingle(activeFile)} className="media-delete-button"><Trash2 className="media-delete-icon" /></button>
+                )}
               </div>
 
               <div className="media-file-info">

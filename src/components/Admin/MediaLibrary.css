@@ -60,6 +60,31 @@
   height: 20px;
 }
 
+.media-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 4px;
+  background: #2271b1;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.media-upload-button:hover:not(:disabled) {
+  background: #135e96;
+}
+
+.media-upload-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .media-bulk-button {
   margin-left: 16px;
   height: 32px;

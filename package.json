@@ -8,9 +8,11 @@
   "scripts": {
     "dev": "next dev --port 3004",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "sync-images": "node scripts/sync-reference-images.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
     "@vercel/blob": "^2.4.0",
     "lucide-react": "^1.16.0",
     "next": "16.1.6",

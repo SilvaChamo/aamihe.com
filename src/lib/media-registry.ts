@@ -3,6 +3,15 @@ import type { SiteMediaRecord } from '@/lib/site-media';
 import { inferMediaCategory, inferMediaCategoryFromUrl } from '@/lib/site-media';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { collectAllSiteImages } from '@/lib/collect-site-images';
+import { dedupeMediaRecords } from '@/lib/media-catalog-key';
+import {
+  repairDuplicateIds,
+  resolveMediaRecordFiles,
+  uniqueMediaIds,
+} from '@/lib/reference-image-sync';
+import { listSupabaseMedia } from '@/lib/supabase-media';
+import { isSupabaseConfigured } from '@/lib/supabase/server';
+import { randomUUID } from 'node:crypto';
 
 function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[] {
   return documents
@@ -23,22 +32,52 @@ function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[
     }));
 }
 
-export async function buildMediaCatalog(db: DashboardDb): Promise<SiteMediaRecord[]> {
-  const map = new Map<string, SiteMediaRecord>();
+/** Biblioteca admin: Supabase + uploads locais, sem duplicar ficheiros legados. */
+export async function buildAdminMediaCatalog(db: DashboardDb): Promise<SiteMediaRecord[]> {
+  const items: SiteMediaRecord[] = [];
 
-  for (const item of await collectAllSiteImages()) {
-    map.set(item.url, item);
+  if (isSupabaseConfigured()) {
+    items.push(...(await listSupabaseMedia()));
   }
 
   for (const item of db.media.filter((m) => m.published)) {
-    map.set(item.url, item);
+    items.push(item);
+  }
+
+  return finalizeCatalog(items);
+}
+
+/** Galeria pública: inclui legado WordPress com deduplicação. */
+export async function buildMediaCatalog(db: DashboardDb): Promise<SiteMediaRecord[]> {
+  const items: SiteMediaRecord[] = [];
+
+  if (isSupabaseConfigured()) {
+    items.push(...(await listSupabaseMedia()));
+  }
+
+  for (const item of db.media.filter((m) => m.published)) {
+    items.push(item);
+  }
+
+  for (const item of await collectAllSiteImages()) {
+    items.push(item);
   }
 
   for (const item of documentMediaRecords(db.documents)) {
-    map.set(item.url, item);
+    items.push(item);
   }
 
-  return Array.from(map.values()).sort((a, b) => {
+  return finalizeCatalog(items);
+}
+
+async function finalizeCatalog(items: SiteMediaRecord[]): Promise<SiteMediaRecord[]> {
+  const deduped = dedupeMediaRecords(repairDuplicateIds(uniqueMediaIds(items)));
+  const resolved = await resolveMediaRecordFiles(deduped);
+  return sortMediaCatalog(dedupeMediaRecords(resolved));
+}
+
+function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
+  return items.sort((a, b) => {
     const newsRank = (item: SiteMediaRecord) =>
       item.source === 'news' || item.subcategory === 'Notícias' ? 0 : 1;
     const rankDiff = newsRank(a) - newsRank(b);
@@ -59,7 +98,7 @@ export function upsertMediaRecord(
   }
 
   const record: SiteMediaRecord = {
-    id: input.id ?? `media_${Date.now()}`,
+    id: input.id ?? `media_${Date.now()}_${randomUUID().slice(0, 6)}`,
     site_slug: input.site_slug,
     title: input.title,
     url: input.url,

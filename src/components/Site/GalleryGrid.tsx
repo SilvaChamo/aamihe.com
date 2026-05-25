@@ -37,14 +37,19 @@ export default function GalleryGrid() {
   const [searchQuery, setSearchQuery] = useState('');
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
 
-  const loadGallery = () => {
+  const loadGallery = async () => {
     setLoading(true);
-    fetch(`/api/public/site-media?t=${Date.now()}`, { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setItems(data.media);
-      })
-      .finally(() => setLoading(false));
+    try {
+      const res = await fetch(`/api/public/site-media?t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.media)) {
+        setItems(data.media);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar galeria', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

@@ -8,7 +8,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as MediaCategory | null;
     const db = await getDashboardDb();
-    let items = (await buildMediaCatalog(db)).filter((item) => item.published);
+    let items: Awaited<ReturnType<typeof buildMediaCatalog>> = [];
+    try {
+      items = await buildMediaCatalog(db);
+    } catch (catalogError) {
+      console.error('buildMediaCatalog:', catalogError);
+      items = db.media.filter((item) => item.published);
+    }
+    items = items.filter((item) => item.published);
     if (category) {
       items = items.filter((item) => item.category === category);
     }

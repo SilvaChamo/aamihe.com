@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useNews } from '@/context/NewsContext';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
@@ -11,10 +11,48 @@ export default function NoticiasPage() {
   const [quickEditId, setQuickEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
   const filteredNews = news.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const allFilteredSelected =
+    filteredNews.length > 0 && filteredNews.every((item) => selectedIds.has(item.id));
+  const someFilteredSelected =
+    filteredNews.some((item) => selectedIds.has(item.id)) && !allFilteredSelected;
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = someFilteredSelected;
+    }
+  }, [someFilteredSelected]);
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredNews.forEach((item) => next.delete(item.id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredNews.forEach((item) => next.add(item.id));
+        return next;
+      });
+    }
+  };
 
   const handleQuickEdit = (item: any) => {
     setQuickEditId(item.id);
@@ -82,7 +120,15 @@ export default function NoticiasPage() {
         <table className="wp-table">
           <thead>
             <tr>
-              <th className="col-cb"><input type="checkbox" /></th>
+              <th className="col-cb">
+                <input
+                  ref={headerCheckboxRef}
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleSelectAll}
+                  aria-label="Selecionar todas as notícias visíveis"
+                />
+              </th>
               <th className="col-title">Título</th>
               <th className="col-cat">Categoria</th>
               <th className="col-date">Data</th>
@@ -96,7 +142,14 @@ export default function NoticiasPage() {
               filteredNews.map((item) => (
                 <React.Fragment key={item.id}>
                   <tr className={`news-row ${quickEditId === item.id ? 'quick-edit-row' : ''}`}>
-                    <td className="col-cb"><input type="checkbox" /></td>
+                    <td className="col-cb">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        aria-label={`Selecionar ${item.title}`}
+                      />
+                    </td>
                     <td className="col-title">
                       <div className="title-with-thumb">
                         <img src={item.image} alt="" className="news-thumb" />

@@ -2,20 +2,7 @@
   "documents": [],
   "media": [
     {
-      "id": "media_1779722862965",
-      "site_slug": "aamihe",
-      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
-      "url": "/uploads/imagens/1779721327690-0eb48792.png",
-      "category": "imagens",
-      "subcategory": "Notícias",
-      "mime_type": "image/png",
-      "source": "news",
-      "published": true,
-      "created_at": "2026-05-25T15:27:42.965Z",
-      "updated_at": "2026-05-25T15:29:44.041Z"
-    },
-    {
-      "id": "media_1779723496681",
+      "id": "media_1779729377211",
       "site_slug": "aamihe",
       "title": "GoL, UMU, EPA Launch Ocean Acidification Training for West Africa",
       "url": "/gallery/Ocean-acidification-training.jpeg.webp",
@@ -24,11 +11,37 @@
       "mime_type": "image/webp",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:38:16.681Z",
-      "updated_at": "2026-05-25T15:38:16.681Z"
+      "created_at": "2026-05-25T17:16:17.211Z",
+      "updated_at": "2026-05-25T17:16:17.211Z"
     },
     {
-      "id": "media_1779723496890",
+      "id": "media_1779729377211_bed4c6ab",
+      "site_slug": "aamihe",
+      "title": "MASHONALAND EAST DEVELOPMENT PULSE",
+      "url": "/gallery/bed4c6ab-bf65-48aa-9d9d-61de5d50f21a.jpeg.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T17:16:17.211Z",
+      "updated_at": "2026-05-25T17:16:17.211Z"
+    },
+    {
+      "id": "media_1779729377277",
+      "site_slug": "aamihe",
+      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika",
+      "url": "/gallery/President-Kongolo-Chijika-1.jpg.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T17:16:17.277Z",
+      "updated_at": "2026-05-25T17:16:17.277Z"
+    },
+    {
+      "id": "media_1779729377435",
       "site_slug": "aamihe",
       "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
       "url": "/gallery/news-1779723496576-c40e6429.png",
@@ -37,21 +50,60 @@
       "mime_type": "image/png",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:38:16.890Z",
-      "updated_at": "2026-05-25T15:38:54.317Z"
+      "created_at": "2026-05-25T17:16:17.435Z",
+      "updated_at": "2026-05-25T17:27:07.529Z"
     },
     {
-      "id": "media_1779723577696",
+      "id": "media_1779729377211",
       "site_slug": "aamihe",
-      "title": "Teste sync",
-      "url": "/gallery/news-1779723577667-29674dd1.png",
+      "title": "GoL, UMU, EPA Launch Ocean Acidification Training for West Africa",
+      "url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/news/1779730011213-5d9853fe.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T17:26:53.428Z",
+      "updated_at": "2026-05-25T17:26:53.428Z"
+    },
+    {
+      "id": "media_1779729377211_bed4c6ab",
+      "site_slug": "aamihe",
+      "title": "MASHONALAND EAST DEVELOPMENT PULSE",
+      "url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/news/1779730013998-bf566ead.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T17:26:55.458Z",
+      "updated_at": "2026-05-25T17:26:55.458Z"
+    },
+    {
+      "id": "media_1779729377277",
+      "site_slug": "aamihe",
+      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika",
+      "url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/news/1779730015855-bf87d802.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T17:26:57.027Z",
+      "updated_at": "2026-05-25T17:26:57.027Z"
+    },
+    {
+      "id": "media_1779729377435",
+      "site_slug": "aamihe",
+      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
+      "url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/news/1779730017988-24c943af.png",
       "category": "imagens",
       "subcategory": "Notícias",
       "mime_type": "image/png",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:39:37.696Z",
-      "updated_at": "2026-05-25T15:39:37.696Z"
+      "created_at": "2026-05-25T17:27:05.622Z",
+      "updated_at": "2026-05-25T17:27:05.622Z"
     }
   ]
 }

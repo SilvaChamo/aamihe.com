@@ -1,6 +1,7 @@
 import { mkdir, writeFile, copyFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { resolveMissingPublicImage } from '@/lib/reference-image-sync';
 
 function hasBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -78,7 +79,8 @@ async function copyToGallery(sourceUrl: string, title: string): Promise<string> 
   try {
     await access(sourcePath);
   } catch {
-    return sourceUrl;
+    const basename = path.basename(sourcePath);
+    return resolveMissingPublicImage(`/gallery/${basename}`);
   }
 
   const ext = path.extname(sourcePath) || '.jpg';

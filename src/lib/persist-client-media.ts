@@ -24,18 +24,31 @@ export async function persistNewsImage(image: string, title = 'Imagem de notíci
 }
 
 export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promise<string> {
+  const results = await uploadMediaFiles([file], subcategory);
+  return results[0];
+}
+
+export async function uploadMediaFiles(files: File[], subcategory = 'Upload'): Promise<string[]> {
+  if (files.length === 0) return [];
+
   const form = new FormData();
-  form.append('file', file);
+  files.forEach((file) => form.append('files', file));
   form.append('subcategory', subcategory);
-  form.append('title', file.name);
+  if (files.length === 1) {
+    form.append('title', files[0].name);
+  }
 
   const res = await fetch('/api/admin/media', { method: 'POST', body: form });
   const data = await res.json();
 
-  if (!data.success || !data.media?.url) {
+  if (!data.success) {
     throw new Error(data.error || 'Erro no upload');
   }
 
   dispatchMediaUpdated();
-  return data.media.url;
+
+  if (Array.isArray(data.media)) {
+    return data.media.map((m: { url: string }) => m.url);
+  }
+  return [data.media.url];
 }

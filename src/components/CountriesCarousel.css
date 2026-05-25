@@ -7,7 +7,8 @@
   position: relative;
   z-index: 2;
   margin-top: -60px; /* Margem negativa para subir sobre o banner */
-  padding: 0 12px 40px;
+  margin-bottom: 40px;
+  padding: 0 12px 0;
   background: transparent;
 }
 
@@ -40,7 +41,7 @@
   gap: var(--countries-gap);
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 4px 0 12px; /* Removido o padding lateral de 2px para não quebrar a largura */
+  padding: 4px 0 0;
   align-items: stretch;
 }
 

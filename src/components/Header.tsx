@@ -30,7 +30,6 @@ const translations = {
     conferencia: 'CONFERENCE',
     blog: 'BLOG',
     contacto: 'CONTACT US',
-    admin: 'Admin',
   },
 } as const;
 
@@ -57,9 +56,6 @@ export default function Header() {
             </span>
           </div>
           <div className="top-bar-right">
-            <Link href="/admin/dashboard" className="header-admin-link">
-              {t.admin}
-            </Link>
             <ul className="elementor-nav-menu">
               <li className={`trp-language-switcher-container ${locale === 'pt' ? 'current-language-menu-item' : ''}`}>
                 <button onClick={() => setLocale('pt')} className="elementor-item-btn">

@@ -20,22 +20,55 @@ interface NewsContextType {
 
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
+async function pushContentToServer(news: NewsItem[], categories: NewsCategory[]) {
+  try {
+    await fetch('/api/admin/content', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ news, categories }),
+    });
+  } catch (err) {
+    console.error('Erro ao sincronizar conteúdo com o servidor', err);
+  }
+}
+
 export function NewsProvider({ children }: { children: React.ReactNode }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const imagesSynced = useRef(false);
 
   useEffect(() => {
-    const savedCategories = localStorage.getItem('aamihe_news_categories');
-    if (savedCategories) {
-      setCategories(JSON.parse(savedCategories));
-    } else {
-      setCategories(NEWS_CATEGORIES);
-    }
-
     (async () => {
+      let loadedCategories: NewsCategory[] = NEWS_CATEGORIES;
+      const savedCategories = localStorage.getItem('aamihe_news_categories');
+      if (savedCategories) {
+        loadedCategories = JSON.parse(savedCategories);
+      }
+
+      let items: NewsItem[] = initialNewsData.pt;
       const savedNews = localStorage.getItem('aamihe_news');
-      let items: NewsItem[] = savedNews ? JSON.parse(savedNews) : initialNewsData.pt;
+      if (savedNews) {
+        items = JSON.parse(savedNews);
+      }
+
+      try {
+        const res = await fetch('/api/admin/content');
+        const data = await res.json();
+        if (data.success) {
+          if (Array.isArray(data.news) && data.news.length > 0) {
+            items = data.news;
+            localStorage.setItem('aamihe_news', JSON.stringify(items));
+          }
+          if (Array.isArray(data.categories) && data.categories.length > 0) {
+            loadedCategories = data.categories;
+            localStorage.setItem('aamihe_news_categories', JSON.stringify(loadedCategories));
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar conteúdo remoto', err);
+      }
+
+      setCategories(loadedCategories);
 
       if (!imagesSynced.current) {
         imagesSynced.current = true;
@@ -63,6 +96,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
       }
 
       setNews(items);
+      void pushContentToServer(items, loadedCategories);
     })();
   }, []);
 
@@ -70,12 +104,14 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
     setNews(updatedNews);
     localStorage.setItem('aamihe_news', JSON.stringify(updatedNews));
     window.dispatchEvent(new Event('newsUpdated'));
+    void pushContentToServer(updatedNews, categories);
   };
 
   const saveCategories = (updatedCategories: NewsCategory[]) => {
     setCategories(updatedCategories);
     localStorage.setItem('aamihe_news_categories', JSON.stringify(updatedCategories));
     window.dispatchEvent(new Event('newsCategoriesUpdated'));
+    void pushContentToServer(news, updatedCategories);
   };
 
   const addNews = (item: Omit<NewsItem, 'id'>) => {

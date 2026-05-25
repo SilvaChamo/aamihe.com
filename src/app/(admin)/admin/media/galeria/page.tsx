@@ -9,7 +9,7 @@ export default function GalleryPage() {
       <div className="media-header">
         <h1 className="media-title">Galeria</h1>
       </div>
-      <MediaLibrary />
+      <MediaLibrary fullCatalog />
     </div>
   );
 }

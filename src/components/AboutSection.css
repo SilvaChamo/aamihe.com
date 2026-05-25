@@ -1,5 +1,5 @@
 .about-section {
-  padding: 1rem 1.5rem 4rem; /* Reduzido o padding superior para aproximar do carrossel */
+  padding: 0 1.5rem 4rem; /* Sem espaço extra acima — margem das bandeiras é 40px */
   background-color: #fcfcfc; /* Fundo quase branco para destacar os cards */
 }
 

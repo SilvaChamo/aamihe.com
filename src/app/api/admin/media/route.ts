@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
-import { ensureGalleryFile, storeImageBuffer, storeUploadBuffer } from '@/lib/media-storage';
+import { buildAdminMediaCatalog, buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
+import { canDeleteMedia } from '@/lib/media-catalog-key';
+import { ensureGalleryFile } from '@/lib/media-storage';
+import { uploadFileToStore, deleteSupabaseMedia } from '@/lib/supabase-media';
 import type { MediaCategory } from '@/lib/site-media';
 import { inferMediaCategory } from '@/lib/site-media';
-
-function imageSubfolder(subcategory: string, category: MediaCategory): string {
-  if (subcategory === 'Notícias') return 'gallery';
-  if (category === 'videos') return 'uploads/videos';
-  if (category === 'documentos') return 'uploads/documentos';
-  return 'uploads/imagens';
-}
+import { isSupabaseConfigured } from '@/lib/supabase/server';
 
 function mimeFromUrl(url: string): string {
   const ext = path.extname(url).toLowerCase();
@@ -62,33 +58,25 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
     published: true,
   });
   await saveDashboardDb(db);
+
+  if (isSupabaseConfigured()) {
+    const { upsertSupabaseMedia } = await import('@/lib/supabase-media');
+    await upsertSupabaseMedia(record);
+  }
+
   return record;
 }
 
-async function saveDataUrlImage(dataUrl: string, subcategory: string, title: string) {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) {
-    throw new Error('Formato de imagem inválido');
-  }
-
-  const mimeType = match[1];
-  const buffer = Buffer.from(match[2], 'base64');
-  const saved = await storeImageBuffer(buffer, title || 'noticia', mimeType);
+async function processUpload(file: File, subcategory: string, title?: string) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const category = inferMediaCategory(file.type);
+  const mimeType = file.type || 'application/octet-stream';
+  const record = await uploadFileToStore(buffer, title || file.name, mimeType, category, subcategory);
 
   const db = await getDashboardDb();
-  const record = upsertMediaRecord(db, {
-    site_slug: 'aamihe',
-    title,
-    url: saved.url,
-    category: 'imagens',
-    subcategory,
-    mime_type: mimeType,
-    size: buffer.length,
-    source: mediaSource(subcategory),
-    published: true,
-  });
-
+  upsertMediaRecord(db, record);
   await saveDashboardDb(db);
+
   return record;
 }
 
@@ -96,13 +84,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as MediaCategory | null;
+    const fullCatalog = searchParams.get('catalog') === 'full';
     const db = await getDashboardDb();
-    let items = await buildMediaCatalog(db);
+    let items = fullCatalog ? await buildMediaCatalog(db) : await buildAdminMediaCatalog(db);
     if (category) {
       items = items.filter((item) => item.category === category);
     }
     return NextResponse.json(
-      { success: true, media: items },
+      { success: true, media: items, supabase: isSupabaseConfigured() },
       { headers: { 'Cache-Control': 'no-store' } }
     );
   } catch (error) {
@@ -117,53 +106,63 @@ export async function POST(request: Request) {
     const dataUrl = form.get('data_url');
     const registerUrl = form.get('register_url');
     const subcategory = String(form.get('subcategory') || 'Upload');
-    const title = String(form.get('title') || 'Imagem de notícia');
 
     if (typeof registerUrl === 'string') {
       const pathUrl = normalizeRegisterUrl(registerUrl);
       if (pathUrl || registerUrl.startsWith('http')) {
-        const record = await registerImageUrl(pathUrl || registerUrl, subcategory, title);
+        const record = await registerImageUrl(
+          pathUrl || registerUrl,
+          subcategory,
+          String(form.get('title') || 'Imagem')
+        );
         return NextResponse.json({ success: true, media: record });
       }
     }
 
     if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
-      const record = await saveDataUrlImage(dataUrl, subcategory, title);
+      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) {
+        return NextResponse.json({ success: false, error: 'Formato inválido' }, { status: 400 });
+      }
+      const buffer = Buffer.from(match[2], 'base64');
+      const mimeType = match[1];
+      const title = String(form.get('title') || 'imagem');
+      const record = await uploadFileToStore(buffer, title, mimeType, 'imagens', subcategory);
+      const db = await getDashboardDb();
+      upsertMediaRecord(db, record);
+      await saveDashboardDb(db);
+      if (isSupabaseConfigured()) {
+        const { upsertSupabaseMedia } = await import('@/lib/supabase-media');
+        await upsertSupabaseMedia(record);
+      }
       return NextResponse.json({ success: true, media: record });
     }
 
-    const file = form.get('file') as File | null;
-    if (!file) {
+    const fileEntries = [
+      ...form.getAll('files').filter((f): f is File => f instanceof File && f.size > 0),
+      ...(form.get('file') instanceof File && (form.get('file') as File).size > 0
+        ? [form.get('file') as File]
+        : []),
+    ];
+
+    if (fileEntries.length === 0) {
       return NextResponse.json({ success: false, error: 'Ficheiro em falta' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const category = (form.get('category') as MediaCategory) || inferMediaCategory(file.type);
-    const mimeType = file.type || 'application/octet-stream';
-    const subfolder = imageSubfolder(subcategory, category);
-    const saved =
-      category === 'imagens' && subcategory === 'Notícias'
-        ? await storeImageBuffer(buffer, file.name, mimeType)
-        : await storeUploadBuffer(buffer, file.name, subfolder, mimeType);
+    const uploaded = [];
+    for (const file of fileEntries) {
+      uploaded.push(await processUpload(file, subcategory, file.name));
+    }
 
-    const db = await getDashboardDb();
-    const record = upsertMediaRecord(db, {
-      site_slug: String(form.get('site_slug') || 'aamihe'),
-      title: String(form.get('title') || file.name),
-      url: saved.url,
-      category,
-      subcategory,
-      mime_type: mimeType,
-      size: file.size,
-      source: mediaSource(subcategory),
-      published: true,
+    return NextResponse.json({
+      success: true,
+      media: uploaded.length === 1 ? uploaded[0] : uploaded,
+      count: uploaded.length,
     });
-
-    await saveDashboardDb(db);
-    return NextResponse.json({ success: true, media: record });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, error: 'Erro no upload' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Erro no upload';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -175,9 +174,29 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID em falta' }, { status: 400 });
     }
 
+    if (id.startsWith('site_') || id.startsWith('wp_') || id.startsWith('doc_media_')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Itens do arquivo legado não podem ser eliminados. Carregue novas imagens via «Carregar ficheiros».',
+        },
+        { status: 400 }
+      );
+    }
+
     const db = await getDashboardDb();
+    const existing = db.media.find((m) => m.id === id);
+    if (existing && !canDeleteMedia(existing)) {
+      return NextResponse.json({ success: false, error: 'Este item não pode ser eliminado.' }, { status: 400 });
+    }
+
     db.media = db.media.filter((m) => m.id !== id);
     await saveDashboardDb(db);
+
+    if (isSupabaseConfigured()) {
+      await deleteSupabaseMedia(id);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
