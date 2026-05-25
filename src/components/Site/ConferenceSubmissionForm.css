@@ -1,0 +1,98 @@
+.conference-form-section {
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border, #ddd);
+}
+
+.conference-form-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--primary, #561713);
+}
+
+.conference-form-intro {
+  margin: 0 0 20px;
+  color: #646970;
+  font-size: 14px;
+}
+
+.conference-form {
+  display: grid;
+  gap: 16px;
+}
+
+.conference-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.conference-form input,
+.conference-form textarea {
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.conference-form-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px dashed var(--border, #ddd);
+  border-radius: 6px;
+  padding: 16px;
+  position: relative;
+  font-weight: 400;
+}
+
+.conference-form-upload-box input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.conference-form-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  font-weight: 500 !important;
+}
+
+.conference-form-checkbox input {
+  width: auto;
+}
+
+.conference-form-submit {
+  justify-self: start;
+  background: var(--primary, #561713);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.conference-form-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.conference-form-error {
+  color: #b32d2e;
+  margin: 0;
+  font-size: 14px;
+}
+
+.conference-form-success {
+  color: #008a20;
+  margin: 0;
+  font-size: 14px;
+}

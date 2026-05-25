@@ -70,7 +70,7 @@ export default function DashboardContent() {
             <div>
               <h3 className="dashboard-section-title">Próximos passos</h3>
               <ul className="dashboard-list">
-                <li className="dashboard-list-item"><FileUp /> Adicionar novos documentos</li>
+                <li className="dashboard-list-item"><FileUp /> Rever submissões da conferência</li>
                 <li className="dashboard-list-item"><Activity /> Ver estatísticas do site</li>
               </ul>
             </div>
@@ -152,16 +152,16 @@ export default function DashboardContent() {
                 </div>
               </Link>
 
-              <Link href="/admin/documentos-gerais/novo" className="dashboard-stat-link">
+              <Link href="/documentos" target="_blank" className="dashboard-stat-link">
                 <div className="dashboard-stat-card">
                   <div className="dashboard-stat-icon green">
                     <Plus />
                   </div>
                   <span className="dashboard-stat-value">
-                    +
+                    Formulário
                   </span>
                   <span className="dashboard-stat-label">
-                    Novo Documento
+                    Submissões
                   </span>
                 </div>
               </Link>

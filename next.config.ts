@@ -2,6 +2,15 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: '/documentos-gerais',
+        destination: '/galeria?tipo=documentos',
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

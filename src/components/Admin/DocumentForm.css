@@ -1,0 +1,114 @@
+.document-form-page {
+  padding: 24px;
+  max-width: 820px;
+}
+
+.document-form-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #561713;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.document-form-title {
+  margin: 0 0 8px;
+  font-size: 23px;
+  color: #1d2327;
+}
+
+.document-form-intro {
+  margin: 0 0 24px;
+  color: #50575e;
+  font-size: 14px;
+}
+
+.document-form {
+  background: white;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.document-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.document-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.document-form input,
+.document-form select {
+  height: 38px;
+  border: 1px solid #ccd0d4;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.document-form-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px dashed #ccd0d4;
+  border-radius: 6px;
+  padding: 16px;
+  position: relative;
+}
+
+.document-form-upload-box input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.document-form-current-file {
+  font-size: 13px;
+  color: #50575e;
+}
+
+.document-form-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.document-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.document-form-submit {
+  background: #00a651;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.document-form-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .document-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -73,6 +73,28 @@
   color: var(--text);
 }
 
+.doc-meta {
+  font-size: 12px;
+  color: #646970;
+  margin: -8px 0 0;
+}
+
+.docs-section-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: var(--primary, #561713);
+}
+
+.docs-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #646970;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

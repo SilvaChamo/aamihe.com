@@ -173,7 +173,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { label: 'Biblioteca', href: '/admin/media' },
         { label: 'Adicionar novo', href: '/admin/media/novo' },
         { label: 'Galeria', href: '/admin/media/galeria' },
-        { label: 'Vídeos', href: '/admin/media/videos' },
       ]
     },
     { 

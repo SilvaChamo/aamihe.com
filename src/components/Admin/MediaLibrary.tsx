@@ -18,8 +18,10 @@ import {
   AlertCircle,
   FileDown,
   Eye,
-  Edit3
+  Edit3,
+  Video
 } from 'lucide-react';
+import type { MediaCategory } from '@/lib/site-media';
 import './MediaLibrary.css';
 
 interface MediaLibraryProps {
@@ -28,22 +30,31 @@ interface MediaLibraryProps {
   externalSearchQuery?: string;
 }
 
-interface StorageFile {
+interface MediaFile {
+  id: string;
   name: string;
-  id?: string | null;
-  updated_at?: string | null;
-  created_at?: string | null;
+  url: string;
+  category: MediaCategory;
+  subcategory: string;
   metadata?: {
     size: number;
     mimetype: string;
   } | null;
 }
 
+const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'imagens', label: 'Imagens' },
+  { value: 'documentos', label: 'Documentos' },
+  { value: 'videos', label: 'Vídeos' },
+];
+
 export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }: MediaLibraryProps) {
-  const [files, setFiles] = useState<StorageFile[]>([]);
+  const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFile, setActiveFile] = useState<StorageFile | null>(null);
+  const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [visibleCount, setVisibleCount] = useState(70);
@@ -61,7 +72,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
   
   // Preview Modal State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState<StorageFile | null>(null);
+  const [previewImage, setPreviewImage] = useState<MediaFile | null>(null);
   
   // Metadata States
   const [metadata, setMetadata] = useState({
@@ -72,29 +83,26 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
   });
   const [savingMetadata, setSavingMetadata] = useState(false);
 
-  // Load images from public/gallery folder
   const loadImages = async () => {
     setLoading(true);
     try {
-      // Simulate loading images from the gallery folder
-      const imageFiles = [
-        { name: '3-Tiago-Caungo-Mutombo-Vice-President-Lusophone-compressed-scaled.jpg.webp', metadata: { size: 119358, mimetype: 'image/webp' } },
-        { name: '4-Rene-Gnalega-Vice-President-Francophone-compressed-scaled.jpg.webp', metadata: { size: 113710, mimetype: 'image/webp' } },
-        { name: '5-Yar-Donlah-Gonway-Gono-Vice-President-Anglophone-compressed-scaled.jpg.webp', metadata: { size: 142406, mimetype: 'image/webp' } },
-        { name: '6-Peter-Mageto-Secretary-compressed-scaled.jpg.webp', metadata: { size: 61796, mimetype: 'image/webp' } },
-        { name: '7-Jamisse-Taimo-Consultants-Executive-Officer-compressed-scaled.jpg.webp', metadata: { size: 100124, mimetype: 'image/webp' } },
-        { name: '9-Tukumbi-Lumumba-Kasongo-Consultants-compressed-scaled.jpg.webp', metadata: { size: 113410, mimetype: 'image/webp' } },
-        { name: 'President-Kongolo-Chijika-1.jpg.webp', metadata: { size: 102418, mimetype: 'image/webp' } },
-        { name: 'Vice-President-Anglophone-Rosemary.jpg.webp', metadata: { size: 181090, mimetype: 'image/webp' } },
-        { name: 'Ocean-acidification-training.jpeg.webp', metadata: { size: 51732, mimetype: 'image/webp' } },
-        { name: '647268264_1204088871880282_9104226780545651263_n.jpg', metadata: { size: 106168, mimetype: 'image/jpeg' } },
-        { name: '647704531_1204895398466296_3711846847153028344_n.jpg', metadata: { size: 82655, mimetype: 'image/jpeg' } },
-        { name: '648985636_1205610048394831_7145794994169769278_n.jpg', metadata: { size: 65019, mimetype: 'image/jpeg' } },
-        { name: '665869693_1605095437427935_5862029230954093158_n.jpg', metadata: { size: 63016, mimetype: 'image/jpeg' } },
-        { name: '696961631_1258292909793211_21745030036662716_n.jpg', metadata: { size: 37156, mimetype: 'image/jpeg' } },
-        { name: 'BgNoticias.jpeg', metadata: { size: 1737908, mimetype: 'image/jpeg' } },
-      ];
-      setFiles(imageFiles);
+      const res = await fetch('/api/admin/media');
+      const data = await res.json();
+      if (data.success) {
+        setFiles(
+          data.media.map((item: { id: string; title: string; url: string; category: MediaCategory; subcategory: string; mime_type: string; size?: number }) => ({
+            id: item.id,
+            name: item.title,
+            url: item.url,
+            category: item.category,
+            subcategory: item.subcategory,
+            metadata: {
+              size: item.size || 0,
+              mimetype: item.mime_type,
+            },
+          }))
+        );
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -108,46 +116,52 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
 
   const filteredFiles = useMemo(() => {
     const query = (externalSearchQuery || searchQuery).toLowerCase();
-    return files.filter(f => f.name.toLowerCase().includes(query));
-  }, [files, searchQuery, externalSearchQuery]);
+    return files.filter((f) => {
+      const matchesType = typeFilter === 'all' || f.category === typeFilter;
+      const matchesSearch =
+        !query ||
+        f.name.toLowerCase().includes(query) ||
+        f.subcategory.toLowerCase().includes(query);
+      return matchesType && matchesSearch;
+    });
+  }, [files, searchQuery, externalSearchQuery, typeFilter]);
 
   const paginatedFiles = useMemo(() => {
     return filteredFiles.slice(0, visibleCount);
   }, [filteredFiles, visibleCount]);
 
-  const toggleSelect = (name: string) => {
+  const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
-    if (newSelected.has(name)) newSelected.delete(name);
-    else newSelected.add(name);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
     setSelectedIds(newSelected);
   };
 
-  const getPublicUrl = (filename: string) => {
-    return `/gallery/${filename}`;
-  };
+  const getPublicUrl = (file: MediaFile) => file.url;
 
-  const openDetails = async (file: StorageFile) => {
+  const openDetails = async (file: MediaFile) => {
     setActiveFile(file);
     setIsEditingImage(false);
-    
-    // Load original image dimensions for editing
-    const img = new Image();
-    img.src = getPublicUrl(file.name);
-    img.onload = () => {
-      setEditWidth(img.width);
-      setEditHeight(img.height);
-    };
+
+    if (file.category === 'imagens') {
+      const img = new Image();
+      img.src = getPublicUrl(file);
+      img.onload = () => {
+        setEditWidth(img.width);
+        setEditHeight(img.height);
+      };
+    }
     
     // Set default metadata
     setMetadata({
       alt_text: '',
-      title: file.name.split('-').slice(0, -1).join('-') || file.name,
+      title: file.name,
       caption: '',
       description: ''
     });
   };
 
-  const openPreview = (file: StorageFile) => {
+  const openPreview = (file: MediaFile) => {
     setPreviewImage(file);
     setIsPreviewOpen(true);
   };
@@ -170,11 +184,11 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     }
   };
 
-  const deleteSingle = async (filename: string) => {
-    if (!confirm('Eliminar esta imagem permanentemente?')) return;
+  const deleteSingle = async (id: string) => {
+    if (!confirm('Eliminar este item permanentemente?')) return;
     setLoading(true);
-    // Simulate deletion
-    setFiles(prev => prev.filter(f => f.name !== filename));
+    await fetch(`/api/admin/media?id=${id}`, { method: 'DELETE' });
+    setFiles((prev) => prev.filter((f) => f.id !== id));
     setActiveFile(null);
     setIsEditorOpen(false);
     setLoading(false);
@@ -185,7 +199,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     if (!confirm(`Eliminar ${selectedIds.size} itens?`)) return;
     setLoading(true);
     const ids = Array.from(selectedIds);
-    setFiles(prev => prev.filter(f => !ids.includes(f.name)));
+    setFiles((prev) => prev.filter((f) => !ids.includes(f.id)));
     setSelectedIds(new Set());
     setIsBulkMode(false);
     setLoading(false);
@@ -197,7 +211,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
     
     try {
       const img = new Image();
-      img.src = getPublicUrl(activeFile.name);
+      img.src = getPublicUrl(activeFile);
       await new Promise((resolve, reject) => { 
         img.onload = resolve;
         img.onerror = () => reject(new Error('Falha ao carregar imagem para edição.'));
@@ -285,6 +299,18 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
         </div>
 
         <div className="media-toolbar-right">
+          <select
+            className="media-type-select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as 'all' | MediaCategory)}
+            aria-label="Filtrar por tipo"
+          >
+            {TYPE_FILTERS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <div className="media-count">{filteredFiles.length} itens</div>
           {!externalSearchQuery && (
             <div className="media-search">
@@ -310,20 +336,26 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
             <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (
                 <div 
-                  key={file.name}
+                  key={file.id}
                   onClick={() => {
                     if (isBulkMode) {
-                      toggleSelect(file.name);
+                      toggleSelect(file.id);
                     } else if (isModal && onSelect) {
-                      onSelect(getPublicUrl(file.name));
+                      onSelect(getPublicUrl(file));
                     } else {
                       openDetails(file);
                     }
                   }}
-                  className={`media-item ${selectedIds.has(file.name) || activeFile?.name === file.name ? 'selected' : ''}`}
+                  className={`media-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                 >
-                  <img src={getPublicUrl(file.name)} className="media-item-image" alt="" loading="lazy" />
-                  {selectedIds.has(file.name) && (
+                  {file.category === 'imagens' ? (
+                    <img src={getPublicUrl(file)} className="media-item-image" alt="" loading="lazy" />
+                  ) : file.category === 'videos' ? (
+                    <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
+                  ) : (
+                    <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
+                  )}
+                  {selectedIds.has(file.id) && (
                     <div className="media-item-check"><Check className="media-check-icon" /></div>
                   )}
                   {isModal && onSelect && (
@@ -355,7 +387,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteSingle(file.name);
+                        deleteSingle(file.id);
                       }}
                       className="media-action-button delete"
                       title="Eliminar"
@@ -385,7 +417,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
 
             <div className="media-sidebar-content">
               <div className="media-preview">
-                <img src={getPublicUrl(activeFile.name)} className="media-preview-image" alt="" />
+                <img src={getPublicUrl(activeFile)} className="media-preview-image" alt="" />
               </div>
 
               <div className="media-metadata">
@@ -406,7 +438,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
               <div className="media-sidebar-actions">
                 <button onClick={() => setIsEditorOpen(true)} className="media-edit-button">Editar Imagem</button>
                 <button onClick={saveMetadata} disabled={savingMetadata} className="media-save-button">{savingMetadata ? '...' : 'Salvar'}</button>
-                <button onClick={() => deleteSingle(activeFile.name)} className="media-delete-button"><Trash2 className="media-delete-icon" /></button>
+                <button onClick={() => deleteSingle(activeFile.id)} className="media-delete-button"><Trash2 className="media-delete-icon" /></button>
               </div>
 
               <div className="media-file-info">
@@ -416,6 +448,14 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                 </div>
                 <div className="media-info-item">
                   <span className="media-info-label">Tipo:</span>
+                  <span className="media-info-value">{activeFile.category}</span>
+                </div>
+                <div className="media-info-item">
+                  <span className="media-info-label">Categoria:</span>
+                  <span className="media-info-value">{activeFile.subcategory}</span>
+                </div>
+                <div className="media-info-item">
+                  <span className="media-info-label">Mime:</span>
                   <span className="media-info-value">{activeFile.metadata?.mimetype}</span>
                 </div>
                 <div className="media-info-item">
@@ -424,7 +464,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                 </div>
                 <div className="media-info-item">
                   <span className="media-info-label">URL:</span>
-                  <span className="media-info-value">{getPublicUrl(activeFile.name)}</span>
+                  <span className="media-info-value">{getPublicUrl(activeFile)}</span>
                 </div>
               </div>
             </div>
@@ -443,7 +483,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
           <div className="media-editor-body">
             <div className="media-editor-preview">
               <div className="media-editor-image-container">
-                <img src={getPublicUrl(activeFile.name)} className="media-editor-image" alt="" />
+                <img src={getPublicUrl(activeFile)} className="media-editor-image" alt="" />
               </div>
             </div>
 
@@ -490,7 +530,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
         <div className="media-preview-modal">
           <div className="media-preview-content">
             <button onClick={closePreview} className="media-preview-close"><X className="media-close-icon" /></button>
-            <img src={getPublicUrl(previewImage.name)} className="media-preview-full-image" alt={previewImage.name} />
+            <img src={getPublicUrl(previewImage)} className="media-preview-full-image" alt={previewImage.name} />
             <div className="media-preview-info">
               <h3 className="media-preview-title">{previewImage.name}</h3>
               <p className="media-preview-meta">{formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}</p>

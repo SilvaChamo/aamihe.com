@@ -1,0 +1,47 @@
+{
+  "documents": [
+    {
+      "id": "doc_geral_1",
+      "site_slug": "aamihe",
+      "title_pt": "Estatuto Jurídico",
+      "title_en": "Legal Status",
+      "title_fr": "Statut Juridique",
+      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAIMES-Constituicao-1.pdf",
+      "language": "pt",
+      "category": "geral",
+      "published": true,
+      "sort_order": 1,
+      "created_at": "2021-12-01T10:00:00.000Z",
+      "updated_at": "2021-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "doc_geral_2",
+      "site_slug": "aamihe",
+      "title_pt": "Legal Status",
+      "title_en": "Legal Status",
+      "title_fr": "Legal Status",
+      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAMIHE-Constitution-1.pdf",
+      "language": "en",
+      "category": "geral",
+      "published": true,
+      "sort_order": 2,
+      "created_at": "2021-12-01T10:00:00.000Z",
+      "updated_at": "2021-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "doc_geral_3",
+      "site_slug": "aamihe",
+      "title_pt": "Statut Juridique",
+      "title_en": "Legal Status",
+      "title_fr": "Statut Juridique",
+      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAMIHE-Constitution-FR-1.pdf",
+      "language": "fr",
+      "category": "geral",
+      "published": true,
+      "sort_order": 3,
+      "created_at": "2021-12-01T10:00:00.000Z",
+      "updated_at": "2021-12-01T10:00:00.000Z"
+    }
+  ],
+  "media": []
+}
