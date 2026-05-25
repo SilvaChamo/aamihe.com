@@ -1,14 +1,122 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { upsertMediaRecord } from '@/lib/media-registry';
+import { buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
 import {
   collectUrlsFromReferenceHtml,
+  getReferenceIndex,
   resolveMissingPublicImage,
 } from '@/lib/reference-image-sync';
-import { isSupabaseConfigured } from '@/lib/supabase/server';
-import { upsertSupabaseMedia, uploadFileToStore } from '@/lib/supabase-media';
+import { mediaCatalogKey } from '@/lib/media-catalog-key';
+import { isSupabaseConfigured, getSupabaseAdmin, MEDIA_BUCKET } from '@/lib/supabase/server';
+import { upsertSupabaseMedia } from '@/lib/supabase-media';
+import type { SiteMediaRecord } from '@/lib/site-media';
+
+const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const SKIP = /(?:^|\/)(pt_PT|fr_FR|en_GB)\.png$|Logo-Small|cropped-Logo|favicon/i;
+
+function mimeFromExt(ext: string) {
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.gif') return 'image/gif';
+  return 'image/jpeg';
+}
+
+function stableId(relativePath: string) {
+  return `site_${createHash('sha1').update(relativePath).digest('hex').slice(0, 12)}`;
+}
+
+function titleFromName(name: string) {
+  return name
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function subcategoryFor(relPath: string, filename: string) {
+  if (relPath.startsWith('gallery/')) {
+    return filename.startsWith('news-') ? 'Notícias' : 'Galeria';
+  }
+  if (relPath.startsWith('uploads/imagens/')) return 'Notícias';
+  if (relPath.startsWith('images/paises/')) return 'Países membros';
+  if (relPath.startsWith('images/')) return 'Site';
+  if (relPath.startsWith('Blog_files/')) return 'Blog';
+  return 'Galeria';
+}
+
+async function walkPublicImages(dir: string, prefix = ''): Promise<{ full: string; rel: string; name: string }[]> {
+  const results: { full: string; rel: string; name: string }[] = [];
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return results;
+  }
+  for (const entry of entries) {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...(await walkPublicImages(full, rel)));
+      continue;
+    }
+    const ext = path.extname(entry.name).toLowerCase();
+    if (!IMAGE_EXT.has(ext) || SKIP.test(rel)) continue;
+    results.push({ full, rel, name: entry.name });
+  }
+  return results;
+}
+
+async function uploadLocalFileToSupabase(
+  filePath: string,
+  relPath: string
+): Promise<SiteMediaRecord | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const buffer = await readFile(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeType = mimeFromExt(ext);
+  const storagePath = relPath
+    .replace(/\\/g, '/')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w./-]+/g, '-')
+    .replace(/^\/+/, 'legacy/')
+    .replace(/^legacy\/+/, 'legacy/');
+  const storagePathFinal = storagePath.startsWith('legacy/') ? storagePath : `legacy/${storagePath}`;
+  const id = stableId(storagePathFinal);
+  const subcategory = subcategoryFor(relPath, path.basename(filePath));
+
+  const { error: uploadError } = await admin.storage
+    .from(MEDIA_BUCKET)
+    .upload(storagePathFinal, buffer, { contentType: mimeType, upsert: true });
+
+  if (uploadError) {
+    console.error('Storage upload', relPath, uploadError.message);
+    return null;
+  }
+
+  const { data: publicData } = admin.storage.from(MEDIA_BUCKET).getPublicUrl(storagePathFinal);
+  const record: SiteMediaRecord = {
+    id,
+    site_slug: 'aamihe',
+    title: titleFromName(path.basename(filePath)),
+    url: publicData.publicUrl,
+    category: 'imagens',
+    subcategory,
+    mime_type: mimeType,
+    size: buffer.length,
+    source: 'legacy',
+    published: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  return upsertSupabaseMedia({ ...record, storage_path: storagePathFinal, catalog_key: mediaCatalogKey(record.url) });
+}
 
 export async function POST() {
   try {
@@ -32,40 +140,69 @@ export async function POST() {
     }
 
     const uniqueRestored = [...new Set(restored)];
-    await saveDashboardDb(db);
 
     let supabaseSynced = 0;
+    const failed: string[] = [];
+
     if (isSupabaseConfigured()) {
-      for (const record of db.media.filter((r) => r.published && r.url.startsWith('/'))) {
-        const filePath = path.join(process.cwd(), 'public', record.url.replace(/^\//, ''));
+      const publicRoot = path.join(process.cwd(), 'public');
+      const files = await walkPublicImages(publicRoot);
+      const byKey = new Map<string, { full: string; rel: string; name: string }>();
+
+      for (const file of files) {
+        const key = mediaCatalogKey(`/${file.rel}`);
+        if (!byKey.has(key)) byKey.set(key, file);
+      }
+
+      const refIndex = await getReferenceIndex();
+      for (const [, refPath] of refIndex) {
+        const name = path.basename(refPath);
+        const key = mediaCatalogKey(`/${name}`);
+        if (byKey.has(key)) continue;
+        const ext = path.extname(name).toLowerCase();
+        if (!IMAGE_EXT.has(ext) || SKIP.test(name)) continue;
+        byKey.set(key, { full: refPath, rel: `ref/${name}`, name });
+      }
+
+      for (const file of byKey.values()) {
         try {
-          const buffer = await readFile(filePath);
-          const uploaded = await uploadFileToStore(
-            buffer,
-            path.basename(record.url),
-            record.mime_type,
-            'imagens',
-            record.subcategory
-          );
-          const saved = upsertMediaRecord(db, {
-            ...record,
-            url: uploaded.url,
-            id: record.id,
-          });
-          await upsertSupabaseMedia(saved);
-          supabaseSynced += 1;
-        } catch {
-          /* ficheiro ainda inexistente */
+          const saved = await uploadLocalFileToSupabase(file.full, file.rel);
+          if (saved) {
+            upsertMediaRecord(db, saved);
+            supabaseSynced += 1;
+          } else {
+            failed.push(file.rel);
+          }
+        } catch (err) {
+          failed.push(file.rel);
+          console.error(file.rel, err);
         }
       }
-      await saveDashboardDb(db);
+
+      for (const record of db.media.filter((r) => r.published && r.url.startsWith('/'))) {
+        const filePath = path.join(publicRoot, record.url.replace(/^\//, ''));
+        try {
+          const saved = await uploadLocalFileToSupabase(filePath, record.url.replace(/^\//, ''));
+          if (saved) {
+            Object.assign(record, { url: saved.url, updated_at: new Date().toISOString() });
+            supabaseSynced += 1;
+          }
+        } catch {
+          failed.push(record.url);
+        }
+      }
     }
+
+    await saveDashboardDb(db);
+    const totalInSupabase = isSupabaseConfigured() ? (await buildMediaCatalog(db)).length : 0;
 
     return NextResponse.json({
       success: true,
       restored: uniqueRestored.length,
-      restored_paths: uniqueRestored.slice(0, 50),
       supabase_synced: supabaseSynced,
+      catalog_total: totalInSupabase,
+      failed_count: failed.length,
+      failed_sample: failed.slice(0, 10),
       supabase: isSupabaseConfigured(),
     });
   } catch (error) {

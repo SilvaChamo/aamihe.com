@@ -9,7 +9,8 @@
     "dev": "next dev --port 3004",
     "build": "next build",
     "start": "next start",
-    "sync-images": "node scripts/sync-reference-images.mjs"
+    "sync-images": "node scripts/sync-reference-images.mjs",
+    "upload-supabase": "node scripts/upload-all-to-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
