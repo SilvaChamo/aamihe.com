@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
-import { isImageUploadFile, uploadMediaFile } from '@/lib/persist-client-media';
+import { isImageFile } from '@/lib/is-image-file';
+import { uploadMediaFile } from '@/lib/persist-client-media';
 import './MediaModal.css';
 
 interface MediaModalProps {
@@ -37,7 +38,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
   };
 
   const processFile = async (file: File) => {
-    if (!isImageUploadFile(file)) {
+    if (!isImageFile(file)) {
       alert('Seleccione um ficheiro de imagem (JPG, PNG, WebP, etc.).');
       return;
     }

@@ -1,3 +1,5 @@
+'use client';
+
 import { dispatchMediaUpdated } from '@/lib/media-events';
 
 export async function persistNewsImage(image: string, title = 'Imagem de notícia'): Promise<string> {
@@ -30,11 +32,6 @@ export async function persistNewsImage(image: string, title = 'Imagem de notíci
 
   dispatchMediaUpdated();
   return url;
-}
-
-export function isImageUploadFile(file: File): boolean {
-  if (file.type.startsWith('image/')) return true;
-  return /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name);
 }
 
 export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promise<string> {

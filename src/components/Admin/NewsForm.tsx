@@ -6,7 +6,8 @@ import { useNews } from '@/context/NewsContext';
 import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
-import { isImageUploadFile, persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
+import { isImageFile } from '@/lib/is-image-file';
+import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
 import './NewsForm.css';
 
 interface NewsFormProps {
@@ -76,7 +77,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     e.target.value = '';
     if (!file) return;
 
-    if (!isImageUploadFile(file)) {
+    if (!isImageFile(file)) {
       alert('Seleccione um ficheiro de imagem (JPG, PNG, WebP, etc.).');
       return;
     }
