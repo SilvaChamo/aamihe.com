@@ -173,6 +173,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { label: 'Biblioteca', href: '/admin/media' },
         { label: 'Adicionar novo', href: '/admin/media/novo' },
         { label: 'Galeria', href: '/admin/media/galeria' },
+        { label: 'Vídeos', href: '/admin/media/videos' },
       ]
     },
     { 
@@ -194,7 +195,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="admin-shell">
-      {/* Admin Bar (Barra Superior Preta) */}
+      {/* Barra superior castanha AAMIHE */}
       <header className="admin-bar">
         <div className="admin-bar-left">
           <Link href="/" className="admin-bar-logo">
