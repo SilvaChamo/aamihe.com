@@ -7,12 +7,12 @@ export function mediaCatalogKey(url: string): string {
     .replace(/^\d+-[a-f0-9]+/i, 'file-upload');
 }
 
-export function canDeleteMedia(item: { id: string; source?: string }): boolean {
+export function canDeleteMedia(item: { id: string; source?: string; url?: string }): boolean {
+  if (item.url?.includes('supabase.co/storage')) return true;
   if (item.source === 'upload' || item.source === 'news') return true;
   if (item.id.startsWith('media_')) return true;
-  if (item.id.startsWith('site_') || item.id.startsWith('wp_') || item.id.startsWith('doc_media_')) {
-    return false;
-  }
+  if (item.id.startsWith('wp_') || item.id.startsWith('doc_media_')) return false;
+  if (item.id.startsWith('site_') && item.url?.startsWith('/')) return false;
   return true;
 }
 

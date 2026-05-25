@@ -174,11 +174,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID em falta' }, { status: 400 });
     }
 
-    if (id.startsWith('site_') || id.startsWith('wp_') || id.startsWith('doc_media_')) {
+    if (id.startsWith('wp_') || id.startsWith('doc_media_')) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Itens do arquivo legado não podem ser eliminados. Carregue novas imagens via «Carregar ficheiros».',
+          error: 'Itens do arquivo HTML legado não podem ser eliminados aqui.',
         },
         { status: 400 }
       );
@@ -186,8 +186,20 @@ export async function DELETE(request: Request) {
 
     const db = await getDashboardDb();
     const existing = db.media.find((m) => m.id === id);
+
     if (existing && !canDeleteMedia(existing)) {
       return NextResponse.json({ success: false, error: 'Este item não pode ser eliminado.' }, { status: 400 });
+    }
+
+    if (!existing && isSupabaseConfigured()) {
+      const { getSupabaseAdmin } = await import('@/lib/supabase/server');
+      const admin = getSupabaseAdmin();
+      if (admin) {
+        const { data: row } = await admin.from('site_media').select('url').eq('id', id).maybeSingle();
+        if (!row?.url?.includes('supabase.co/storage')) {
+          return NextResponse.json({ success: false, error: 'Este item não pode ser eliminado.' }, { status: 400 });
+        }
+      }
     }
 
     db.media = db.media.filter((m) => m.id !== id);

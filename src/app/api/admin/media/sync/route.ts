@@ -28,6 +28,16 @@ function stableId(relativePath: string) {
   return `site_${createHash('sha1').update(relativePath).digest('hex').slice(0, 12)}`;
 }
 
+function sanitizeStorageRel(relPath: string) {
+  const normalized = relPath
+    .replace(/\\/g, '/')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w./-]+/g, '-')
+    .replace(/-+/g, '-');
+  return normalized.startsWith('legacy/') ? normalized : `legacy/${normalized}`;
+}
+
 function titleFromName(name: string) {
   return name
     .replace(/\.[^.]+$/, '')
@@ -79,14 +89,7 @@ async function uploadLocalFileToSupabase(
   const buffer = await readFile(filePath);
   const ext = path.extname(filePath).toLowerCase();
   const mimeType = mimeFromExt(ext);
-  const storagePath = relPath
-    .replace(/\\/g, '/')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w./-]+/g, '-')
-    .replace(/^\/+/, 'legacy/')
-    .replace(/^legacy\/+/, 'legacy/');
-  const storagePathFinal = storagePath.startsWith('legacy/') ? storagePath : `legacy/${storagePath}`;
+  const storagePathFinal = sanitizeStorageRel(relPath);
   const id = stableId(storagePathFinal);
   const subcategory = subcategoryFor(relPath, path.basename(filePath));
 
@@ -109,7 +112,7 @@ async function uploadLocalFileToSupabase(
     subcategory,
     mime_type: mimeType,
     size: buffer.length,
-    source: 'legacy',
+    source: 'upload',
     published: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -146,25 +149,30 @@ export async function POST() {
 
     if (isSupabaseConfigured()) {
       const publicRoot = path.join(process.cwd(), 'public');
-      const files = await walkPublicImages(publicRoot);
-      const byKey = new Map<string, { full: string; rel: string; name: string }>();
+      const publicFiles = await walkPublicImages(publicRoot);
+      const seenStorage = new Set<string>();
+      const queue: { full: string; rel: string; name: string }[] = [];
 
-      for (const file of files) {
-        const key = mediaCatalogKey(`/${file.rel}`);
-        if (!byKey.has(key)) byKey.set(key, file);
+      for (const file of publicFiles) {
+        const storageRel = sanitizeStorageRel(file.rel);
+        if (seenStorage.has(storageRel)) continue;
+        seenStorage.add(storageRel);
+        queue.push(file);
       }
 
       const refIndex = await getReferenceIndex();
       for (const [, refPath] of refIndex) {
         const name = path.basename(refPath);
-        const key = mediaCatalogKey(`/${name}`);
-        if (byKey.has(key)) continue;
         const ext = path.extname(name).toLowerCase();
         if (!IMAGE_EXT.has(ext) || SKIP.test(name)) continue;
-        byKey.set(key, { full: refPath, rel: `ref/${name}`, name });
+        const rel = `ref/${name}`;
+        const storageRel = sanitizeStorageRel(rel);
+        if (seenStorage.has(storageRel)) continue;
+        seenStorage.add(storageRel);
+        queue.push({ full: refPath, rel, name });
       }
 
-      for (const file of byKey.values()) {
+      for (const file of queue) {
         try {
           const saved = await uploadLocalFileToSupabase(file.full, file.rel);
           if (saved) {

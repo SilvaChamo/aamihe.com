@@ -25,7 +25,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-25T17:16:17.211Z",
-      "updated_at": "2026-05-25T17:16:17.211Z"
+      "updated_at": "2026-05-25T17:30:15.801Z"
     },
     {
       "id": "media_1779729377277",
@@ -38,7 +38,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-25T17:16:17.277Z",
-      "updated_at": "2026-05-25T17:16:17.277Z"
+      "updated_at": "2026-05-25T17:56:48.618Z"
     },
     {
       "id": "media_1779729377435",
@@ -51,7 +51,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-25T17:16:17.435Z",
-      "updated_at": "2026-05-25T17:27:07.529Z"
+      "updated_at": "2026-05-25T17:57:03.699Z"
     },
     {
       "id": "media_1779729377211",
@@ -104,6 +104,20 @@
       "published": true,
       "created_at": "2026-05-25T17:27:05.622Z",
       "updated_at": "2026-05-25T17:27:05.622Z"
+    },
+    {
+      "id": "media_1779731027655_deca27",
+      "site_slug": "aamihe",
+      "title": "CIMBOLO.png",
+      "url": "/uploads/imagens/1779731038247-35ad86b8.png",
+      "category": "imagens",
+      "subcategory": "Upload",
+      "mime_type": "image/png",
+      "size": 220659,
+      "source": "upload",
+      "published": true,
+      "created_at": "2026-05-25T17:44:08.803Z",
+      "updated_at": "2026-05-25T17:44:08.803Z"
     }
   ]
 }

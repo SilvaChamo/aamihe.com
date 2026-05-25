@@ -115,26 +115,27 @@ async function main() {
   const publicRoot = path.join(projectRoot, 'public');
   const referenceRoot = path.join(projectRoot, '../aamihe/site');
 
-  const publicFiles = await walkImages(publicRoot);
+  const publicFiles = (await walkImages(publicRoot)).map((f) => ({ ...f, fromReference: false }));
   const refFiles = (await walkImages(referenceRoot)).map((f) => ({
     ...f,
     rel: `ref/${f.rel}`,
     fromReference: true,
   }));
 
-  const byCatalog = new Map();
+  const seenStorage = new Set();
+  const files = [];
   for (const file of [...publicFiles, ...refFiles]) {
-    const keyName = catalogKey(file.filename);
-    const existing = byCatalog.get(keyName);
-    if (!existing || (!existing.fromReference && file.fromReference)) {
-      byCatalog.set(keyName, file);
-    } else if (!file.fromReference) {
-      byCatalog.set(keyName, file);
-    }
+    const storageRel = sanitizeStoragePath(
+      file.fromReference
+        ? `legacy/ref/${file.rel.replace(/^ref\//, '')}`
+        : `legacy/${file.rel}`
+    );
+    if (seenStorage.has(storageRel)) continue;
+    seenStorage.add(storageRel);
+    files.push({ ...file, storageRel });
   }
 
-  const files = Array.from(byCatalog.values());
-  console.log(`A enviar ${files.length} imagem(ns) para Supabase...`);
+  console.log(`A enviar ${files.length} imagem(ns) para Supabase (${publicFiles.length} public + ${refFiles.length} referência)...`);
 
   let uploaded = 0;
   let skipped = 0;
@@ -142,11 +143,7 @@ async function main() {
   const seenIds = new Set();
 
   for (const file of files) {
-    const storageRel = sanitizeStoragePath(
-      file.fromReference
-        ? `legacy/ref/${file.rel.replace(/^ref\//, '')}`
-        : `legacy/${file.rel}`
-    );
+    const storageRel = file.storageRel;
     const id = stableId(storageRel);
     if (seenIds.has(id)) {
       skipped += 1;
@@ -182,7 +179,7 @@ async function main() {
           subcategory,
           mime_type: mimeType,
           size: buffer.length,
-          source: 'legacy',
+          source: 'upload',
           source_id: null,
           published: true,
           catalog_key: catalogKey(file.filename),
