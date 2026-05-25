@@ -5,7 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import { FileText, Play } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './GalleryGrid.css';
+
+const GALLERY_IMAGE_SIZES =
+  '(max-width: 600px) 50vw, (max-width: 900px) 33vw, (max-width: 1200px) 25vw, 16vw';
 
 type MediaItem = {
   id: string;
@@ -32,11 +36,12 @@ const SUBCATEGORY_OPTIONS = [
 ];
 
 function buildMediaUrl(typeFilter: 'all' | MediaCategory): string {
-  const params = new URLSearchParams({ t: String(Date.now()) });
+  const params = new URLSearchParams();
   if (typeFilter !== 'all') {
     params.set('category', typeFilter);
   }
-  return `/api/public/site-media?${params}`;
+  const query = params.toString();
+  return `/api/public/site-media${query ? `?${query}` : ''}`;
 }
 
 export default function GalleryGrid() {
@@ -185,12 +190,13 @@ export default function GalleryGrid() {
                 <article key={item.id} className="gallery-item-card">
                   <div className="gallery-item-preview">
                     {kind === 'imagens' ? (
-                      <img
+                      <OptimizedImage
                         src={item.url}
                         alt={item.title}
-                        loading="lazy"
-                        decoding="async"
-                        fetchPriority="low"
+                        fill
+                        className="gallery-item-image"
+                        sizes={GALLERY_IMAGE_SIZES}
+                        quality={72}
                       />
                     ) : kind === 'videos' ? (
                       <div className="gallery-item-placeholder video">

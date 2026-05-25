@@ -1,5 +1,8 @@
 import Link from 'next/link';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './BlogLayout.css';
+
+const BLOG_CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, 50vw';
 
 type BlogEntryCardProps = {
   id: number;
@@ -19,7 +22,14 @@ export default function BlogEntryCard({ id, title, image, date }: BlogEntryCardP
           <div className="thumbnail">
             <div className="thumbnail-link">
               {imageSrc ? (
-                <img src={imageSrc} alt="" loading="lazy" />
+                <OptimizedImage
+                  src={imageSrc}
+                  alt=""
+                  fill
+                  className="blog-entry-thumb-image"
+                  sizes={BLOG_CARD_IMAGE_SIZES}
+                  quality={75}
+                />
               ) : (
                 <div className="blog-entry-thumbnail-placeholder" aria-hidden="true" />
               )}

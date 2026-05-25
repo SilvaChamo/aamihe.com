@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { NewsItem } from '@/data/news';
 import { getArchiveYears } from '@/lib/blog-utils';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './BlogLayout.css';
 
 type BlogSidebarProps = {
@@ -71,12 +72,14 @@ export default function BlogSidebar({
               <div key={item.id} className="recent-post-card">
                 <div className="post-img">
                   {item.image?.trim() ? (
-                    <img
+                    <OptimizedImage
                       src={item.image.trim()}
                       alt=""
-                      loading="lazy"
-                      decoding="async"
-                      fetchPriority="low"
+                      width={72}
+                      height={72}
+                      className="blog-sidebar-thumb-image"
+                      sizes="72px"
+                      quality={70}
                     />
                   ) : (
                     <div className="blog-sidebar-thumb-placeholder" aria-hidden="true" />

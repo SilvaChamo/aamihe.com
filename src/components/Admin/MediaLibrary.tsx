@@ -25,7 +25,10 @@ import {
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './MediaLibrary.css';
+
+const MEDIA_THUMB_SIZES = '200px';
 
 interface MediaLibraryProps {
   onSelect?: (url: string) => void;
@@ -507,7 +510,15 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   className={`media-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                 >
                   {fileDisplayKind(file) === 'imagens' ? (
-                    <img src={getPublicUrl(file)} className="media-item-image" alt="" loading="lazy" />
+                    <OptimizedImage
+                      src={getPublicUrl(file)}
+                      alt=""
+                      width={220}
+                      height={165}
+                      className="media-item-image"
+                      sizes={MEDIA_THUMB_SIZES}
+                      quality={68}
+                    />
                   ) : fileDisplayKind(file) === 'videos' ? (
                     <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                   ) : (
@@ -585,7 +596,15 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   />
                   <div className="media-list-thumb">
                     {fileDisplayKind(file) === 'imagens' ? (
-                      <img src={getPublicUrl(file)} className="media-list-thumb-image" alt="" loading="lazy" />
+                      <OptimizedImage
+                        src={getPublicUrl(file)}
+                        alt=""
+                        width={64}
+                        height={64}
+                        className="media-list-thumb-image"
+                        sizes="64px"
+                        quality={65}
+                      />
                     ) : fileDisplayKind(file) === 'videos' ? (
                       <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                     ) : (

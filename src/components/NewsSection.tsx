@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useNews } from '@/context/NewsContext';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import './NewsSection.css';
+
+const NEWS_CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw';
 
 const t = {
   title: 'Notícias & Eventos',
@@ -23,10 +26,20 @@ export default function NewsSection() {
         </div>
 
         <div className="news-grid">
-          {displayedNews.map((item) => (
+          {displayedNews.map((item, index) => (
             <div key={item.id} className="news-card">
               <div className="news-card-image">
-                <img src={item.image} alt={item.title} />
+                {item.image?.trim() ? (
+                  <OptimizedImage
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    className="news-card-photo"
+                    sizes={NEWS_CARD_IMAGE_SIZES}
+                    priority={index === 0}
+                    quality={75}
+                  />
+                ) : null}
                 <span className="news-card-category">{item.category}</span>
               </div>
               <div className="news-card-content">
