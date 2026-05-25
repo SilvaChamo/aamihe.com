@@ -66,7 +66,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     setLoading(true);
 
     try {
-      const image = formData.image ? await persistNewsImage(formData.image) : '';
+      const image = formData.image ? await persistNewsImage(formData.image, formData.title) : '';
       const payload = { ...formData, image };
 
       if (isEdit && initialData?.id) {

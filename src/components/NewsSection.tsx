@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNews } from '@/context/NewsContext';
 import './NewsSection.css';
@@ -48,18 +49,18 @@ export default function NewsSection() {
               <div className="news-card-content">
                 <span className="news-card-date">{item.date}</span>
                 <h3 className="news-card-title">{item.title}</h3>
-                <a href={`/noticias/${item.id}`} className="news-card-link">
+                <Link href={`/noticias/${item.id}`} className="news-card-link">
                   {t.more} <span className="arrow">→</span>
-                </a>
+                </Link>
               </div>
             </div>
           ))}
         </div>
 
         <div className="news-footer">
-          <a href="/noticias" className="btn-view-all">
+          <Link href="/noticias" className="btn-view-all">
             {t.viewAll}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

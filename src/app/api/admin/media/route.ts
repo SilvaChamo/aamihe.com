@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import path from 'node:path';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
 import { saveUploadedBuffer } from '@/lib/persist-media';
@@ -12,6 +13,50 @@ function extensionFromMime(mime: string): string {
   return '.jpg';
 }
 
+function mimeFromUrl(url: string): string {
+  const ext = path.extname(url).toLowerCase();
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.gif') return 'image/gif';
+  return 'image/jpeg';
+}
+
+function titleFromUrl(url: string): string {
+  const name = url.split('/').pop() || url;
+  return name
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function imageSubfolder(subcategory: string, category: MediaCategory): string {
+  if (subcategory === 'Notícias') return 'gallery';
+  if (category === 'videos') return 'uploads/videos';
+  if (category === 'documentos') return 'uploads/documentos';
+  return 'uploads/imagens';
+}
+
+function mediaSource(subcategory: string): 'news' | 'upload' {
+  return subcategory === 'Notícias' ? 'news' : 'upload';
+}
+
+async function registerImageUrl(url: string, subcategory: string, title: string) {
+  const db = await getDashboardDb();
+  const record = upsertMediaRecord(db, {
+    site_slug: 'aamihe',
+    title: title || titleFromUrl(url),
+    url,
+    category: 'imagens',
+    subcategory,
+    mime_type: mimeFromUrl(url),
+    source: mediaSource(subcategory),
+    published: true,
+  });
+  await saveDashboardDb(db);
+  return record;
+}
+
 async function saveDataUrlImage(dataUrl: string, subcategory: string, title: string) {
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) {
@@ -22,7 +67,7 @@ async function saveDataUrlImage(dataUrl: string, subcategory: string, title: str
   const buffer = Buffer.from(match[2], 'base64');
   const ext = extensionFromMime(mimeType);
   const filename = `news-${Date.now()}${ext}`;
-  const saved = await saveUploadedBuffer(buffer, filename, 'uploads/imagens');
+  const saved = await saveUploadedBuffer(buffer, filename, imageSubfolder(subcategory, 'imagens'));
 
   const db = await getDashboardDb();
   const record = upsertMediaRecord(db, {
@@ -33,7 +78,7 @@ async function saveDataUrlImage(dataUrl: string, subcategory: string, title: str
     subcategory,
     mime_type: mimeType,
     size: buffer.length,
-    source: 'upload',
+    source: mediaSource(subcategory),
     published: true,
   });
 
@@ -61,13 +106,17 @@ export async function POST(request: Request) {
   try {
     const form = await request.formData();
     const dataUrl = form.get('data_url');
+    const registerUrl = form.get('register_url');
+    const subcategory = String(form.get('subcategory') || 'Upload');
+    const title = String(form.get('title') || 'Imagem de notícia');
+
+    if (typeof registerUrl === 'string' && registerUrl.startsWith('/')) {
+      const record = await registerImageUrl(registerUrl, subcategory, title);
+      return NextResponse.json({ success: true, media: record });
+    }
 
     if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
-      const record = await saveDataUrlImage(
-        dataUrl,
-        String(form.get('subcategory') || 'Notícias'),
-        String(form.get('title') || 'Imagem de notícia')
-      );
+      const record = await saveDataUrlImage(dataUrl, subcategory, title);
       return NextResponse.json({ success: true, media: record });
     }
 
@@ -78,7 +127,7 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const category = (form.get('category') as MediaCategory) || inferMediaCategory(file.type);
-    const subfolder = category === 'videos' ? 'uploads/videos' : category === 'documentos' ? 'uploads/documentos' : 'uploads/imagens';
+    const subfolder = imageSubfolder(subcategory, category);
     const saved = await saveUploadedBuffer(buffer, file.name, subfolder);
 
     const db = await getDashboardDb();
@@ -87,10 +136,10 @@ export async function POST(request: Request) {
       title: String(form.get('title') || file.name),
       url: saved.url,
       category,
-      subcategory: String(form.get('subcategory') || 'Upload'),
+      subcategory,
       mime_type: file.type || 'application/octet-stream',
       size: file.size,
-      source: 'upload',
+      source: mediaSource(subcategory),
       published: true,
     });
 

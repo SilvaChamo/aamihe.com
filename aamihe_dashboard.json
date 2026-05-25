@@ -43,5 +43,49 @@
       "updated_at": "2021-12-01T10:00:00.000Z"
     }
   ],
-  "media": []
+  "media": [
+    {
+      "id": "media_1779721327707",
+      "site_slug": "aamihe",
+      "title": "Captura de ecrã 2026-05-25, às 13.43.52.png",
+      "url": "/gallery/news-1779721327690-0eb48792.png",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/png",
+      "size": 3234065,
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T15:02:07.707Z",
+      "updated_at": "2026-05-25T15:02:07.707Z"
+    },
+    {
+      "id": "media_1779721786259",
+      "site_slug": "aamihe",
+      "title": "GoL, UMU, EPA Launch Ocean Acidification Training for West Africa",
+      "url": "/gallery/Ocean-acidification-training.jpeg.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T15:09:46.259Z",
+      "updated_at": "2026-05-25T15:09:46.259Z"
+    },
+    {
+      "id": "media_1779721850217",
+      "site_slug": "aamihe",
+      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika",
+      "url": "/gallery/President-Kongolo-Chijika-1.jpg.webp",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/webp",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T15:10:50.217Z",
+      "updated_at": "2026-05-25T15:10:50.217Z"
+    }
+  ]
+}50.216Z"
+    }
+  ]
 }

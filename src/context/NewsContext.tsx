@@ -42,11 +42,14 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         let changed = false;
         items = await Promise.all(
           items.map(async (item) => {
-            if (!item.image?.startsWith('data:')) return item;
+            if (!item.image) return item;
             try {
-              const url = await persistNewsImage(item.image);
-              changed = true;
-              return { ...item, image: url };
+              const url = await persistNewsImage(item.image, item.title);
+              if (url !== item.image) {
+                changed = true;
+                return { ...item, image: url };
+              }
+              return item;
             } catch (err) {
               console.error('Erro ao sincronizar imagem da notícia', item.id, err);
               return item;

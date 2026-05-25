@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Upload, ImageIcon } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
-import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
+import { uploadMediaFile } from '@/lib/persist-client-media';
+import './MediaModal.css';
 
 interface MediaModalProps {
   isOpen: boolean;

@@ -1,12 +1,14 @@
-export async function persistNewsImage(image: string): Promise<string> {
-  if (!image || !image.startsWith('data:')) {
-    return image;
-  }
+export async function persistNewsImage(image: string, title = 'Imagem de notícia'): Promise<string> {
+  if (!image) return image;
 
   const form = new FormData();
-  form.append('data_url', image);
+  if (image.startsWith('data:')) {
+    form.append('data_url', image);
+  } else {
+    form.append('register_url', image);
+  }
   form.append('subcategory', 'Notícias');
-  form.append('title', 'Imagem de notícia');
+  form.append('title', title);
 
   const res = await fetch('/api/admin/media', { method: 'POST', body: form });
   const data = await res.json();

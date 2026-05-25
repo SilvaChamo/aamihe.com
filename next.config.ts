@@ -9,6 +9,21 @@ const nextConfig: NextConfig = {
         destination: '/galeria?tipo=documentos',
         permanent: false,
       },
+      {
+        source: '/direccao',
+        destination: '/#direcao',
+        permanent: false,
+      },
+      {
+        source: '/eventos',
+        destination: '/noticias',
+        permanent: false,
+      },
+      {
+        source: '/index.html',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
@@ -26,6 +41,10 @@ const nextConfig: NextConfig = {
         destination: '/conferencia.html',
       },
       {
+        source: '/blog',
+        destination: '/Blog.html',
+      },
+      {
         source: '/Blog',
         destination: '/Blog.html',
       },
@@ -36,6 +55,18 @@ const nextConfig: NextConfig = {
       {
         source: '/post',
         destination: '/post.html',
+      },
+      {
+        source: '/paises',
+        destination: '/Paises membros.htm',
+      },
+      {
+        source: '/universidades',
+        destination: '/Universidades filiadas.htm',
+      },
+      {
+        source: '/arquivo',
+        destination: '/Arquivo.htm',
       },
     ];
   },

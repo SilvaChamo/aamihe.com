@@ -77,6 +77,7 @@ async function walkPublicImages(relativeDir: string): Promise<CollectedImage[]> 
       let subcategory = 'Site';
 
       if (relPath.startsWith('gallery/')) subcategory = 'Galeria';
+      else if (relPath.startsWith('uploads/imagens/')) subcategory = 'Notícias';
       else if (relPath.startsWith('images/paises/')) subcategory = 'Países membros';
       else if (relPath.startsWith('images/')) subcategory = 'Site';
       else if (relPath.startsWith('Imagens/')) subcategory = 'Site';
