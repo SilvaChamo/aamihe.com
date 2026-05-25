@@ -6,8 +6,12 @@ import { canDeleteMedia } from '@/lib/media-catalog-key';
 import { ensureGalleryFile } from '@/lib/media-storage';
 import { uploadFileToStore, deleteSupabaseMedia } from '@/lib/supabase-media';
 import type { MediaCategory } from '@/lib/site-media';
+import { inferUploadMimeType } from '@/lib/infer-upload-mime';
 import { inferMediaCategory } from '@/lib/site-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 function mimeFromUrl(url: string): string {
   const ext = path.extname(url).toLowerCase();
@@ -69,7 +73,7 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
 
 async function processUpload(file: File, subcategory: string, title?: string) {
   const buffer = Buffer.from(await file.arrayBuffer());
-  const mimeType = file.type || 'application/octet-stream';
+  const mimeType = inferUploadMimeType(file);
   const category = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name)
     ? 'imagens'
     : inferMediaCategory(mimeType);
@@ -208,7 +212,10 @@ export async function DELETE(request: Request) {
     await saveDashboardDb(db);
 
     if (isSupabaseConfigured()) {
-      await deleteSupabaseMedia(id);
+      const deletedFromSupa = await deleteSupabaseMedia(id);
+      if (!deletedFromSupa) {
+         return NextResponse.json({ success: false, error: 'Não foi possível eliminar a imagem da cloud (Supabase).' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true });

@@ -1,10 +1,20 @@
 /** Chave para evitar a mesma imagem repetida com URLs diferentes. */
 export function mediaCatalogKey(url: string): string {
-  const name = (url.split('/').pop() || url).toLowerCase();
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      return new URL(trimmed).pathname.toLowerCase();
+    } catch {
+      return trimmed.toLowerCase();
+    }
+  }
+
+  const name = (trimmed.split('/').pop() || trimmed).toLowerCase();
   return name
     .replace(/-\d+x\d+(?=\.[a-z0-9]+$)/i, '')
-    .replace(/^news-\d+-[a-f0-9]+/i, 'news-upload')
-    .replace(/^\d+-[a-f0-9]+/i, 'file-upload');
+    .replace(/^news-\d+-[a-f0-9]+/i, 'news-upload');
 }
 
 export function canDeleteMedia(item: { id: string; source?: string; url?: string }): boolean {

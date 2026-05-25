@@ -130,7 +130,9 @@ export async function uploadFileToStore(
       const saved = await upsertSupabaseMedia({ ...record, storage_path: storagePath });
       if (saved) return saved;
     } else {
-      console.error('Supabase storage upload:', uploadError.message);
+      const msg = uploadError.message || 'Erro desconhecido';
+      console.error('Supabase storage upload:', msg);
+      throw new Error(`Não foi possível guardar o ficheiro no Supabase: ${msg}`);
     }
   }
 

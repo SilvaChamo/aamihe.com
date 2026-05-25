@@ -186,13 +186,30 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
     setSelectedIds(newSelected);
   };
 
-  const getPublicUrl = (file: MediaFile) => file.url;
+  const getPublicUrl = (file: MediaFile) => {
+    const url = file.url?.trim() || '';
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    if (url.startsWith('/') && typeof window !== 'undefined') {
+      return `${window.location.origin}${url}`;
+    }
+    return url;
+  };
+
+  const fileDisplayKind = (file: MediaFile) =>
+    resolveMediaCategory({
+      category: file.category,
+      mime_type: file.metadata?.mimetype,
+      url: file.url,
+    });
 
   const openDetails = async (file: MediaFile) => {
     setActiveFile(file);
     setIsEditingImage(false);
 
-    if (file.category === 'imagens') {
+    if (fileDisplayKind(file) === 'imagens') {
       const img = new Image();
       img.src = getPublicUrl(file);
       img.onload = () => {
@@ -489,9 +506,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   }}
                   className={`media-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                 >
-                  {file.category === 'imagens' ? (
+                  {fileDisplayKind(file) === 'imagens' ? (
                     <img src={getPublicUrl(file)} className="media-item-image" alt="" loading="lazy" />
-                  ) : file.category === 'videos' ? (
+                  ) : fileDisplayKind(file) === 'videos' ? (
                     <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                   ) : (
                     <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
@@ -567,9 +584,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                     aria-label={`Selecionar ${file.name}`}
                   />
                   <div className="media-list-thumb">
-                    {file.category === 'imagens' ? (
+                    {fileDisplayKind(file) === 'imagens' ? (
                       <img src={getPublicUrl(file)} className="media-list-thumb-image" alt="" loading="lazy" />
-                    ) : file.category === 'videos' ? (
+                    ) : fileDisplayKind(file) === 'videos' ? (
                       <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                     ) : (
                       <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
@@ -646,7 +663,13 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
 
             <div className="media-sidebar-content">
               <div className="media-preview">
-                <img src={getPublicUrl(activeFile)} className="media-preview-image" alt="" />
+                {fileDisplayKind(activeFile) === 'imagens' ? (
+                  <img src={getPublicUrl(activeFile)} className="media-preview-image" alt="" />
+                ) : fileDisplayKind(activeFile) === 'videos' ? (
+                  <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
+                ) : (
+                  <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
+                )}
               </div>
 
               <div className="media-metadata">
