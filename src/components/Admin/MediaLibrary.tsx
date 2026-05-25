@@ -113,6 +113,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
 
   useEffect(() => {
     loadImages();
+    const onMediaUpdated = () => loadImages();
+    window.addEventListener('mediaUpdated', onMediaUpdated);
+    return () => window.removeEventListener('mediaUpdated', onMediaUpdated);
   }, []);
 
   const filteredFiles = useMemo(() => {

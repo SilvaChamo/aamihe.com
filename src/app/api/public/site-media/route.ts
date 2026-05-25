@@ -12,7 +12,10 @@ export async function GET(request: Request) {
     if (category) {
       items = items.filter((item) => item.category === category);
     }
-    return NextResponse.json({ success: true, media: items });
+    return NextResponse.json(
+      { success: true, media: items },
+      { headers: { 'Cache-Control': 'no-store' } }
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao carregar galeria' }, { status: 500 });

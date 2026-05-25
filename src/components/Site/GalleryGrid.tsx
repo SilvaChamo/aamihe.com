@@ -22,6 +22,12 @@ const TYPE_OPTIONS: { value: 'all' | MediaCategory; label: string }[] = [
   { value: 'videos', label: 'Vídeos' },
 ];
 
+const SUBCATEGORY_OPTIONS = [
+  { value: '', label: 'Todas as origens' },
+  { value: 'Notícias', label: 'Notícias' },
+  { value: 'Galeria', label: 'Galeria' },
+];
+
 export default function GalleryGrid() {
   const searchParams = useSearchParams();
   const initialType = (searchParams.get('tipo') as MediaCategory | 'all' | null) || 'all';
@@ -29,14 +35,23 @@ export default function GalleryGrid() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>(initialType);
   const [searchQuery, setSearchQuery] = useState('');
+  const [subcategoryFilter, setSubcategoryFilter] = useState('');
 
-  useEffect(() => {
-    fetch('/api/public/site-media')
+  const loadGallery = () => {
+    setLoading(true);
+    fetch(`/api/public/site-media?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setItems(data.media);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadGallery();
+    const onMediaUpdated = () => loadGallery();
+    window.addEventListener('mediaUpdated', onMediaUpdated);
+    return () => window.removeEventListener('mediaUpdated', onMediaUpdated);
   }, []);
 
   useEffect(() => {
@@ -54,9 +69,11 @@ export default function GalleryGrid() {
         !query ||
         item.title.toLowerCase().includes(query) ||
         item.subcategory.toLowerCase().includes(query);
-      return matchesType && matchesSearch;
+      const matchesSubcategory =
+        !subcategoryFilter || item.subcategory === subcategoryFilter;
+      return matchesType && matchesSearch && matchesSubcategory;
     });
-  }, [items, typeFilter, searchQuery]);
+  }, [items, typeFilter, searchQuery, subcategoryFilter]);
 
   return (
     <div className="gallery-grid-page">
@@ -69,6 +86,19 @@ export default function GalleryGrid() {
         >
           {TYPE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="gallery-type-select"
+          value={subcategoryFilter}
+          onChange={(e) => setSubcategoryFilter(e.target.value)}
+          aria-label="Filtrar por origem"
+        >
+          {SUBCATEGORY_OPTIONS.map((option) => (
+            <option key={option.value || 'all'} value={option.value}>
               {option.label}
             </option>
           ))}

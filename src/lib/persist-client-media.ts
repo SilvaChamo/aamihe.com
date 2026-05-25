@@ -1,3 +1,5 @@
+import { dispatchMediaUpdated } from '@/lib/media-events';
+
 export async function persistNewsImage(image: string, title = 'Imagem de notícia'): Promise<string> {
   if (!image) return image;
 
@@ -17,6 +19,7 @@ export async function persistNewsImage(image: string, title = 'Imagem de notíci
     throw new Error(data.error || 'Erro ao guardar imagem na galeria');
   }
 
+  dispatchMediaUpdated();
   return data.media.url;
 }
 
@@ -33,5 +36,6 @@ export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promi
     throw new Error(data.error || 'Erro no upload');
   }
 
+  dispatchMediaUpdated();
   return data.media.url;
 }

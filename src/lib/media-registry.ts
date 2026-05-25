@@ -38,9 +38,13 @@ export async function buildMediaCatalog(db: DashboardDb): Promise<SiteMediaRecor
     map.set(item.url, item);
   }
 
-  return Array.from(map.values()).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  return Array.from(map.values()).sort((a, b) => {
+    const newsRank = (item: SiteMediaRecord) =>
+      item.source === 'news' || item.subcategory === 'Notícias' ? 0 : 1;
+    const rankDiff = newsRank(a) - newsRank(b);
+    if (rankDiff !== 0) return rankDiff;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 }
 
 export function upsertMediaRecord(

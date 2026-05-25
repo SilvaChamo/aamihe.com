@@ -1,65 +1,21 @@
 {
-  "documents": [
-    {
-      "id": "doc_geral_1",
-      "site_slug": "aamihe",
-      "title_pt": "Estatuto Jurídico",
-      "title_en": "Legal Status",
-      "title_fr": "Statut Juridique",
-      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAIMES-Constituicao-1.pdf",
-      "language": "pt",
-      "category": "geral",
-      "published": true,
-      "sort_order": 1,
-      "created_at": "2021-12-01T10:00:00.000Z",
-      "updated_at": "2021-12-01T10:00:00.000Z"
-    },
-    {
-      "id": "doc_geral_2",
-      "site_slug": "aamihe",
-      "title_pt": "Legal Status",
-      "title_en": "Legal Status",
-      "title_fr": "Legal Status",
-      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAMIHE-Constitution-1.pdf",
-      "language": "en",
-      "category": "geral",
-      "published": true,
-      "sort_order": 2,
-      "created_at": "2021-12-01T10:00:00.000Z",
-      "updated_at": "2021-12-01T10:00:00.000Z"
-    },
-    {
-      "id": "doc_geral_3",
-      "site_slug": "aamihe",
-      "title_pt": "Statut Juridique",
-      "title_en": "Legal Status",
-      "title_fr": "Statut Juridique",
-      "file_url": "https://aamihe.com/wp-content/uploads/2021/12/AAMIHE-Constitution-FR-1.pdf",
-      "language": "fr",
-      "category": "geral",
-      "published": true,
-      "sort_order": 3,
-      "created_at": "2021-12-01T10:00:00.000Z",
-      "updated_at": "2021-12-01T10:00:00.000Z"
-    }
-  ],
+  "documents": [],
   "media": [
     {
-      "id": "media_1779721327707",
+      "id": "media_1779722862965",
       "site_slug": "aamihe",
-      "title": "Captura de ecrã 2026-05-25, às 13.43.52.png",
-      "url": "/gallery/news-1779721327690-0eb48792.png",
+      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
+      "url": "/uploads/imagens/1779721327690-0eb48792.png",
       "category": "imagens",
       "subcategory": "Notícias",
       "mime_type": "image/png",
-      "size": 3234065,
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:02:07.707Z",
-      "updated_at": "2026-05-25T15:02:07.707Z"
+      "created_at": "2026-05-25T15:27:42.965Z",
+      "updated_at": "2026-05-25T15:29:44.041Z"
     },
     {
-      "id": "media_1779721786259",
+      "id": "media_1779723496681",
       "site_slug": "aamihe",
       "title": "GoL, UMU, EPA Launch Ocean Acidification Training for West Africa",
       "url": "/gallery/Ocean-acidification-training.jpeg.webp",
@@ -68,24 +24,34 @@
       "mime_type": "image/webp",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:09:46.259Z",
-      "updated_at": "2026-05-25T15:09:46.259Z"
+      "created_at": "2026-05-25T15:38:16.681Z",
+      "updated_at": "2026-05-25T15:38:16.681Z"
     },
     {
-      "id": "media_1779721850217",
+      "id": "media_1779723496890",
       "site_slug": "aamihe",
-      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika",
-      "url": "/gallery/President-Kongolo-Chijika-1.jpg.webp",
+      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
+      "url": "/gallery/news-1779723496576-c40e6429.png",
       "category": "imagens",
       "subcategory": "Notícias",
-      "mime_type": "image/webp",
+      "mime_type": "image/png",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T15:10:50.217Z",
-      "updated_at": "2026-05-25T15:10:50.217Z"
-    }
-  ]
-}50.216Z"
+      "created_at": "2026-05-25T15:38:16.890Z",
+      "updated_at": "2026-05-25T15:38:54.317Z"
+    },
+    {
+      "id": "media_1779723577696",
+      "site_slug": "aamihe",
+      "title": "Teste sync",
+      "url": "/gallery/news-1779723577667-29674dd1.png",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/png",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-25T15:39:37.696Z",
+      "updated_at": "2026-05-25T15:39:37.696Z"
     }
   ]
 }
