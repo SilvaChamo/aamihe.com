@@ -195,14 +195,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="admin-shell">
-      {/* Barra superior castanha AAMIHE */}
+      {/* Barra castanha — identidade AAMIHE */}
+      <header className="admin-brand-bar">
+        <Link href="/" className="admin-brand-logo">
+          <span className="admin-brand-logo-text">AAMIHE</span>
+        </Link>
+        <span className="admin-brand-tagline">Painel de administração</span>
+      </header>
+
+      {/* Barra cinza — acções rápidas (estilo WordPress) */}
       <header className="admin-bar">
         <div className="admin-bar-left">
-          <Link href="/" className="admin-bar-logo">
-            <Settings className="admin-bar-logo-icon" />
-            <span className="admin-bar-logo-text">AAMIHE</span>
-          </Link>
-          
           <div className="admin-bar-links">
             <Link href="/admin/noticias/nova" className="admin-bar-link">
               <Plus className="admin-bar-link-icon" />
