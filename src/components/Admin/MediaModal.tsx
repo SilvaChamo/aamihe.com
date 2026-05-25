@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Upload, ImageIcon } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
-import './MediaModal.css';
+import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
 
 interface MediaModalProps {
   isOpen: boolean;
@@ -25,18 +25,18 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      // Simulate network delay for "premium" feel (progress bar or spinner)
-      setTimeout(() => {
-        onSelect(ev.target?.result as string);
-        setIsUploading(false);
-        onClose();
-      }, 800);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const url = await uploadMediaFile(file, 'Notícias');
+      onSelect(url);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao carregar imagem. Tente novamente.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {

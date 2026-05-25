@@ -337,6 +337,96 @@
   border-color: #561713;
 }
 
+/* Vista em lista */
+.media-list {
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.media-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #edf0f2;
+  cursor: pointer;
+  background: white;
+}
+
+.media-list-item:hover {
+  background: #f8f9fa;
+}
+
+.media-list-item.selected {
+  background: #f4efe8;
+}
+
+.media-list-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.media-list-thumb {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border: 1px solid #ccd0d4;
+  overflow: hidden;
+  background: #f0f0f1;
+}
+
+.media-list-thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-list-thumb .media-item-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-list-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.media-list-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d2327;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-list-meta {
+  font-size: 12px;
+  color: #8c8f94;
+}
+
+.media-list-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.media-list-actions .media-action-button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
 .media-item-image {
   width: 100%;
   height: 100%;

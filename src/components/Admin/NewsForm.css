@@ -1,180 +1,299 @@
-/* WordPress-style Admin News Form CSS */
+/* Layout baseado no entrecampos (Tailwind convertido para CSS) */
 
 .news-form-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
   color: #2c3338;
-  font-family: inherit; /* Herdado do body (Roboto Slab) */
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
 .news-form-header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .news-form-header h1 {
-  font-size: 18px; /* Reduzido de 20px */
-  font-weight: 500;
+  font-size: 23px;
+  font-weight: 400;
   color: #1d2327;
+  margin: 0;
 }
 
 .news-form-layout {
-  display: grid;
-  grid-template-columns: 1fr 280px;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-}
-
-@media (max-width: 1024px) {
-  .news-form-layout {
-    grid-template-columns: 1fr;
-  }
+  width: 100%;
 }
 
 .news-form-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .news-form-sidebar {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.wp-title-input {
-  width: 100%;
-  height: 40px;
-  padding: 0 10px;
-  font-size: 1.1em; /* Reduzido de 1.25em */
-  line-height: 100%;
-  outline: none;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
-  background-color: #fff;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.07);
-  font-family: inherit;
+@media (min-width: 1024px) {
+  .news-form-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .news-form-sidebar {
+    flex: 0 0 280px;
+    width: 280px;
+    position: sticky;
+    top: 20px;
+  }
 }
 
-.wp-title-input:focus {
+.news-form-title-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 12px;
+  font-size: 1.4rem;
+  background: #fff;
+  border: 1px solid #8c8f94;
+  border-radius: 6px;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.news-form-title-input:focus {
   border-color: #561713;
   box-shadow: 0 0 0 1px #561713;
 }
 
-.wp-box {
+.news-form-editor-box {
   background: #fff;
   border: 1px solid #ccd0d4;
-  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.wp-box-header {
-  padding: 8px 12px;
+.news-form-panel {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.news-form-panel-header {
+  padding: 10px 12px;
   border-bottom: 1px solid #ccd0d4;
+  background: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fcf9f9;
 }
 
-.wp-box-header h2 {
+.news-form-panel-header h2 {
   font-size: 14px;
   font-weight: 600;
+  color: #1d2327;
   margin: 0;
-  color: #561713;
 }
 
-.wp-box-content {
+.news-form-panel-header svg {
+  color: #8c8f94;
+  flex-shrink: 0;
+}
+
+.news-form-panel-body {
   padding: 12px;
+  background: #fff;
 }
 
-.wp-textarea {
-  width: 100%;
-  border: 1px solid #8c8f94;
-  padding: 8px;
-  font-size: 13px;
-  resize: vertical;
+.news-form-panel-body--categories {
+  padding: 0;
 }
 
-.wp-textarea:focus {
-  border-color: #561713;
-  outline: none;
-}
-
-.wp-sidebar-actions {
+.news-form-panel-footer {
+  padding: 12px;
+  background: #f6f7f7;
+  border-top: 1px solid #ccd0d4;
   display: flex;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: #fcf9f9;
-  border-top: 1px solid #ccd0d4;
+  align-items: center;
+  gap: 10px;
 }
 
-.btn-publish {
-  background: #561713;
-  color: #fff;
-  border: 1px solid #561713;
-  padding: 4px 12px;
-  border-radius: 3px;
+.news-form-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
+  font-family: inherit;
+  box-sizing: border-box;
+  min-height: 80px;
+}
+
+.news-form-textarea:focus {
+  border-color: #561713;
+  box-shadow: 0 0 0 1px #561713;
+}
+
+.news-form-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+  color: #50575e;
 }
 
-.btn-publish:hover {
-  background: #cca876;
-  border-color: #cca876;
+.news-form-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.featured-image-preview {
+.news-form-meta-row svg {
+  color: #8c8f94;
+  flex-shrink: 0;
+}
+
+.news-form-image-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.news-form-image-preview {
   width: 100%;
   height: auto;
   border: 1px solid #ccd0d4;
-  margin-bottom: 10px;
+  cursor: pointer;
+  display: block;
 }
 
-.btn-link {
+.news-form-link {
   background: none;
   border: none;
   color: #561713;
-  text-decoration: underline;
   font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   cursor: pointer;
   padding: 0;
 }
 
-.visual-editor .ql-container {
-  font-family: inherit;
-  font-size: 14px;
-  min-height: 400px;
+.news-form-link:hover {
+  color: #3a100d;
 }
 
-.visual-editor .ql-editor {
+.news-form-link-danger {
+  color: #d63638;
+}
+
+.news-form-submit {
+  padding: 8px 24px;
+  background: #561713;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.news-form-submit:hover {
+  background: #3a100d;
+}
+
+.news-form-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.news-form-categories {
+  max-height: 192px;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.news-form-category-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #2c3338;
+  cursor: pointer;
+}
+
+.news-form-category-item input {
+  margin-top: 2px;
+}
+
+.news-form-container .visual-editor-container {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.news-form-container .editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fcf9f9;
+  border-bottom: 1px solid #ccd0d4;
+}
+
+.news-form-container .editor-content {
+  width: 100%;
+  min-height: 400px;
+  padding: 15px;
+  outline: none;
+  background: #fff;
   font-family: inherit;
   line-height: 1.6;
+  font-size: 15px;
+  box-sizing: border-box;
 }
 
-.visual-editor .ql-toolbar {
-  border: none !important;
-  border-bottom: 1px solid #ccd0d4 !important;
-  background: #fcf9f9;
+.news-form-container .editor-content:empty::before {
+  content: attr(data-placeholder);
+  color: #8c8f94;
+  pointer-events: none;
 }
 
-.visual-editor .ql-container {
-  border: none !important;
-}
-
-.btn-link.danger {
-  color: #b32d2e;
-}
-
-.cat-list {
-  max-height: 200px;
-  overflow-y: auto;
+.news-form-container .toolbar-btn {
+  background: #fff;
   border: 1px solid #ccd0d4;
-  padding: 8px;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #561713;
 }
 
-.cat-item {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 13px;
+.news-form-container .toolbar-btn:hover {
+  background: #f0f0f1;
+  border-color: #561713;
 }

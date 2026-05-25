@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNews } from '@/context/NewsContext';
-import { ChevronUp, Calendar, Eye, Key } from 'lucide-react';
+import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
+import { persistNewsImage } from '@/lib/persist-client-media';
 import './NewsForm.css';
 
 interface NewsFormProps {
@@ -45,15 +46,18 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     }
   }, [initialData, categories]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const image = formData.image ? await persistNewsImage(formData.image) : '';
+      const payload = { ...formData, image };
+
       if (isEdit && initialData?.id) {
-        updateNews(initialData.id, formData);
+        updateNews(initialData.id, payload);
       } else {
-        addNews(formData);
+        addNews(payload);
       }
       router.push('/admin/noticias');
     } catch (err) {
@@ -72,40 +76,35 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
       <form onSubmit={handleSubmit} className="news-form-layout">
         <div className="news-form-main">
-          <input 
-            type="text" 
-            placeholder="Introduza o título aqui" 
-            className="wp-title-input"
+          <input
+            type="text"
+            placeholder="Adicionar título"
+            className="news-form-title-input"
             value={formData.title}
-            onChange={(e) => setFormData({...formData, title: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
           />
 
-          <div className="wp-box">
-            <div className="wp-box-header">
-              <h2>Conteúdo Visual</h2>
-            </div>
-            <div className="wp-box-content" style={{ padding: 0 }}>
-              <VisualEditor 
-                key={initialData?.id || 'new'}
-                value={formData.content}
-                onChange={(val) => setFormData({...formData, content: val})}
-                placeholder="Escreva o conteúdo da notícia aqui..."
-              />
-            </div>
+          <div className="news-form-editor-box">
+            <VisualEditor
+              key={initialData?.id || 'new'}
+              value={formData.content}
+              onChange={(val) => setFormData({ ...formData, content: val })}
+              placeholder="Escreva o conteúdo da notícia aqui..."
+            />
           </div>
 
-          <div className="wp-box">
-            <div className="wp-box-header">
+          <div className="news-form-panel">
+            <div className="news-form-panel-header">
               <h2>Excerto (Resumo)</h2>
               <ChevronUp size={16} />
             </div>
-            <div className="wp-box-content">
-              <textarea 
-                className="wp-textarea" 
-                rows={4}
+            <div className="news-form-panel-body">
+              <textarea
+                className="news-form-textarea"
+                rows={3}
                 value={formData.summary}
-                onChange={(e) => setFormData({...formData, summary: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
                 placeholder="Uma breve descrição para a Home Page..."
               />
             </div>
@@ -113,91 +112,98 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
         </div>
 
         <div className="news-form-sidebar">
-          {/* Publicar */}
-          <div className="wp-box">
-            <div className="wp-box-header">
+          <div className="news-form-panel">
+            <div className="news-form-panel-header">
+              <h2>Imagem de destaque</h2>
+              <ChevronUp size={16} />
+            </div>
+            <div className="news-form-panel-body">
+              {formData.image ? (
+                <div className="news-form-image-block">
+                  <img
+                    src={formData.image}
+                    alt="Preview"
+                    className="news-form-image-preview"
+                    onClick={() => setIsMediaModalOpen(true)}
+                  />
+                  <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
+                    Substituir imagem
+                  </button>
+                  <button
+                    type="button"
+                    className="news-form-link news-form-link-danger"
+                    onClick={() => setFormData({ ...formData, image: '' })}
+                  >
+                    Remover imagem
+                  </button>
+                </div>
+              ) : (
+                <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
+                  Definir imagem de destaque
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="news-form-panel">
+            <div className="news-form-panel-header">
               <h2>Publicar</h2>
               <ChevronUp size={16} />
             </div>
-            <div className="wp-box-content">
-              <div style={{ fontSize: '13px', color: '#50575e', marginBottom: '15px' }}>
-                <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Key size={14} /> Estado: <strong>{formData.status === 'published' ? 'Publicado' : 'Rascunho'}</strong>
+            <div className="news-form-panel-body">
+              <div className="news-form-meta">
+                <div className="news-form-meta-row">
+                  <Key size={16} />
+                  <span>Estado: <strong>{formData.status === 'published' ? 'Publicado' : 'Rascunho'}</strong></span>
                 </div>
-                <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Eye size={14} /> Visibilidade: <strong>Público</strong>
+                <div className="news-form-meta-row">
+                  <Eye size={16} />
+                  <span>Visibilidade: <strong>Público</strong></span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={14} /> Data: <strong>{formData.date}</strong>
+                <div className="news-form-meta-row">
+                  <Calendar size={16} />
+                  <span>Data: <strong>{formData.date}</strong></span>
                 </div>
               </div>
             </div>
-            <div className="wp-sidebar-actions">
-              <button type="button" className="btn-link danger" onClick={() => router.push('/admin/noticias')}>Mover para o lixo</button>
-              <button type="submit" className="btn-publish" disabled={loading}>
+            <div className="news-form-panel-footer">
+              <button type="button" className="news-form-link news-form-link-danger" onClick={() => router.push('/admin/noticias')}>
+                Mover para o lixo
+              </button>
+              <button type="submit" className="news-form-submit" disabled={loading}>
                 {loading ? 'A guardar...' : (isEdit ? 'Atualizar' : 'Publicar')}
               </button>
             </div>
           </div>
 
-          {/* Imagem de Destaque */}
-          <div className="wp-box">
-            <div className="wp-box-header">
-              <h2>Imagem de destaque</h2>
-              <ChevronUp size={16} />
-            </div>
-            <div className="wp-box-content">
-              {formData.image ? (
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={formData.image} 
-                    alt="Preview" 
-                    className="featured-image-preview" 
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setIsMediaModalOpen(true)}
-                  />
-                  <div style={{ marginTop: '10px' }}>
-                    <button type="button" className="btn-link" onClick={() => setIsMediaModalOpen(true)}>Substituir imagem</button>
-                    <br />
-                    <button type="button" className="btn-link danger" onClick={() => setFormData({...formData, image: ''})}>Remover imagem</button>
-                  </div>
-                </div>
-              ) : (
-                <button type="button" className="btn-link" onClick={() => setIsMediaModalOpen(true)}>Definir imagem de destaque</button>
-              )}
-            </div>
-          </div>
-
-          {/* Categorias */}
-          <div className="wp-box">
-            <div className="wp-box-header">
+          <div className="news-form-panel">
+            <div className="news-form-panel-header">
               <h2>Categorias</h2>
               <ChevronUp size={16} />
             </div>
-            <div className="wp-box-content">
-              <div className="cat-list">
-                {categories.map(cat => (
-                  <label key={cat.slug} className="cat-item">
-                    <input 
-                      type="checkbox" 
+            <div className="news-form-panel-body news-form-panel-body--categories">
+              <div className="news-form-categories">
+                {categories.map((cat) => (
+                  <label key={cat.slug} className="news-form-category-item">
+                    <input
+                      type="checkbox"
                       checked={formData.category === cat.name}
-                      onChange={() => setFormData({...formData, category: cat.name})}
-                    /> {cat.name}
+                      onChange={() => setFormData({ ...formData, category: cat.name })}
+                    />
+                    <span>{cat.name}</span>
                   </label>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Media Selector Modal */}
-          <MediaModal 
-            isOpen={isMediaModalOpen}
-            onClose={() => setIsMediaModalOpen(false)}
-            onSelect={(url) => setFormData({...formData, image: url})}
-          />
         </div>
       </form>
-    </div>
 
+      <MediaModal
+        isOpen={isMediaModalOpen}
+        onClose={() => setIsMediaModalOpen(false)}
+        onSelect={(url) => setFormData({ ...formData, image: url })}
+      />
+    </div>
   );
 }

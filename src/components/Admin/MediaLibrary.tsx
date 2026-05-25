@@ -57,6 +57,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
   const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(70);
   
   // Advanced Editor States
@@ -280,8 +281,22 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
       {/* Toolbar Superior */}
       <div className="media-toolbar">
         <div className="media-toolbar-left">
-          <button className="media-toolbar-button"><ListIcon className="media-toolbar-icon" /></button>
-          <button className="media-toolbar-button active"><LayoutGrid className="media-toolbar-icon" /></button>
+          <button
+            type="button"
+            className={`media-toolbar-button ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            aria-label="Vista em lista"
+          >
+            <ListIcon className="media-toolbar-icon" />
+          </button>
+          <button
+            type="button"
+            className={`media-toolbar-button ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            aria-label="Vista em grelha"
+          >
+            <LayoutGrid className="media-toolbar-icon" />
+          </button>
           
           {!isBulkMode ? (
             <button 
@@ -332,7 +347,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
         <div className="media-grid-container">
           {loading && files.length === 0 ? (
             <div className="media-loading"><RefreshCw className="media-loading-icon" /></div>
-          ) : (
+          ) : viewMode === 'grid' ? (
             <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (
                 <div 
@@ -385,6 +400,81 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery }:
                       <Eye className="media-action-icon" />
                     </button>
                     <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSingle(file.id);
+                      }}
+                      className="media-action-button delete"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="media-action-icon" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={`media-list ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
+              {paginatedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className={`media-list-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    if (isModal && onSelect) {
+                      onSelect(getPublicUrl(file));
+                    } else {
+                      openDetails(file);
+                    }
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    className="media-list-checkbox"
+                    checked={selectedIds.has(file.id)}
+                    onChange={() => toggleSelect(file.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Selecionar ${file.name}`}
+                  />
+                  <div className="media-list-thumb">
+                    {file.category === 'imagens' ? (
+                      <img src={getPublicUrl(file)} className="media-list-thumb-image" alt="" loading="lazy" />
+                    ) : file.category === 'videos' ? (
+                      <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
+                    ) : (
+                      <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
+                    )}
+                  </div>
+                  <div className="media-list-info">
+                    <span className="media-list-name">{file.name}</span>
+                    <span className="media-list-meta">
+                      {file.subcategory} · {formatSize(file.metadata?.size)}
+                    </span>
+                  </div>
+                  <div className="media-list-actions">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDetails(file);
+                      }}
+                      className="media-action-button edit"
+                      title="Editar"
+                    >
+                      <Edit3 className="media-action-icon" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPreview(file);
+                      }}
+                      className="media-action-button view"
+                      title="Ver"
+                    >
+                      <Eye className="media-action-icon" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteSingle(file.id);

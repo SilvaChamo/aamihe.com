@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initialNewsData, NewsItem } from '@/data/news';
+import { persistNewsImage } from '@/lib/persist-client-media';
 import { NEWS_CATEGORIES, NewsCategory, slugifyCategory } from '@/data/news-categories';
 
 interface NewsContextType {
@@ -22,21 +23,44 @@ const NewsContext = createContext<NewsContextType | undefined>(undefined);
 export function NewsProvider({ children }: { children: React.ReactNode }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>([]);
+  const imagesSynced = useRef(false);
 
   useEffect(() => {
-    const savedNews = localStorage.getItem('aamihe_news');
-    if (savedNews) {
-      setNews(JSON.parse(savedNews));
-    } else {
-      setNews(initialNewsData.pt);
-    }
-
     const savedCategories = localStorage.getItem('aamihe_news_categories');
     if (savedCategories) {
       setCategories(JSON.parse(savedCategories));
     } else {
       setCategories(NEWS_CATEGORIES);
     }
+
+    (async () => {
+      const savedNews = localStorage.getItem('aamihe_news');
+      let items: NewsItem[] = savedNews ? JSON.parse(savedNews) : initialNewsData.pt;
+
+      if (!imagesSynced.current) {
+        imagesSynced.current = true;
+        let changed = false;
+        items = await Promise.all(
+          items.map(async (item) => {
+            if (!item.image?.startsWith('data:')) return item;
+            try {
+              const url = await persistNewsImage(item.image);
+              changed = true;
+              return { ...item, image: url };
+            } catch (err) {
+              console.error('Erro ao sincronizar imagem da notícia', item.id, err);
+              return item;
+            }
+          })
+        );
+        if (changed) {
+          localStorage.setItem('aamihe_news', JSON.stringify(items));
+          window.dispatchEvent(new Event('newsUpdated'));
+        }
+      }
+
+      setNews(items);
+    })();
   }, []);
 
   const saveNews = (updatedNews: NewsItem[]) => {

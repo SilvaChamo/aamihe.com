@@ -63,6 +63,7 @@
 .admin-content-wrapper {
   display: flex;
   flex: 1;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -239,8 +240,14 @@
 /* Main Content */
 .admin-main {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   position: relative;
+}
+
+.admin-main-content {
+  width: 100%;
+  min-width: 0;
 }
 
 .sidebar-toggle {
@@ -269,4 +276,5 @@
 
 .admin-main-content {
   width: 100%;
+  min-width: 0;
 }

@@ -32,15 +32,8 @@ export default function VisualEditor({ value, onChange, placeholder }: VisualEdi
   };
 
   return (
-    <div className="visual-editor-container" style={{ border: '1px solid #ccd0d4', borderRadius: '4px', overflow: 'hidden' }}>
-      {/* Toolbar */}
-      <div className="editor-toolbar" style={{ 
-        display: 'flex', 
-        gap: '10px', 
-        padding: '10px', 
-        background: '#fcf9f9', 
-        borderBottom: '1px solid #ccd0d4' 
-      }}>
+    <div className="visual-editor-container">
+      <div className="editor-toolbar">
         <button type="button" onClick={() => execCommand('bold')} className="toolbar-btn" title="Negrito"><Bold size={16} /></button>
         <button type="button" onClick={() => execCommand('italic')} className="toolbar-btn" title="Itálico"><Italic size={16} /></button>
         <button type="button" onClick={() => execCommand('formatBlock', 'h2')} className="toolbar-btn" title="Título 2">H2</button>
@@ -54,48 +47,14 @@ export default function VisualEditor({ value, onChange, placeholder }: VisualEdi
         <button type="button" onClick={() => execCommand('removeFormat')} className="toolbar-btn" title="Limpar Formatação"><Type size={16} /></button>
       </div>
 
-      {/* Editable Area */}
       <div
         ref={editorRef}
         contentEditable
         onInput={handleInput}
         className="editor-content"
-        style={{ 
-          minHeight: '400px', 
-          padding: '15px', 
-          outline: 'none', 
-          background: '#fff',
-          fontFamily: 'inherit',
-          lineHeight: '1.6',
-          fontSize: '15px'
-        }}
         data-placeholder={placeholder}
       />
 
-      <style jsx>{`
-        .toolbar-btn {
-          background: #fff;
-          border: 1px solid #ccd0d4;
-          border-radius: 3px;
-          padding: 4px 8px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 12px;
-          font-weight: 600;
-          color: #561713;
-          transition: all 0.2s;
-        }
-        .toolbar-btn:hover {
-          background: #f0f0f1;
-          border-color: #561713;
-        }
-        .editor-content:empty:before {
-          content: attr(data-placeholder);
-          color: #8c8f94;
-        }
-      `}</style>
     </div>
   );
 }

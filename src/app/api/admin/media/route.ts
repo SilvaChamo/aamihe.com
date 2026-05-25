@@ -5,6 +5,42 @@ import { saveUploadedBuffer } from '@/lib/persist-media';
 import type { MediaCategory } from '@/lib/site-media';
 import { inferMediaCategory } from '@/lib/site-media';
 
+function extensionFromMime(mime: string): string {
+  if (mime === 'image/png') return '.png';
+  if (mime === 'image/webp') return '.webp';
+  if (mime === 'image/gif') return '.gif';
+  return '.jpg';
+}
+
+async function saveDataUrlImage(dataUrl: string, subcategory: string, title: string) {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    throw new Error('Formato de imagem inválido');
+  }
+
+  const mimeType = match[1];
+  const buffer = Buffer.from(match[2], 'base64');
+  const ext = extensionFromMime(mimeType);
+  const filename = `news-${Date.now()}${ext}`;
+  const saved = await saveUploadedBuffer(buffer, filename, 'uploads/imagens');
+
+  const db = await getDashboardDb();
+  const record = upsertMediaRecord(db, {
+    site_slug: 'aamihe',
+    title,
+    url: saved.url,
+    category: 'imagens',
+    subcategory,
+    mime_type: mimeType,
+    size: buffer.length,
+    source: 'upload',
+    published: true,
+  });
+
+  await saveDashboardDb(db);
+  return record;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -24,6 +60,17 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
+    const dataUrl = form.get('data_url');
+
+    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:')) {
+      const record = await saveDataUrlImage(
+        dataUrl,
+        String(form.get('subcategory') || 'Notícias'),
+        String(form.get('title') || 'Imagem de notícia')
+      );
+      return NextResponse.json({ success: true, media: record });
+    }
+
     const file = form.get('file') as File | null;
     if (!file) {
       return NextResponse.json({ success: false, error: 'Ficheiro em falta' }, { status: 400 });
