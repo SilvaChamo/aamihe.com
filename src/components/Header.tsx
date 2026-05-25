@@ -14,7 +14,6 @@ const translations = {
     conferencia: 'CONFERÊNCIA',
     blog: 'BLOG',
     contacto: 'CONTACTE-NOS',
-    admin: 'Admin',
   },
   fr: {
     inicio: 'ACCUEIL',
@@ -23,7 +22,6 @@ const translations = {
     conferencia: 'CONFÉRENCE',
     blog: 'BLOG',
     contacto: 'CONTACTEZ-NOUS',
-    admin: 'Admin',
   },
   en: {
     inicio: 'HOME',
