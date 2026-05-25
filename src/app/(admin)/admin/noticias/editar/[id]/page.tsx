@@ -18,5 +18,5 @@ export default function EditarNoticiaPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  return <NewsForm initialData={newsItem} isEdit={true} />;
+  return <NewsForm key={newsItem.id} initialData={newsItem} isEdit={true} />;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNews } from '@/context/NewsContext';
 import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
@@ -19,6 +19,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
   const { addNews, updateNews, categories } = useNews();
   const [loading, setLoading] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const initializedRef = useRef<number | 'new' | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -31,20 +32,34 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({
-        ...prev,
-        ...initialData,
+    if (initialData?.id != null) {
+      if (initializedRef.current === initialData.id) return;
+      initializedRef.current = initialData.id;
+      setFormData({
+        title: initialData.title || '',
+        category: initialData.category || '',
+        date: initialData.date || new Date().toLocaleDateString('pt-PT'),
+        image: initialData.image || '',
         content: initialData.content || '',
-        summary: initialData.summary || ''
-      }));
-    } else if (categories.length > 0) {
-      setFormData(prev => ({
+        summary: initialData.summary || '',
+        status: initialData.status || 'published',
+      });
+      return;
+    }
+
+    if (!isEdit && initializedRef.current !== 'new') {
+      initializedRef.current = 'new';
+    }
+  }, [initialData, isEdit]);
+
+  useEffect(() => {
+    if (!isEdit && categories.length > 0) {
+      setFormData((prev) => ({
         ...prev,
         category: prev.category || categories[0].name,
       }));
     }
-  }, [initialData, categories]);
+  }, [categories, isEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,7 +217,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       <MediaModal
         isOpen={isMediaModalOpen}
         onClose={() => setIsMediaModalOpen(false)}
-        onSelect={(url) => setFormData({ ...formData, image: url })}
+        onSelect={(url) => setFormData((prev) => ({ ...prev, image: url }))}
       />
     </div>
   );

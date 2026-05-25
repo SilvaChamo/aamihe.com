@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload, ImageIcon } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
 import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
@@ -16,6 +16,14 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('upload');
+      setIsDragging(false);
+      setIsUploading(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +31,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
     if (file) {
       processFile(file);
     }
+    e.target.value = '';
   };
 
   const processFile = async (file: File) => {
@@ -126,14 +135,11 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
         <div className="media-modal-footer">
           <div className="media-modal-footer-left">
             {activeTab === 'library' && (
-              <p className="media-selection-info">Selecione uma imagem da biblioteca para continuar.</p>
+              <p className="media-selection-info">Clique numa imagem para a inserir na notícia.</p>
             )}
           </div>
           <div className="media-modal-footer-right">
-            <button className="media-button-secondary" onClick={onClose}>Cancelar</button>
-            {activeTab === 'library' && (
-              <button className="media-button-primary disabled">Inserir na notícia</button>
-            )}
+            <button type="button" className="media-button-secondary" onClick={onClose}>Cancelar</button>
           </div>
         </div>
       </div>
