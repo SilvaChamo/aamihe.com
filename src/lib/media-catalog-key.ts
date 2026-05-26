@@ -1,4 +1,25 @@
-/** Chave para evitar a mesma imagem repetida com URLs diferentes. */
+import type { SiteMediaRecord } from '@/lib/site-media';
+
+/** Nome de ficheiro normalizado (sem sufixo WordPress -300x200). */
+export function mediaUniqueBasename(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  const pathname = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+    ? (() => {
+        try {
+          return new URL(trimmed).pathname;
+        } catch {
+          return trimmed;
+        }
+      })()
+    : trimmed;
+
+  const name = (pathname.split('/').pop() || pathname).toLowerCase();
+  return name.replace(/-\d+x\d+(?=\.[a-z0-9]+$)/i, '');
+}
+
+/** Chave para URLs remotas (caminho completo). */
 export function mediaCatalogKey(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) return '';
@@ -11,10 +32,7 @@ export function mediaCatalogKey(url: string): string {
     }
   }
 
-  const name = (trimmed.split('/').pop() || trimmed).toLowerCase();
-  return name
-    .replace(/-\d+x\d+(?=\.[a-z0-9]+$)/i, '')
-    .replace(/^news-\d+-[a-f0-9]+/i, 'news-upload');
+  return mediaUniqueBasename(trimmed);
 }
 
 export function canDeleteMedia(item: { id: string; source?: string; url?: string }): boolean {
@@ -35,15 +53,33 @@ export function mediaPriority(item: { source?: string; id: string; url: string }
   return 1;
 }
 
-function pickPreferredMedia(
-  existing: import('@/lib/site-media').SiteMediaRecord,
-  candidate: import('@/lib/site-media').SiteMediaRecord
-): import('@/lib/site-media').SiteMediaRecord {
-  const existingPriority = mediaPriority(existing);
-  const candidatePriority = mediaPriority(candidate);
-  if (candidatePriority !== existingPriority) {
-    return candidatePriority > existingPriority ? candidate : existing;
+function parseDimensionsFromUrl(url: string): number {
+  const match = url.match(/-(\d+)x(\d+)(?=\.[a-z0-9]+$)/i);
+  if (!match) return 0;
+  return Number(match[1]) * Number(match[2]);
+}
+
+function isThumbnailUrl(url: string): boolean {
+  return /-\d+x\d+(?=\.[a-z0-9]+$)/i.test(url);
+}
+
+/** Pontuação maior = melhor qualidade (tamanho, resolução, não-miniatura). */
+export function mediaQualityScore(item: SiteMediaRecord): number {
+  let score = mediaPriority(item) * 1_000_000;
+  if (item.size && item.size > 0) score += item.size;
+  score += parseDimensionsFromUrl(item.url);
+  if (isThumbnailUrl(item.url)) score -= 500_000;
+  if (item.url.includes('supabase.co/storage')) score += 10_000;
+  return score;
+}
+
+function pickPreferredMedia(existing: SiteMediaRecord, candidate: SiteMediaRecord): SiteMediaRecord {
+  const existingScore = mediaQualityScore(existing);
+  const candidateScore = mediaQualityScore(candidate);
+  if (candidateScore !== existingScore) {
+    return candidateScore > existingScore ? candidate : existing;
   }
+
   const existingLocal = existing.url.startsWith('/');
   const candidateLocal = candidate.url.startsWith('/');
   if (candidateLocal && !existingLocal) return candidate;
@@ -51,8 +87,8 @@ function pickPreferredMedia(
   return candidate;
 }
 
-export function dedupeMediaRecords(items: import('@/lib/site-media').SiteMediaRecord[]) {
-  const byId = new Map<string, import('@/lib/site-media').SiteMediaRecord>();
+export function dedupeMediaRecords(items: SiteMediaRecord[]) {
+  const byId = new Map<string, SiteMediaRecord>();
   for (const item of items) {
     const existing = byId.get(item.id);
     if (!existing) {
@@ -62,16 +98,17 @@ export function dedupeMediaRecords(items: import('@/lib/site-media').SiteMediaRe
     byId.set(item.id, pickPreferredMedia(existing, item));
   }
 
-  const byKey = new Map<string, import('@/lib/site-media').SiteMediaRecord>();
+  const byBasename = new Map<string, SiteMediaRecord>();
   for (const item of byId.values()) {
-    const key = mediaCatalogKey(item.url);
-    const existing = byKey.get(key);
+    const key = mediaUniqueBasename(item.url);
+    if (!key) continue;
+    const existing = byBasename.get(key);
     if (!existing) {
-      byKey.set(key, item);
+      byBasename.set(key, item);
       continue;
     }
-    byKey.set(key, pickPreferredMedia(existing, item));
+    byBasename.set(key, pickPreferredMedia(existing, item));
   }
 
-  return Array.from(byKey.values());
+  return Array.from(byBasename.values());
 }

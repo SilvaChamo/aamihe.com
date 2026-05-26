@@ -32,6 +32,12 @@
   margin: 0;
 }
 
+.news-form-locale-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #50575e;
+}
+
 .news-form-layout {
   display: flex;
   flex-direction: column;

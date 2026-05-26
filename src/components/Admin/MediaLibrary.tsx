@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { uploadMediaFiles } from '@/lib/persist-client-media';
-import { canDeleteMedia, mediaCatalogKey } from '@/lib/media-catalog-key';
+import { canDeleteMedia, dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
+import type { SiteMediaRecord } from '@/lib/site-media';
 import { 
   Trash2, 
   Copy, 
@@ -25,10 +26,7 @@ import {
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
-import OptimizedImage from '@/components/ui/OptimizedImage';
 import './MediaLibrary.css';
-
-const MEDIA_THUMB_SIZES = '200px';
 
 interface MediaLibraryProps {
   onSelect?: (url: string) => void;
@@ -108,35 +106,21 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
       const res = await fetch(`/api/admin/media${query ? `?${query}` : ''}`);
       const data = await res.json();
       if (data.success) {
-        const mapped = data.media.map(
-          (item: {
-            id: string;
-            title: string;
-            url: string;
-            category: MediaCategory;
-            subcategory: string;
-            mime_type: string;
-            size?: number;
-            source?: string;
-          }) => ({
-            id: item.id,
-            name: item.title,
-            url: item.url,
-            category: resolveMediaCategory(item),
-            subcategory: item.subcategory,
-            source: item.source,
-            metadata: {
-              size: item.size || 0,
-              mimetype: item.mime_type,
-            },
-          })
-        );
-        const byKey = new Map<string, MediaFile>();
-        for (const file of mapped) {
-          const key = `${file.id}::${mediaCatalogKey(file.url)}`;
-          if (!byKey.has(key)) byKey.set(key, file);
-        }
-        setFiles(Array.from(byKey.values()));
+        const records = data.media as SiteMediaRecord[];
+        const deduped = dedupeMediaRecords(records);
+        const mapped = deduped.map((item) => ({
+          id: item.id,
+          name: item.title,
+          url: item.url,
+          category: resolveMediaCategory(item),
+          subcategory: item.subcategory,
+          source: item.source,
+          metadata: {
+            size: item.size || 0,
+            mimetype: item.mime_type,
+          },
+        }));
+        setFiles(mapped);
       } else {
         setFiles([]);
       }
@@ -510,15 +494,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   className={`media-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                 >
                   {fileDisplayKind(file) === 'imagens' ? (
-                    <OptimizedImage
-                      src={getPublicUrl(file)}
-                      alt=""
-                      width={220}
-                      height={165}
-                      className="media-item-image"
-                      sizes={MEDIA_THUMB_SIZES}
-                      quality={68}
-                    />
+                    <img src={getPublicUrl(file)} className="media-item-image" alt="" loading="lazy" />
                   ) : fileDisplayKind(file) === 'videos' ? (
                     <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                   ) : (
@@ -596,15 +572,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   />
                   <div className="media-list-thumb">
                     {fileDisplayKind(file) === 'imagens' ? (
-                      <OptimizedImage
-                        src={getPublicUrl(file)}
-                        alt=""
-                        width={64}
-                        height={64}
-                        className="media-list-thumb-image"
-                        sizes="64px"
-                        quality={65}
-                      />
+                      <img src={getPublicUrl(file)} className="media-list-thumb-image" alt="" loading="lazy" />
                     ) : fileDisplayKind(file) === 'videos' ? (
                       <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
                     ) : (

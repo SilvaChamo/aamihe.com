@@ -1,3 +1,12 @@
+export type NewsLocale = 'pt' | 'fr' | 'en';
+
+export type NewsTranslation = {
+  title: string;
+  content: string;
+  summary?: string;
+  category?: string;
+};
+
 export interface NewsItem {
   id: number;
   date: string;
@@ -8,6 +17,11 @@ export interface NewsItem {
   summary?: string;
   author?: string;
   status?: 'published' | 'draft' | 'pending';
+  /** Francês e inglês; português fica nos campos principais. */
+  translations?: {
+    fr?: NewsTranslation;
+    en?: NewsTranslation;
+  };
 }
 
 export const initialNewsData: Record<string, NewsItem[]> = {
@@ -15,7 +29,7 @@ export const initialNewsData: Record<string, NewsItem[]> = {
     {
       id: 1,
       date: '19 Set, 2024',
-      title: 'GoL, UMU, EPA Launch Ocean Acidification Training for West Africa',
+      title: 'GoL, UMU e EPA lançam formação sobre acidificação dos oceanos na África Ocidental',
       image: '/gallery/Ocean-acidification-training.jpeg.webp',
       category: 'Educação',
       content: 'A Universidade Metodista Unida (UMU), em colaboração com o Governo da Libéria (GoL) e a Agência de Proteção Ambiental (EPA), lançou um programa de formação sobre acidificação dos oceanos para a África Ocidental...',
@@ -26,7 +40,7 @@ export const initialNewsData: Record<string, NewsItem[]> = {
     {
       id: 2,
       date: 'Ago, 2024',
-      title: 'MASHONALAND EAST DEVELOPMENT PULSE',
+      title: 'Impulso de desenvolvimento em Mashonaland East',
       image: '/gallery/bed4c6ab-bf65-48aa-9d9d-61de5d50f21a.jpeg.webp',
       category: 'Desenvolvimento',
       content: 'Relatório detalhado sobre os avanços no desenvolvimento regional em Mashonaland East...',

@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { SiteMediaRecord } from '@/lib/site-media';
 
@@ -19,6 +19,7 @@ type CollectedImage = {
   subcategory: string;
   mime_type: string;
   dedupeKey: string;
+  size: number;
 };
 
 function mimeFromName(name: string): string {
@@ -86,12 +87,20 @@ async function walkPublicImages(relativeDir: string): Promise<CollectedImage[]> 
       else if (relPath.startsWith('Imagens/')) subcategory = 'Site';
       else if (relPath.startsWith('Blog_files/')) subcategory = 'Blog';
 
+      let fileSize = 0;
+      try {
+        fileSize = (await stat(fullPath)).size;
+      } catch {
+        fileSize = 0;
+      }
+
       results.push({
         url,
         title: titleFromPath(url),
         subcategory,
         mime_type: mimeFromName(entry.name),
         dedupeKey: basenameKey(entry.name),
+        size: fileSize,
       });
     }
   }
@@ -123,6 +132,7 @@ async function parseWordPressGalleryHtml(): Promise<CollectedImage[]> {
         subcategory: WP_GALLERY_CATEGORIES[tag] || 'Galeria',
         mime_type: mimeFromName(url),
         dedupeKey: basenameKey(url),
+        size: 0,
       };
     });
   } catch {
@@ -144,8 +154,15 @@ export async function collectAllSiteImages(): Promise<SiteMediaRecord[]> {
     return rank(a.url) - rank(b.url) || a.url.localeCompare(b.url);
   });
 
+  const bestLocal = new Map<string, CollectedImage>();
   for (const image of localImages) {
-    if (seenBasenames.has(image.dedupeKey)) continue;
+    const existing = bestLocal.get(image.dedupeKey);
+    if (!existing || image.size > existing.size) {
+      bestLocal.set(image.dedupeKey, image);
+    }
+  }
+
+  for (const image of bestLocal.values()) {
     seenBasenames.add(image.dedupeKey);
     map.set(image.url, {
       id: `site_${image.dedupeKey}`,
@@ -155,6 +172,7 @@ export async function collectAllSiteImages(): Promise<SiteMediaRecord[]> {
       category: 'imagens',
       subcategory: image.subcategory,
       mime_type: image.mime_type,
+      size: image.size || undefined,
       source: 'legacy',
       published: true,
       created_at: now,

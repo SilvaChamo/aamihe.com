@@ -8,14 +8,14 @@ import BlogPageLayout from '@/components/Blog/BlogPageLayout';
 import BlogEntryCard from '@/components/Blog/BlogEntryCard';
 import BlogPagination from '@/components/Blog/BlogPagination';
 import BlogSidebar from '@/components/Blog/BlogSidebar';
-import { useNews } from '@/context/NewsContext';
+import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import { filterNewsByQuery, filterNewsByYear } from '@/lib/blog-utils';
 import '@/components/Blog/BlogLayout.css';
 
 const PER_PAGE = 4;
 
 export default function NoticiasPage() {
-  const { news } = useNews();
+  const { news } = useLocalizedNews();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeYear, setActiveYear] = useState<string | null>(null);
   const [page, setPage] = useState(1);

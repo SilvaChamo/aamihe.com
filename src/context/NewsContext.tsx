@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { initialNewsData, NewsItem } from '@/data/news';
+import { migrateNewsCatalog } from '@/lib/news-i18n';
 import { persistNewsImage } from '@/lib/persist-client-media';
 import { NEWS_CATEGORIES, NewsCategory, slugifyCategory } from '@/data/news-categories';
 
@@ -66,6 +67,25 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         console.error('Erro ao carregar conteúdo remoto', err);
+      }
+
+      let applySeedPortuguese = false;
+      try {
+        applySeedPortuguese = !localStorage.getItem('aamihe_news_pt_native_v1');
+      } catch {
+        applySeedPortuguese = false;
+      }
+
+      const migrated = migrateNewsCatalog(items, { applySeedPortuguese });
+      if (
+        applySeedPortuguese ||
+        JSON.stringify(migrated) !== JSON.stringify(items)
+      ) {
+        items = migrated;
+        localStorage.setItem('aamihe_news', JSON.stringify(items));
+        if (applySeedPortuguese) {
+          localStorage.setItem('aamihe_news_pt_native_v1', '1');
+        }
       }
 
       setCategories(loadedCategories);

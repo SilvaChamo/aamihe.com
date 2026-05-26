@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 import { useNews } from '@/context/NewsContext';
+import type { NewsItem } from '@/data/news';
+import { buildNewsSavePayload, readNewsFieldsForLocale } from '@/lib/news-i18n';
 import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
@@ -15,9 +18,12 @@ interface NewsFormProps {
   isEdit?: boolean;
 }
 
+const localeLabels = { pt: 'Português', fr: 'Français', en: 'English' } as const;
+
 export default function NewsForm({ initialData, isEdit = false }: NewsFormProps) {
   const router = useRouter();
-  const { addNews, updateNews, categories } = useNews();
+  const { locale } = useLanguage();
+  const { addNews, updateNews, categories, getNewsById } = useNews();
   const [loading, setLoading] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const initializedRef = useRef<number | 'new' | null>(null);
@@ -36,24 +42,24 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
   useEffect(() => {
     if (initialData?.id != null) {
-      if (initializedRef.current === initialData.id) return;
-      initializedRef.current = initialData.id;
+      const fields = readNewsFieldsForLocale(initialData as NewsItem, locale);
       setFormData({
-        title: initialData.title || '',
-        category: initialData.category || '',
+        title: fields.title,
+        category: fields.category || initialData.category || '',
         date: initialData.date || new Date().toLocaleDateString('pt-PT'),
         image: initialData.image || '',
-        content: initialData.content || '',
-        summary: initialData.summary || '',
+        content: fields.content,
+        summary: fields.summary,
         status: initialData.status || 'published',
       });
+      initializedRef.current = initialData.id;
       return;
     }
 
     if (!isEdit && initializedRef.current !== 'new') {
       initializedRef.current = 'new';
     }
-  }, [initialData, isEdit]);
+  }, [initialData, isEdit, locale]);
 
   useEffect(() => {
     if (!isEdit && categories.length > 0) {
@@ -103,12 +109,17 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       if (image && !image.startsWith('http://') && !image.startsWith('https://')) {
         image = await persistNewsImage(image, formData.title);
       }
-      const payload = { ...formData, image };
+      const existing = isEdit && initialData?.id ? getNewsById(initialData.id) : undefined;
+      const payload = buildNewsSavePayload(existing, locale, {
+        ...formData,
+        image,
+        status: formData.status,
+      });
 
       if (isEdit && initialData?.id) {
         updateNews(initialData.id, payload);
       } else {
-        addNews(payload);
+        addNews(payload as Omit<NewsItem, 'id'>);
       }
       router.push('/admin/noticias');
     } catch (err) {
@@ -131,6 +142,10 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
       <div className="news-form-header">
         <h1>{isEdit ? 'Editar notícia' : 'Adicionar nova notícia'}</h1>
+        <p className="news-form-locale-hint">
+          A editar em: <strong>{localeLabels[locale]}</strong>
+          {locale !== 'pt' ? ' (versão traduzida; o português é a língua principal do site)' : ''}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="news-form-layout">

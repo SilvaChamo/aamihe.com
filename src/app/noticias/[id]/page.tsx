@@ -8,12 +8,12 @@ import NewsArticleBody from '@/components/NewsArticleBody';
 import BlogPageBanner from '@/components/Blog/BlogPageBanner';
 import BlogPageLayout from '@/components/Blog/BlogPageLayout';
 import BlogSidebar from '@/components/Blog/BlogSidebar';
-import { useNews } from '@/context/NewsContext';
+import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import '@/components/Blog/BlogLayout.css';
 
 export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getNewsById, news } = useNews();
+  const { getNewsById, news } = useLocalizedNews();
   const item = getNewsById(parseInt(id, 10));
   const published = news.filter((n) => n.status !== 'draft');
 
