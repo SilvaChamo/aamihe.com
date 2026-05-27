@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, type FormEvent } from 'react';
+import { type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlogPageBanner from '@/components/Blog/BlogPageBanner';
 import ContactForm from '@/components/ContactForm';
+import FacebookPageEmbed from '@/components/FacebookPageEmbed';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
-import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import styles from './contacte.module.css';
 
 const COPY = {
@@ -23,9 +23,7 @@ const COPY = {
     error: 'Não foi possível enviar. Tente novamente.',
     search: 'PROCURAR',
     searchPlaceholder: 'Procurar…',
-    infoTitle: 'Contactos',
-    facebook: 'Facebook',
-    facebookNote: 'Siga a AAMIHE nas redes sociais.',
+    facebook: 'FACEBOOK',
   },
   fr: {
     name: 'Nom',
@@ -38,9 +36,7 @@ const COPY = {
     error: "Impossible d'envoyer. Réessayez.",
     search: 'RECHERCHER',
     searchPlaceholder: 'Rechercher…',
-    infoTitle: 'Contacts',
-    facebook: 'Facebook',
-    facebookNote: 'Suivez AAMIHE sur les réseaux sociaux.',
+    facebook: 'FACEBOOK',
   },
   en: {
     name: 'Name',
@@ -53,9 +49,7 @@ const COPY = {
     error: 'Could not send. Please try again.',
     search: 'SEARCH',
     searchPlaceholder: 'Search…',
-    infoTitle: 'Contact',
-    facebook: 'Facebook',
-    facebookNote: 'Follow AAMIHE on social media.',
+    facebook: 'FACEBOOK',
   },
 } as const;
 
@@ -65,10 +59,6 @@ export default function ContacteNosPage() {
   const router = useRouter();
   const t = COPY[locale];
   const { contact } = pages;
-
-  useEffect(() => {
-    scrollBelowSiteHeader('contact-content-start', 'auto');
-  }, []);
 
   function handleSiteSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -86,7 +76,6 @@ export default function ContacteNosPage() {
       <Header />
       <main id="main" className={`site-main clr ${styles['contact-main']}`} role="main">
         <BlogPageBanner title={contact.bannerTitle} imageUrl={contact.bannerImage} />
-        <div id="contact-content-start" className={styles['contact-content-anchor']} aria-hidden="true" />
 
         <div className={`container clr ${styles['contact-layout']}`}>
           <div className={styles['contact-primary']}>
@@ -102,33 +91,31 @@ export default function ContacteNosPage() {
             <ContactForm labels={t} />
           </div>
 
-          <aside className={styles['contact-sidebar']} aria-label="Informação de contacto">
-            <div className={styles['contact-sidebar-box']}>
-              <h3>{t.infoTitle}</h3>
-              <div className={styles['contact-sidebar-divider']} />
-              <ul className={styles['contact-info-list']}>
-                <li>{contact.address}</li>
-                <li>
-                  <a href={`tel:${contact.contactPhone.replace(/\s/g, '')}`}>{contact.contactPhone}</a>
-                </li>
-                <li>
-                  <a href={`mailto:${contact.contactEmail}`}>{contact.contactEmail}</a>
-                </li>
-              </ul>
-            </div>
-
+          <aside className={styles['contact-sidebar']} aria-label="Pesquisa e redes sociais">
             <div className={styles['contact-sidebar-box']}>
               <h3>{t.search}</h3>
               <div className={styles['contact-sidebar-divider']} />
               <form className={styles['contact-search']} onSubmit={handleSiteSearch} role="search">
-                <input type="search" name="q" placeholder={t.searchPlaceholder} aria-label={t.search} />
+                <div className={styles['contact-search-row']}>
+                  <input type="search" name="q" placeholder={t.searchPlaceholder} aria-label={t.search} />
+                  <button type="submit" className={styles['contact-search-btn']} aria-label={t.search}>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fill="currentColor"
+                        d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </form>
             </div>
 
             <div className={styles['contact-sidebar-box']}>
               <h3>{t.facebook}</h3>
               <div className={styles['contact-sidebar-divider']} />
-              <p style={{ fontSize: 14, color: '#666', margin: 0 }}>{t.facebookNote}</p>
+              <div className={styles['contact-facebook']}>
+                <FacebookPageEmbed />
+              </div>
             </div>
           </aside>
         </div>

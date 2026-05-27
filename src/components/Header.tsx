@@ -2,9 +2,15 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import './Header.css';
+
+const SCROLL_THRESHOLD = 80;
+const SCROLL_DELTA = 6;
+const HEADER_HEIGHT_FULL = '112px';
+const HEADER_HEIGHT_NAV = '72px';
 
 const translations = {
   pt: {
@@ -36,11 +42,51 @@ const translations = {
 export default function Header() {
   const pathname = usePathname();
   const { locale, setLocale } = useLanguage();
+  const [navPinned, setNavPinned] = useState(false);
+  const lastScrollY = useRef(0);
 
   const t = translations[locale];
 
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const lastY = lastScrollY.current;
+
+        if (y < SCROLL_THRESHOLD) {
+          setNavPinned(false);
+        } else if (y < lastY - SCROLL_DELTA) {
+          setNavPinned(true);
+        } else if (y > lastY + SCROLL_DELTA) {
+          setNavPinned(false);
+        }
+
+        lastScrollY.current = y;
+        ticking = false;
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--site-header-height',
+      navPinned ? HEADER_HEIGHT_NAV : HEADER_HEIGHT_FULL,
+    );
+    return () => {
+      document.documentElement.style.setProperty('--site-header-height', HEADER_HEIGHT_FULL);
+    };
+  }, [navPinned]);
+
   return (
-    <header className="header">
+    <header className={`header${navPinned ? ' header--nav-pinned' : ''}`}>
       {/* Top Bar */}
       <div className="top-bar">
         <div className="container top-bar-container">

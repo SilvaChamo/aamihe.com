@@ -7,6 +7,32 @@
   right: 0;
   z-index: 1000;
   background: var(--white);
+  transition: box-shadow 0.2s ease;
+}
+
+.header--nav-pinned {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+.header--nav-pinned .top-bar {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.2s ease,
+    padding 0.25s ease;
+}
+
+.top-bar {
+  max-height: 80px;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.2s ease,
+    padding 0.25s ease;
 }
 
 .top-bar {

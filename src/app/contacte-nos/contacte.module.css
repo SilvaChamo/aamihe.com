@@ -2,11 +2,8 @@
   margin-bottom: 48px;
 }
 
-.contact-content-anchor {
-  height: 0;
-  width: 100%;
-  overflow: hidden;
-  pointer-events: none;
+.contact-main :global(.blog-page-banner) {
+  margin-bottom: 28px;
 }
 
 .contact-layout {
@@ -68,44 +65,62 @@
   margin-bottom: 16px;
 }
 
-.contact-info-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.contact-info-list li {
-  margin-bottom: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-}
-
-.contact-info-list a {
-  color: #561713;
-  text-decoration: none;
-}
-
-.contact-info-list a:hover {
-  color: #cca876;
-}
-
-.contact-search input {
-  width: 100%;
-  padding: 10px 12px;
+.contact-search-row {
+  display: flex;
+  align-items: stretch;
   border: 1px solid #ddd;
   border-radius: 4px;
+  overflow: hidden;
+}
+
+.contact-search-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 0;
   font-size: 14px;
   font-family: inherit;
 }
 
-.contact-form {
+.contact-search-row input:focus {
+  outline: none;
+}
+
+.contact-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  border: 0;
+  background: #561713;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.contact-search-btn:hover {
+  background: #3a100d;
+}
+
+.contact-facebook {
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.contact-facebook :global(.fb-page),
+.contact-facebook :global(.fb-page span),
+.contact-facebook :global(.fb-page iframe) {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+:global(.contact-form) {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.contact-field label {
+:global(.contact-field) label {
   display: block;
   font-size: 14px;
   font-weight: 600;
@@ -113,8 +128,8 @@
   margin-bottom: 6px;
 }
 
-.contact-field input,
-.contact-field textarea {
+:global(.contact-field) input,
+:global(.contact-field) textarea {
   width: 100%;
   padding: 12px 15px;
   border: 1px solid #ededed;
@@ -125,17 +140,17 @@
   background: #fff;
 }
 
-.contact-field input:focus,
-.contact-field textarea:focus {
+:global(.contact-field) input:focus,
+:global(.contact-field) textarea:focus {
   outline: none;
   border-color: #e0e0e0;
 }
 
-.contact-field--checkbox {
+:global(.contact-field--checkbox) {
   margin-top: 4px;
 }
 
-.contact-checkbox-label {
+:global(.contact-checkbox-label) {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -144,17 +159,17 @@
   cursor: pointer;
 }
 
-.contact-checkbox-label input {
+:global(.contact-checkbox-label) input {
   width: auto;
   margin-top: 3px;
 }
 
-.contact-checkbox-label em {
+:global(.contact-checkbox-label) em {
   font-style: normal;
   color: #888;
 }
 
-.contact-submit {
+:global(.contact-submit) {
   display: inline-block;
   width: 100%;
   padding: 14px 20px;
@@ -171,25 +186,25 @@
   transition: background 0.2s ease;
 }
 
-.contact-submit:hover:not(:disabled) {
+:global(.contact-submit:hover:not(:disabled)) {
   background: #92754c;
 }
 
-.contact-submit:disabled {
+:global(.contact-submit:disabled) {
   opacity: 0.7;
   cursor: wait;
 }
 
-.contact-form-message {
+:global(.contact-form-message) {
   margin: 0;
   font-size: 14px;
 }
 
-.contact-form-message--ok {
+:global(.contact-form-message--ok) {
   color: #1a6b2e;
 }
 
-.contact-form-message--error {
+:global(.contact-form-message--error) {
   color: #b32d2e;
 }
 
