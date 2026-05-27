@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { NewsProvider } from '@/context/NewsContext';
+import { AuthProvider } from '@/context/AuthContext';
 import ScrollRevealHandler from '@/components/ScrollRevealHandler';
 import localFont from 'next/font/local';
 
@@ -21,8 +22,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <LanguageProvider>
           <NewsProvider>
-            <ScrollRevealHandler />
-            <div className="site-root">{children}</div>
+            <AuthProvider>
+              <ScrollRevealHandler />
+              <div className="site-root">{children}</div>
+            </AuthProvider>
           </NewsProvider>
         </LanguageProvider>
       </body>

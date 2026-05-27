@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Newspaper,
@@ -15,7 +15,10 @@ import {
   FileUp,
   Video,
   LogOut,
+  Users,
 } from 'lucide-react';
+import { clearAdminSecret } from '@/lib/admin-auth';
+import { useAdminBase } from '@/lib/admin-base';
 import './AdminShell.css';
 
 interface SubmenuEntry {
@@ -27,7 +30,6 @@ function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string
   const matches = submenu
     .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
     .sort((a, b) => b.href.length - a.href.length);
-
   return matches[0]?.href ?? null;
 }
 
@@ -60,55 +62,34 @@ const SidebarItem = ({
   React.useEffect(() => {
     if (isChildActive && !isOpen && onToggle) onToggle();
   }, [isChildActive, isOpen, onToggle]);
-  
+
   return (
-    <div 
+    <div
       className="sidebar-item"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="sidebar-item-content">
-        {isDashboard ? (
-          <div className={mainClassName}>
-            <Link href={href} className="sidebar-item-link">
-              <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
-              <span className="sidebar-label">{label}</span>
-            </Link>
-            {submenu && (
-              <ChevronDown 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (onToggle) onToggle();
-                }}
-                className={`sidebar-chevron ${isOpen ? 'open' : ''}`} 
-              />
-            )}
-          </div>
-        ) : (
-          <div className={mainClassName}>
-            <Link href={href} className="sidebar-item-link">
-              <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
-              <span className="sidebar-label">{label}</span>
-            </Link>
-            {submenu && (
-              <ChevronDown 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (onToggle) onToggle();
-                }}
-                className={`sidebar-chevron ${isOpen ? 'open' : ''}`} 
-              />
-            )}
-          </div>
-        )}
+        <div className={mainClassName}>
+          <Link href={href} className="sidebar-item-link">
+            <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
+            <span className="sidebar-label">{label}</span>
+          </Link>
+          {submenu && (
+            <ChevronDown
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onToggle) onToggle();
+              }}
+              className={`sidebar-chevron ${isOpen ? 'open' : ''}`}
+            />
+          )}
+        </div>
 
         {submenu && isHovered && !isOpen && (
           <div className="sidebar-flyout">
-            <div className="sidebar-flyout-title">
-              {label}
-            </div>
+            <div className="sidebar-flyout-title">{label}</div>
             {submenu.map((item) => (
               <Link
                 key={item.href}
@@ -121,7 +102,7 @@ const SidebarItem = ({
           </div>
         )}
       </div>
-      
+
       {submenu && isOpen && (
         <div className="sidebar-submenu">
           {submenu.map((item) => (
@@ -141,74 +122,104 @@ const SidebarItem = ({
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const base = useAdminBase();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   const handleToggleSubmenu = (label: string) => {
-    setOpenSubmenu(prev => prev === label ? null : label);
+    setOpenSubmenu((prev) => (prev === label ? null : label));
   };
 
-  // Fechar submenu quando navegar para página fora do multimídia
   React.useEffect(() => {
-    if (openSubmenu === 'Multimédia' && !pathname.startsWith('/admin/media')) {
+    if (openSubmenu === 'Multimédia' && !pathname.startsWith(`${base}/media`)) {
       setOpenSubmenu(null);
     }
-    if (openSubmenu === 'Notícias' && !pathname.startsWith('/admin/noticias')) {
+    if (openSubmenu === 'Notícias' && !pathname.startsWith(`${base}/noticias`)) {
       setOpenSubmenu(null);
     }
-  }, [pathname, openSubmenu]);
+    if (openSubmenu === 'Utilizadores' && !pathname.startsWith(`${base}/utilizadores`)) {
+      setOpenSubmenu(null);
+    }
+    if (openSubmenu === 'Definições' && !pathname.startsWith(`${base}/definicoes`)) {
+      setOpenSubmenu(null);
+    }
+  }, [pathname, openSubmenu, base]);
 
   const menuItems = [
     {
-      href: '/admin/dashboard',
+      href: base === '/dashboard' ? '/dashboard' : '/admin/dashboard',
       icon: LayoutDashboard,
       label: 'Dashboard',
     },
-    { 
-      href: '/admin/noticias', 
-      icon: Newspaper, 
+    {
+      href: `${base}/noticias`,
+      icon: Newspaper,
       label: 'Notícias',
       submenu: [
-        { label: 'Todas as Notícias', href: '/admin/noticias' },
-        { label: 'Adicionar Nova', href: '/admin/noticias/nova' },
-        { label: 'Categorias', href: '/admin/noticias/categorias' },
-        { label: 'Etiquetas', href: '/admin/noticias/etiquetas' },
-      ]
+        { label: 'Todas as Notícias', href: `${base}/noticias` },
+        { label: 'Adicionar Nova', href: `${base}/noticias/nova` },
+        { label: 'Categorias', href: `${base}/noticias/categorias` },
+        { label: 'Etiquetas', href: `${base}/noticias/etiquetas` },
+      ],
     },
-    { 
-      href: '/admin/media', 
-      icon: ImageIcon, 
+    {
+      href: `${base}/media`,
+      icon: ImageIcon,
       label: 'Multimédia',
       submenu: [
-        { label: 'Biblioteca', href: '/admin/media' },
-        { label: 'Adicionar novo', href: '/admin/media/novo' },
-        { label: 'Galeria', href: '/admin/media/galeria' },
-        { label: 'Vídeos', href: '/admin/media/videos' },
-      ]
+        { label: 'Biblioteca', href: `${base}/media` },
+        ...(base === '/dashboard'
+          ? [{ label: 'Documentos', href: `${base}/media/documentos` }]
+          : [
+              { label: 'Adicionar novo', href: `${base}/media/novo` },
+              { label: 'Galeria', href: `${base}/media/galeria` },
+            ]),
+        { label: 'Vídeos', href: `${base}/media/videos` },
+      ],
     },
-    { 
-      href: '/admin/documentos-gerais', 
-      icon: FileUp, 
+    {
+      href: `${base}/documentos-gerais`,
+      icon: FileUp,
       label: 'Documentos',
     },
-    { 
-      href: '/admin/definicoes', 
-      icon: Settings, 
+    {
+      href: `${base}/utilizadores`,
+      icon: Users,
+      label: 'Utilizadores',
+      submenu: [
+        { label: 'Todos os Utilizadores', href: `${base}/utilizadores` },
+        { label: 'Adicionar Novo', href: `${base}/utilizadores/novo` },
+      ],
+    },
+    {
+      href: `${base}/definicoes`,
+      icon: Settings,
       label: 'Definições',
       submenu: [
-        { label: 'Geral', href: '/admin/definicoes' },
-        { label: 'Notícias', href: '/admin/definicoes/noticias' },
-        { label: 'Media', href: '/admin/definicoes/media' },
-      ]
+        { label: 'Geral', href: `${base}/definicoes` },
+        { label: 'Notícias', href: `${base}/definicoes/noticias` },
+        { label: 'Utilizadores', href: `${base}/definicoes/utilizadores` },
+        { label: 'Media', href: `${base}/definicoes/media` },
+        { label: 'Segurança', href: `${base}/definicoes/seguranca` },
+        { label: 'Backup', href: `${base}/definicoes/backup` },
+        { label: 'API & Integrações', href: `${base}/definicoes/api` },
+      ],
     },
   ];
 
+  const handleLogout = () => {
+    clearAdminSecret();
+    router.push('/admin/login');
+  };
+
+  const homeHref = base === '/dashboard' ? '/dashboard' : '/admin/dashboard';
+
   return (
     <div className="admin-shell">
-      {/* Barra castanha — identidade AAMIHE */}
       <header className="admin-brand-bar">
         <div className="admin-brand-left">
-          <Link href="/admin/dashboard" className="admin-brand-logo">
+          <Link href={homeHref} className="admin-brand-logo">
             AAMIHE
           </Link>
           <Link href="/" target="_blank" className="admin-brand-action">
@@ -218,18 +229,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
         <div className="admin-brand-right">
           <span className="admin-brand-tagline">Painel de administração</span>
-          <Link href="/" className="admin-brand-action">
+          <button type="button" onClick={handleLogout} className="admin-brand-action">
             <LogOut className="admin-brand-action-icon" />
             Sair
-          </Link>
+          </button>
         </div>
       </header>
 
       <div className="admin-content-wrapper">
-        {/* Sidebar (Menu Lateral) */}
-        <aside 
-          className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}
-        >
+        <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
           <nav className="admin-sidebar-nav">
             {menuItems.map((item) => {
               const subs = item.submenu;
@@ -240,9 +248,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 ? isChildActive || pathname === item.href
                 : pathname === item.href;
               const shouldBeOpen = openSubmenu === item.label || isChildActive;
-              
+
               return (
-                <SidebarItem 
+                <SidebarItem
                   key={item.href}
                   href={item.href}
                   icon={item.icon}
@@ -258,19 +266,20 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </nav>
         </aside>
 
-        {/* Main Content Area */}
         <main className="admin-main">
-          {/* Toggle Sidebar Button */}
-          <button 
+          <button
+            type="button"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="sidebar-toggle"
           >
-            {isSidebarOpen ? <X className="sidebar-toggle-icon" /> : <Menu className="sidebar-toggle-icon" />}
+            {isSidebarOpen ? (
+              <X className="sidebar-toggle-icon" />
+            ) : (
+              <Menu className="sidebar-toggle-icon" />
+            )}
           </button>
 
-          <div className="admin-main-content">
-            {children}
-          </div>
+          <div className="admin-main-content">{children}</div>
         </main>
       </div>
     </div>

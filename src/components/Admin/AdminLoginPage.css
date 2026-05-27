@@ -1,0 +1,255 @@
+.admin-login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-family: 'Roboto Slab', Roboto, sans-serif;
+}
+
+/* Coluna esquerda — foto + painel branco com logo */
+.admin-login-left {
+  position: relative;
+  min-height: 100vh;
+  background-image: url('/images/login-bg.jpg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+.admin-login-logo-panel {
+  position: relative;
+  z-index: 2;
+  margin-top: 50px;
+  margin-left: 0;
+  padding: 28px 36px 28px 28px;
+  background: #fff;
+  border-radius: 0 20px 20px 0;
+  width: fit-content;
+  max-width: calc(100% - 20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.admin-login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fff;
+  padding: 40px 32px;
+}
+
+.admin-login-panel-inner {
+  width: 100%;
+  max-width: 440px;
+}
+
+.admin-login-logo {
+  display: block;
+  background-image: url('/Logo-Small.png.webp');
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+  width: 220px;
+  height: 72px;
+  overflow: hidden;
+  text-indent: 100%;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.admin-login-card {
+  width: 100%;
+}
+
+.admin-login-form-box {
+  border: 1px solid #d4d4d4;
+  border-radius: 8px;
+  padding: 32px 30px;
+  background: #fff;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-login-form .input {
+  width: 100%;
+  height: 48px;
+  background: #fff;
+  border-radius: 5px;
+  border: 1px solid #bdbdbd;
+  padding: 0 16px;
+  font: normal 15px Roboto, sans-serif;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.admin-login-form .input::placeholder {
+  color: #9a9a9a;
+}
+
+.admin-login-form .input:focus {
+  border-color: #995b00;
+  outline: none;
+  box-shadow: 0 0 0 1px #995b00;
+}
+
+.wp-pwd {
+  position: relative;
+}
+
+.wp-hide-pw {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wp-hide-pw:hover {
+  color: #995b00;
+}
+
+.cf-turnstile-wrapper {
+  min-height: 70px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.cf-turnstile-mount {
+  min-height: 65px;
+  width: 100%;
+}
+
+.forgetmenot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #444;
+  cursor: pointer;
+  margin: 0;
+}
+
+.forgetmenot input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #995b00;
+}
+
+.button-primary {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 5px;
+  background: #995b00;
+  color: #fff;
+  font: normal 15px Roboto, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 15px;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: #db8300;
+}
+
+.button-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.admin-login-form-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.admin-login-form-links--center {
+  justify-content: center;
+}
+
+.admin-login-form-links a,
+.admin-login-form-links .link-button {
+  color: #754a00;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-login-form-links a:hover,
+.admin-login-form-links .link-button:hover {
+  color: #dd8500;
+}
+
+.admin-login-error {
+  background: #fff;
+  border-left: 4px solid #d63638;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  padding: 12px;
+  color: #3c434a;
+  font-size: 14px;
+}
+
+.admin-login-success {
+  background: #f0fdf4;
+  border-left: 4px solid #16a34a;
+  padding: 12px;
+  color: #166534;
+  font-size: 14px;
+}
+
+.admin-login-back {
+  text-align: center;
+  margin: 24px 0 0;
+  font-size: 14px;
+}
+
+.admin-login-back a {
+  color: #dd8500;
+  text-decoration: underline;
+}
+
+.admin-login-back a:hover {
+  color: #02af00;
+}
+
+@media screen and (max-width: 900px) {
+  .admin-login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-left {
+    min-height: 200px;
+  }
+
+  .admin-login-logo-panel {
+    margin-top: 24px;
+    border-radius: 0 16px 16px 0;
+    padding: 20px 28px 20px 20px;
+  }
+
+  .admin-login-panel {
+    min-height: auto;
+    padding: 32px 20px 48px;
+  }
+}
