@@ -10,6 +10,8 @@
   --text-light: #75828c;
   --border: #ededed;
   --max-width: 1280px;
+  --font-admin: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+    'Helvetica Neue', sans-serif;
 }
 
 * {

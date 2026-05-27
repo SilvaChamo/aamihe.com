@@ -3,6 +3,18 @@
   flex-direction: column;
   min-height: 100vh;
   background: var(--light);
+  font-family: var(--font-admin);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #2c3338;
+}
+
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.admin-shell button {
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* Barra castanha — identidade AAMIHE */

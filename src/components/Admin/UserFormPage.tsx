@@ -337,9 +337,10 @@ function UserFormLayout({
 
   return (
     <div className="wp-admin-page wp-form-wrap">
-      <div className="wp-page-header" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+      <div className="wp-page-header wp-form-page-header">
         <h1>{title}</h1>
         <p className="wp-subtitle">{subtitle}</p>
+        <div className="wp-form-header-divider" aria-hidden="true" />
       </div>
 
       {error && <div className="wp-notice-error">{error}</div>}
@@ -348,7 +349,7 @@ function UserFormLayout({
       <form onSubmit={onSubmit}>
         <table className="wp-form-table">
           <tbody>
-            <tr className="section-row">
+            <tr className="section-row section-row--plain">
               <th colSpan={2}>
                 <h2>Nome</h2>
               </th>
