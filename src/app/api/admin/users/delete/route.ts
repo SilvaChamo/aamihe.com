@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+import { deleteUser } from '@/lib/users';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,25 +11,17 @@ export async function POST(req: NextRequest) {
     }
 
     const errors: string[] = [];
-    const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
     for (const userId of targetIds) {
-      // Se for um ID de teste (não UUID), apenas ignoramos a chamada ao Supabase e retornamos sucesso
-      if (!isUUID(userId)) {
-        console.log(`Ignorando delete de ID de teste (não UUID): ${userId}`);
-        continue;
-      }
-
-      // Delete from Supabase Auth
-      const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-      if (error) {
-        console.error(`Erro ao eliminar utilizador ${userId}:`, error.message);
-        errors.push(`${userId}: ${error.message}`);
+      try {
+        await deleteUser(userId);
+      } catch (err: unknown) {
+        errors.push(err instanceof Error ? err.message : String(err));
       }
     }
 
     if (errors.length === targetIds.length) {
-      return NextResponse.json({ error: errors.join('; ') }, { status: 500 });
+      return NextResponse.json({ error: errors.join('; ') }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -43,8 +29,8 @@ export async function POST(req: NextRequest) {
       deleted: targetIds.length - errors.length,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (err: any) {
-    console.error('Erro ao eliminar utilizador:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro ao eliminar utilizador';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

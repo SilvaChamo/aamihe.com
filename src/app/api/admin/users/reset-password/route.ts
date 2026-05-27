@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { findUserByLogin } from '@/lib/users';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
-
+/** Contas locais AAMIHE — reposição via painel (Editar utilizador). */
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
@@ -15,21 +10,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email obrigatório' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-    });
-
-    if (error) {
-      console.error('Erro ao gerar link de recuperação:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const user = await findUserByLogin(email);
+    if (!user) {
+      return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 });
     }
 
-    // Nota: Em produção, o Supabase enviaria o email automaticamente se configurado.
-    // Aqui usamos generateLink para validar que o utilizador existe e a chave funciona.
-    
-    return NextResponse.json({ success: true, message: `Email de recuperação enviado para ${email}` });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      message:
+        'Contas AAMIHE são geridas localmente. Use «Editar utilizador» para definir uma nova palavra-passe.',
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro ao processar pedido';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,187 +1,181 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Globe, 
+import React from 'react';
+import {
+  Globe,
   Save,
   Image as ImageIcon,
   Mail,
   Phone,
-  MapPin
+  MapPin,
+  CheckCircle,
+  Loader2,
 } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import './definicoes.css';
+
+const DEFAULTS = {
+  siteName: 'AAMIHE',
+  siteDescription: 'Associação de Apoio a Migrantes e Imigrantes em Hotéis e Empreendimentos',
+  logoUrl: '',
+  faviconUrl: '',
+  contactEmail: 'admin@aamihe.com',
+  contactPhone: '',
+  address: '',
+  googleAnalyticsId: '',
+  maintenanceMode: false,
+};
 
 export default function DefinicoesGeraisPage() {
-  const [formData, setFormData] = useState({
-    siteName: 'AAMIHE',
-    siteDescription: 'Associação Académica de Medicina e Higiene',
-    logoUrl: '',
-    faviconUrl: '',
-    contactEmail: 'info@aamihe.com',
-    contactPhone: '',
-    address: '',
-    googleAnalyticsId: '',
-    maintenanceMode: false,
-  });
-  const [saving, setSaving] = useState(false);
-
-  React.useEffect(() => {
-    fetch('/api/admin/settings')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.settings) setFormData((prev) => ({ ...prev, ...data.settings }));
-      })
-      .catch(() => {});
-  }, []);
+  const { settings, setSettings, loading, saving, savedAt, error, save } = useSettings(DEFAULTS);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao guardar');
-      alert('Definições guardadas com sucesso!');
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Erro ao guardar');
-    } finally {
-      setSaving(false);
-    }
+    await save();
   };
 
   return (
-    <div className="min-h-screen text-[#2c3338] font-sans pb-12 p-6">
-      <section className="bg-white border border-[#ccd0d4] p-6 mb-5 shadow-sm rounded-none">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1d2327]">Definições Gerais</h1>
-        <p className="text-[#50575e] mt-1">Configure as informações básicas do site</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Site Info */}
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#1d2327] mb-4 flex items-center gap-2">
-            <Globe className="w-5 h-5 text-[#2271b1]" /> Informações do Site
-          </h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1">Nome do Site</label>
-              <input
-                type="text"
-                value={formData.siteName}
-                onChange={(e) => setFormData({...formData, siteName: e.target.value})}
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1">Descrição</label>
-              <textarea
-                value={formData.siteDescription}
-                onChange={(e) => setFormData({...formData, siteDescription: e.target.value})}
-                rows={3}
-                className="w-full px-3 py-2 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none"
-              />
-            </div>
+    <div className="settings-container">
+      <form onSubmit={handleSubmit}>
+        <div className="settings-header">
+          <div className="settings-title-group">
+            <h1>Definições Gerais</h1>
+            <p>Configure as informações básicas do site</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {savedAt && !saving && (
+              <span className="settings-saved-badge">
+                <CheckCircle size={14} /> Guardado
+              </span>
+            )}
+            {error && <span className="settings-error-badge">{error}</span>}
+            <button type="submit" className="btn-save-settings" disabled={saving || loading}>
+              {saving ? <Loader2 className="w-4 h-4 spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'A guardar...' : 'Guardar'}
+            </button>
           </div>
         </div>
 
-        {/* Branding */}
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#1d2327] mb-4 flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-[#2271b1]" /> Identidade Visual
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1">Logotipo</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none text-sm"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1">Favicon</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none text-sm"
-              />
-            </div>
+        {loading ? (
+          <div className="settings-loading">
+            <Loader2 className="spin" size={24} /> A carregar definições...
           </div>
-        </div>
+        ) : (
+          <div className="settings-layout-stack">
+            {/* Site Info */}
+            <div className="settings-panel">
+              <div className="settings-panel-header">
+                <h2><Globe /> Informações do Site</h2>
+              </div>
+              <div className="settings-panel-body">
+                <div className="form-field-group">
+                  <label>Nome do Site</label>
+                  <input
+                    type="text"
+                    value={settings.siteName}
+                    onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                    className="form-input-text"
+                  />
+                </div>
+                <div className="form-field-group">
+                  <label>Descrição</label>
+                  <textarea
+                    value={settings.siteDescription}
+                    onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
+                    rows={3}
+                    className="form-textarea"
+                  />
+                </div>
+              </div>
+            </div>
 
-        {/* Contact */}
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#1d2327] mb-4 flex items-center gap-2">
-            <Mail className="w-5 h-5 text-[#2271b1]" /> Contactos
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1 flex items-center gap-1">
-                <Mail className="w-4 h-4" /> Email
-              </label>
-              <input
-                type="email"
-                value={formData.contactEmail}
-                onChange={(e) => setFormData({...formData, contactEmail: e.target.value})}
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none"
-              />
+            {/* Branding */}
+            <div className="settings-panel">
+              <div className="settings-panel-header">
+                <h2><ImageIcon /> Identidade Visual</h2>
+              </div>
+              <div className="settings-panel-body">
+                <div className="grid-col-1-2">
+                  <div className="form-field-group">
+                    <label>Logotipo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="form-input-text"
+                    />
+                  </div>
+                  <div className="form-field-group">
+                    <label>Favicon</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="form-input-text"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1 flex items-center gap-1">
-                <Phone className="w-4 h-4" /> Telefone
-              </label>
-              <input
-                type="tel"
-                value={formData.contactPhone}
-                onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none"
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-[#1d2327] mb-1 flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> Endereço
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md focus:border-[#2271b1] focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
 
-        {/* Maintenance Mode */}
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-[#1d2327]">Modo de Manutenção</h2>
-              <p className="text-sm text-[#50575e]">Ativar modo de manutenção (apenas admins podem aceder)</p>
+            {/* Contact */}
+            <div className="settings-panel">
+              <div className="settings-panel-header">
+                <h2><Mail /> Contactos</h2>
+              </div>
+              <div className="settings-panel-body">
+                <div className="grid-col-1-2">
+                  <div className="form-field-group">
+                    <label><Mail className="w-4 h-4" /> Email</label>
+                    <input
+                      type="email"
+                      value={settings.contactEmail}
+                      onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
+                      className="form-input-text"
+                    />
+                  </div>
+                  <div className="form-field-group">
+                    <label><Phone className="w-4 h-4" /> Telefone</label>
+                    <input
+                      type="tel"
+                      value={settings.contactPhone}
+                      onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })}
+                      className="form-input-text"
+                    />
+                  </div>
+                  <div className="form-field-group" style={{ gridColumn: '1 / -1' }}>
+                    <label><MapPin className="w-4 h-4" /> Endereço</label>
+                    <input
+                      type="text"
+                      value={settings.address}
+                      onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                      className="form-input-text"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={formData.maintenanceMode}
-                onChange={(e) => setFormData({...formData, maintenanceMode: e.target.checked})}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2271b1]"></div>
-            </label>
+
+            {/* Maintenance Mode */}
+            <div className="settings-panel">
+              <div className="settings-panel-body">
+                <div className="switch-field-row">
+                  <div className="switch-field-label">
+                    <p className="switch-title">Modo de Manutenção</p>
+                    <p className="switch-desc">Ativar modo de manutenção (apenas admins podem aceder)</p>
+                  </div>
+                  <label className="ios-toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={settings.maintenanceMode}
+                      onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
+                    />
+                    <span className="ios-toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </form>
-      </section>
     </div>
   );
 }

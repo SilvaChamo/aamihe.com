@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "id": "user_1779917109331_f7ac8aae",
+      "username": "silva.chamo",
+      "email": "silva.chamo@gmail.com",
+      "passwordHash": "81874ce19526c1cdef353ecb5bc6f74ac84fc0914caba64ef6f88307a732b9a8a5a0b02708333785fa626fdbf15196e5f00a13c084fca15a8c490fa5432cf626",
+      "passwordSalt": "65db4321b74349beffa517f28ef42587",
+      "role": "Administrador",
+      "firstName": "Silva",
+      "lastName": "Chamo",
+      "alcunha": "",
+      "displayNameType": "full_name",
+      "website": "",
+      "bio": "",
+      "telefone": "",
+      "profissao": "",
+      "cargo": "",
+      "avatar_url": "",
+      "created_at": "2026-05-27T21:25:09.331Z"
+    }
+  ]
+}

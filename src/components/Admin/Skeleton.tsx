@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import './admin-wp.css';
 
 export function SkeletonCard() {
   return (
-    <div className="bg-white border border-[#ccd0d4] rounded-lg p-4 animate-pulse">
+    <div className="bg-white border border-[#ccd0d4] rounded-lg p-4 wp-skeleton-pulse">
       <div className="flex items-start gap-4">
         <div className="w-16 h-16 bg-gray-200 rounded" />
         <div className="flex-1 space-y-2">
@@ -19,10 +20,10 @@ export function SkeletonCard() {
 
 export function SkeletonTableRow({ columns = 4 }: { columns?: number }) {
   return (
-    <tr className="animate-pulse">
+    <tr className="wp-skeleton-row wp-skeleton-pulse">
       {Array.from({ length: columns }).map((_, i) => (
-        <td key={i} className="p-3">
-          <div className="h-4 bg-gray-200 rounded" />
+        <td key={i}>
+          <div className="wp-skeleton-bar" style={{ width: i === 0 ? '60%' : '80%' }} />
         </td>
       ))}
     </tr>

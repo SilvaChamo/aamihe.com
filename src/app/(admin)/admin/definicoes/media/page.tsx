@@ -1,144 +1,171 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Image, Save, Upload, FileType } from 'lucide-react';
+import React from 'react';
+import { Image, Save, Upload, CheckCircle, Loader2 } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import '../definicoes.css';
+
+const DEFAULTS = {
+  maxUploadSize: 10,
+  allowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'] as string[],
+  autoCompress: true,
+  compressQuality: 80,
+  createThumbnails: true,
+  thumbnailSize: 300,
+};
 
 export default function DefinicoesMediaPage() {
-  const [settings, setSettings] = useState({
-    maxUploadSize: 10,
-    allowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
-    autoCompress: true,
-    compressQuality: 80,
-    createThumbnails: true,
-    thumbnailSize: 300
-  });
+  const { settings, setSettings, loading, saving, savedAt, error, save } = useSettings(DEFAULTS);
 
   const toggleFormat = (format: string) => {
-    setSettings(prev => ({
-      ...prev,
-      allowedFormats: prev.allowedFormats.includes(format)
-        ? prev.allowedFormats.filter(f => f !== format)
-        : [...prev.allowedFormats, format]
-    }));
+    const current = settings.allowedFormats as string[];
+    const updated = current.includes(format)
+      ? current.filter((f) => f !== format)
+      : [...current, format];
+    setSettings({ ...settings, allowedFormats: updated });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await save();
   };
 
   return (
-    <div className="p-6 text-[#2c3338] w-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1d2327]">Definições de Media</h1>
-          <p className="text-[#50575e] mt-1">Configure as opções de upload e processamento de imagens</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#2271b1] text-white rounded-md hover:bg-[#135e96]">
-          <Save className="w-4 h-4" /> Guardar
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#1d2327] mb-4 flex items-center gap-2">
-            <Upload className="w-5 h-5 text-[#2271b1]" /> Upload de Ficheiros
-          </h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-1">Tamanho Máximo de Upload (MB)</label>
-              <input
-                type="number"
-                value={settings.maxUploadSize}
-                onChange={(e) => setSettings({...settings, maxUploadSize: parseInt(e.target.value)})}
-                className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#1d2327] mb-2">Formatos Permitidos</label>
-              <div className="flex flex-wrap gap-2">
-                {['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'doc', 'docx'].map(format => (
-                  <button
-                    key={format}
-                    onClick={() => toggleFormat(format)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      settings.allowedFormats.includes(format)
-                        ? 'bg-[#2271b1] text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {format.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
+    <div className="settings-container">
+      <form onSubmit={handleSubmit}>
+        <div className="settings-header">
+          <div className="settings-title-group">
+            <h1>Definições de Media</h1>
+            <p>Configure as opções de upload e processamento de imagens</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {savedAt && !saving && (
+              <span className="settings-saved-badge">
+                <CheckCircle size={14} /> Guardado
+              </span>
+            )}
+            {error && <span className="settings-error-badge">{error}</span>}
+            <button type="submit" className="btn-save-settings" disabled={saving || loading}>
+              {saving ? <Loader2 className="w-4 h-4 spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'A guardar...' : 'Guardar'}
+            </button>
           </div>
         </div>
 
-        <div className="bg-white border border-[#ccd0d4] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#1d2327] mb-4 flex items-center gap-2">
-            <Image className="w-5 h-5 text-[#2271b1]" /> Processamento de Imagens
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-[#1d2327]">Compressão automática</p>
-                <p className="text-sm text-[#50575e]">Comprimir imagens no upload</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={settings.autoCompress}
-                  onChange={(e) => setSettings({...settings, autoCompress: e.target.checked})}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2271b1]"></div>
-              </label>
-            </div>
-
-            {settings.autoCompress && (
-              <div>
-                <label className="block text-sm font-medium text-[#1d2327] mb-1">Qualidade da Compressão (%)</label>
-                <input
-                  type="range"
-                  min="50"
-                  max="100"
-                  value={settings.compressQuality}
-                  onChange={(e) => setSettings({...settings, compressQuality: parseInt(e.target.value)})}
-                  className="w-full"
-                />
-                <div className="text-center text-sm text-[#50575e]">{settings.compressQuality}%</div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-[#1d2327]">Criar miniaturas</p>
-                <p className="text-sm text-[#50575e]">Gerar versões reduzidas automaticamente</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={settings.createThumbnails}
-                  onChange={(e) => setSettings({...settings, createThumbnails: e.target.checked})}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2271b1]"></div>
-              </label>
-            </div>
-
-            {settings.createThumbnails && (
-              <div>
-                <label className="block text-sm font-medium text-[#1d2327] mb-1">Tamanho da Miniatura (px)</label>
-                <input
-                  type="number"
-                  value={settings.thumbnailSize}
-                  onChange={(e) => setSettings({...settings, thumbnailSize: parseInt(e.target.value)})}
-                  className="w-full h-10 px-3 border border-[#ccd0d4] rounded-md"
-                />
-              </div>
-            )}
+        {loading ? (
+          <div className="settings-loading">
+            <Loader2 className="spin" size={24} /> A carregar definições...
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="settings-layout-stack">
+            <div className="settings-panel">
+              <div className="settings-panel-header">
+                <h2><Upload /> Upload de Ficheiros</h2>
+              </div>
+              <div className="settings-panel-body">
+                <div className="form-field-group">
+                  <label>Tamanho Máximo de Upload (MB)</label>
+                  <input
+                    type="number"
+                    value={settings.maxUploadSize}
+                    onChange={(e) => setSettings({ ...settings, maxUploadSize: parseInt(e.target.value) || 10 })}
+                    className="form-input-text"
+                    min={1}
+                    max={500}
+                  />
+                </div>
+
+                <div className="form-field-group">
+                  <label>Formatos Permitidos</label>
+                  <div className="format-pills-container">
+                    {['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf', 'doc', 'docx'].map((format) => {
+                      const allowed = settings.allowedFormats as string[];
+                      return (
+                        <button
+                          key={format}
+                          type="button"
+                          onClick={() => toggleFormat(format)}
+                          className={`format-pill-btn ${allowed.includes(format) ? 'active' : ''}`}
+                        >
+                          {format.toUpperCase()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="settings-panel">
+              <div className="settings-panel-header">
+                <h2><Image /> Processamento de Imagens</h2>
+              </div>
+              <div className="settings-panel-body">
+                <div className="switch-field-row">
+                  <div className="switch-field-label">
+                    <p className="switch-title">Compressão automática</p>
+                    <p className="switch-desc">Comprimir imagens no upload</p>
+                  </div>
+                  <label className="ios-toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={settings.autoCompress}
+                      onChange={(e) => setSettings({ ...settings, autoCompress: e.target.checked })}
+                    />
+                    <span className="ios-toggle-slider"></span>
+                  </label>
+                </div>
+
+                {settings.autoCompress && (
+                  <div className="form-field-group">
+                    <label>Qualidade da Compressão (%)</label>
+                    <div className="range-slider-container">
+                      <input
+                        type="range"
+                        min="50"
+                        max="100"
+                        value={settings.compressQuality}
+                        onChange={(e) => setSettings({ ...settings, compressQuality: parseInt(e.target.value) })}
+                        className="range-slider"
+                      />
+                      <span className="range-slider-value">{settings.compressQuality}%</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="switch-field-row">
+                  <div className="switch-field-label">
+                    <p className="switch-title">Criar miniaturas</p>
+                    <p className="switch-desc">Gerar versões reduzidas automaticamente</p>
+                  </div>
+                  <label className="ios-toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={settings.createThumbnails}
+                      onChange={(e) => setSettings({ ...settings, createThumbnails: e.target.checked })}
+                    />
+                    <span className="ios-toggle-slider"></span>
+                  </label>
+                </div>
+
+                {settings.createThumbnails && (
+                  <div className="form-field-group">
+                    <label>Tamanho da Miniatura (px)</label>
+                    <input
+                      type="number"
+                      value={settings.thumbnailSize}
+                      onChange={(e) => setSettings({ ...settings, thumbnailSize: parseInt(e.target.value) || 300 })}
+                      className="form-input-text"
+                      min={50}
+                      max={2000}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </form>
     </div>
   );
 }

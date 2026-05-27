@@ -1,51 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+import { updateUser, USER_ROLES, type UserRole } from '@/lib/users';
 
 export async function POST(req: NextRequest) {
   try {
-    const { id, firstName, lastName, alcunha, displayNameType, role, bio, website, avatarUrl, password, telefone, profissao, cargo } = await req.json();
+    const body = await req.json();
+    const {
+      id,
+      email,
+      firstName,
+      lastName,
+      alcunha,
+      displayNameType,
+      role,
+      bio,
+      website,
+      avatarUrl,
+      password,
+      telefone,
+      profissao,
+      cargo,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 });
     }
 
-    const updateData: any = {
-      user_metadata: {
-        full_name: `${firstName} ${lastName}`.trim(),
-        first_name: firstName,
-        last_name: lastName,
-        alcunha: alcunha || '',
-        displayNameType: displayNameType || 'full_name',
-        app: 'aamihe',
-        role: role,
-        bio: bio,
-        website: website,
-        avatar_url: avatarUrl,
-        telefone: telefone || '',
-        profissao: profissao || '',
-        cargo: cargo || ''
-      }
-    };
+    const safeRole: UserRole | undefined =
+      role && USER_ROLES.includes(role) ? role : undefined;
 
-    if (password) {
-      updateData.password = password;
-    }
+    const user = await updateUser({
+      id,
+      email,
+      firstName,
+      lastName,
+      alcunha,
+      displayNameType,
+      role: safeRole,
+      bio,
+      website,
+      avatarUrl,
+      password,
+      telefone,
+      profissao,
+      cargo,
+    });
 
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(id, updateData);
-
-    if (error) {
-      console.error('Erro ao atualizar utilizador:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ success: true, user });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erro ao atualizar utilizador';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

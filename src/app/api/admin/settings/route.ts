@@ -1,42 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import { NextResponse } from 'next/server';
+import { requireAdminAuth } from '@/lib/admin-session';
+import { loadSiteSettings, saveSiteSettings } from '@/lib/supabase-settings';
 
-const SETTINGS_PATH = path.join(process.cwd(), 'aamihe_settings.json');
+export async function GET(request: Request) {
+  const authError = await requireAdminAuth(request);
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
+  }
 
-const DEFAULT_SETTINGS = {
-  siteName: 'AAMIHE',
-  siteDescription: 'Associação Académica de Medicina e Higiene',
-  contactEmail: 'info@aamihe.com',
-  postsPerPage: 10,
-  allowRegistration: true,
-  requireEmailVerification: true,
-  maintenanceMode: false,
-};
+  const settings = await loadSiteSettings();
+  return NextResponse.json({ success: true, settings: settings ?? {} });
+}
 
-async function readSettings(): Promise<Record<string, unknown>> {
+export async function POST(request: Request) {
+  const authError = await requireAdminAuth(request);
+  if (authError) {
+    return NextResponse.json({ error: authError.error }, { status: authError.status });
+  }
+
+  let body: Record<string, unknown>;
   try {
-    const raw = await readFile(SETTINGS_PATH, 'utf8');
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    body = await request.json();
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return NextResponse.json({ error: 'Pedido inválido.' }, { status: 400 });
   }
-}
 
-export async function GET() {
-  const settings = await readSettings();
-  return NextResponse.json({ settings });
-}
+  // Merge with existing settings
+  const existing = (await loadSiteSettings()) ?? {};
+  const merged = { ...existing, ...body };
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const current = await readSettings();
-    const next = { ...current, ...body };
-    await writeFile(SETTINGS_PATH, JSON.stringify(next, null, 2), 'utf8');
-    return NextResponse.json({ success: true, settings: next });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Erro ao guardar definições';
-    return NextResponse.json({ error: message }, { status: 500 });
+  const ok = await saveSiteSettings(merged);
+  if (!ok) {
+    // If Supabase not configured, return success anyway (local dev fallback)
+    return NextResponse.json({ success: true, settings: merged, note: 'Supabase not configured, settings not persisted.' });
   }
+
+  return NextResponse.json({ success: true, settings: merged });
 }
