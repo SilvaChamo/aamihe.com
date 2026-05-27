@@ -29,7 +29,7 @@ export default function NewsSection() {
           {displayedNews.map((item) => (
             <div key={item.id} className="news-card">
               <div className="news-card-image">
-                <img src={item.image} alt={item.title} />
+                <img src={item.image} alt={item.title} className="news-card-photo" />
                 <span className="news-card-category">{item.category}</span>
               </div>
               <div className="news-card-content">

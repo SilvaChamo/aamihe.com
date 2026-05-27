@@ -19,7 +19,12 @@
 
 /* Barra castanha — identidade AAMIHE */
 .admin-brand-bar {
-  height: 36px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: var(--admin-topbar-height);
   background: var(--primary);
   color: var(--white);
   display: flex;
@@ -88,16 +93,23 @@ button.admin-brand-action {
   display: flex;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+  margin-top: var(--admin-topbar-height);
+  min-height: calc(100vh - var(--admin-topbar-height));
 }
 
 /* Sidebar */
 .admin-sidebar {
+  position: fixed;
+  top: var(--admin-topbar-height);
+  left: 0;
+  bottom: 0;
+  z-index: 150;
   background: var(--primary);
-  transition: all 0.2s;
+  transition: width 0.2s ease;
   flex-shrink: 0;
-  width: 224px;
-  overflow: hidden;
+  width: var(--admin-sidebar-width);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .admin-sidebar.closed {
@@ -265,8 +277,15 @@ button.admin-brand-action {
 .admin-main {
   flex: 1;
   min-width: 0;
+  margin-left: var(--admin-sidebar-width);
+  min-height: calc(100vh - var(--admin-topbar-height));
   overflow-y: auto;
   position: relative;
+  transition: margin-left 0.2s ease;
+}
+
+.admin-shell:has(.admin-sidebar.closed) .admin-main {
+  margin-left: 0;
 }
 
 .admin-main-content {

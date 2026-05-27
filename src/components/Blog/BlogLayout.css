@@ -53,6 +53,11 @@
 .blog-right-sidebar {
   width: 300px;
   flex-shrink: 0;
+  position: sticky;
+  top: var(--site-header-height);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--site-header-height) - 24px);
+  overflow-y: auto;
 }
 
 .blog-entries-wrap {

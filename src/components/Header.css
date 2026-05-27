@@ -1,9 +1,12 @@
 .header {
   width: 100%;
   flex-shrink: 0;
-  position: sticky;
-  top: -40px; /* Esconde a barra superior ao rolar e fixa o menu */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  background: var(--white);
 }
 
 .top-bar {

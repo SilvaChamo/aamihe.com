@@ -1,8 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { initialNewsData, NewsItem } from '@/data/news';
+import { newsCatalog } from '@/data/news-catalog';
+import { NewsItem } from '@/data/news';
 import { migrateNewsCatalog } from '@/lib/news-i18n';
+import { mergeNewsCatalog } from '@/lib/site-content-merge';
 import { persistNewsImage } from '@/lib/persist-client-media';
 import { NEWS_CATEGORIES, NewsCategory, slugifyCategory } from '@/data/news-categories';
 
@@ -23,11 +25,15 @@ const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
 async function pushContentToServer(news: NewsItem[], categories: NewsCategory[]) {
   try {
-    await fetch('/api/admin/content', {
+    const res = await fetch('/api/admin/content', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ news, categories }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      console.error('Erro ao sincronizar conteúdo:', data.error);
+    }
   } catch (err) {
     console.error('Erro ao sincronizar conteúdo com o servidor', err);
   }
@@ -41,15 +47,23 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       let loadedCategories: NewsCategory[] = NEWS_CATEGORIES;
-      const savedCategories = localStorage.getItem('aamihe_news_categories');
-      if (savedCategories) {
-        loadedCategories = JSON.parse(savedCategories);
+      try {
+        const savedCategories = localStorage.getItem('aamihe_news_categories');
+        if (savedCategories) {
+          loadedCategories = JSON.parse(savedCategories);
+        }
+      } catch {
+        /* ignore */
       }
 
-      let items: NewsItem[] = initialNewsData.pt;
-      const savedNews = localStorage.getItem('aamihe_news');
-      if (savedNews) {
-        items = JSON.parse(savedNews);
+      let items: NewsItem[] = migrateNewsCatalog(newsCatalog);
+      try {
+        const savedNews = localStorage.getItem('aamihe_news');
+        if (savedNews) {
+          items = mergeNewsCatalog(migrateNewsCatalog(newsCatalog), JSON.parse(savedNews));
+        }
+      } catch {
+        /* ignore */
       }
 
       try {
@@ -57,7 +71,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         if (data.success) {
           if (Array.isArray(data.news) && data.news.length > 0) {
-            items = data.news;
+            items = mergeNewsCatalog(migrateNewsCatalog(newsCatalog), data.news);
             localStorage.setItem('aamihe_news', JSON.stringify(items));
           }
           if (Array.isArray(data.categories) && data.categories.length > 0) {
@@ -69,23 +83,10 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         console.error('Erro ao carregar conteúdo remoto', err);
       }
 
-      let applySeedPortuguese = false;
-      try {
-        applySeedPortuguese = !localStorage.getItem('aamihe_news_pt_native_v1');
-      } catch {
-        applySeedPortuguese = false;
-      }
-
-      const migrated = migrateNewsCatalog(items, { applySeedPortuguese });
-      if (
-        applySeedPortuguese ||
-        JSON.stringify(migrated) !== JSON.stringify(items)
-      ) {
+      const migrated = migrateNewsCatalog(items);
+      if (JSON.stringify(migrated) !== JSON.stringify(items)) {
         items = migrated;
         localStorage.setItem('aamihe_news', JSON.stringify(items));
-        if (applySeedPortuguese) {
-          localStorage.setItem('aamihe_news_pt_native_v1', '1');
-        }
       }
 
       setCategories(loadedCategories);
@@ -107,7 +108,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
               console.error('Erro ao sincronizar imagem da notícia', item.id, err);
               return item;
             }
-          })
+          }),
         );
         if (changed) {
           localStorage.setItem('aamihe_news', JSON.stringify(items));
@@ -116,7 +117,6 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
       }
 
       setNews(items);
-      void pushContentToServer(items, loadedCategories);
     })();
   }, []);
 
@@ -135,37 +135,37 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addNews = (item: Omit<NewsItem, 'id'>) => {
-    const newId = news.length > 0 ? Math.max(...news.map(n => n.id)) + 1 : 1;
+    const newId = news.length > 0 ? Math.max(...news.map((n) => n.id)) + 1 : 1;
     const newItem = { ...item, id: newId };
     saveNews([newItem, ...news]);
   };
 
   const updateNews = (id: number, updates: Partial<NewsItem>) => {
-    const updated = news.map(n => n.id === id ? { ...n, ...updates } : n);
+    const updated = news.map((n) => (n.id === id ? { ...n, ...updates } : n));
     saveNews(updated);
   };
 
   const deleteNews = (id: number) => {
-    const updated = news.filter(n => n.id !== id);
+    const updated = news.filter((n) => n.id !== id);
     saveNews(updated);
   };
 
-  const getNewsById = (id: number) => news.find(n => n.id === id);
+  const getNewsById = (id: number) => news.find((n) => n.id === id);
 
-  const getCategoryBySlug = (slug: string) => categories.find(c => c.slug === slug);
+  const getCategoryBySlug = (slug: string) => categories.find((c) => c.slug === slug);
 
   const addCategory = (category: { name: string; description?: string; slug?: string; etiqueta?: string }) => {
     const name = category.name.trim();
     if (!name) return 'Indique o nome da categoria.';
 
-    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    if (categories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
       return 'Já existe uma categoria com este nome.';
     }
 
     const baseSlug = slugifyCategory(category.slug?.trim() || name);
     let slug = baseSlug || 'categoria';
     let suffix = 2;
-    while (categories.some(c => c.slug === slug)) {
+    while (categories.some((c) => c.slug === slug)) {
       slug = `${baseSlug}-${suffix}`;
       suffix += 1;
     }
@@ -178,7 +178,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateCategory = (slug: string, updates: Partial<NewsCategory>) => {
-    const current = categories.find(c => c.slug === slug);
+    const current = categories.find((c) => c.slug === slug);
     if (!current) return 'Categoria não encontrada.';
 
     const name = updates.name?.trim() ?? current.name;
@@ -190,21 +190,21 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
     if (!name) return 'Indique o nome da categoria.';
     if (!nextSlug) return 'Indique um slug válido.';
 
-    if (categories.some(c => c.slug !== slug && c.name.toLowerCase() === name.toLowerCase())) {
+    if (categories.some((c) => c.slug !== slug && c.name.toLowerCase() === name.toLowerCase())) {
       return 'Já existe uma categoria com este nome.';
     }
 
-    if (categories.some(c => c.slug !== slug && c.slug === nextSlug)) {
+    if (categories.some((c) => c.slug !== slug && c.slug === nextSlug)) {
       return 'Já existe uma categoria com este slug.';
     }
 
-    const updatedCategories = categories.map(c =>
-      c.slug === slug ? { ...c, name, description, etiqueta, slug: nextSlug } : c
+    const updatedCategories = categories.map((c) =>
+      c.slug === slug ? { ...c, name, description, etiqueta, slug: nextSlug } : c,
     );
 
     if (name !== current.name) {
-      const updatedNews = news.map(item =>
-        item.category === current.name ? { ...item, category: name } : item
+      const updatedNews = news.map((item) =>
+        item.category === current.name ? { ...item, category: name } : item,
       );
       saveNews(updatedNews);
     }
@@ -214,15 +214,15 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCategory = (slug: string) => {
-    const current = categories.find(c => c.slug === slug);
+    const current = categories.find((c) => c.slug === slug);
     if (!current) return 'Categoria não encontrada.';
 
-    const count = news.filter(item => item.category === current.name).length;
+    const count = news.filter((item) => item.category === current.name).length;
     if (count > 0) {
       return `Não é possível eliminar: existem ${count} notícia(s) nesta categoria.`;
     }
 
-    saveCategories(categories.filter(c => c.slug !== slug));
+    saveCategories(categories.filter((c) => c.slug !== slug));
     return null;
   };
 

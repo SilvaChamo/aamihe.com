@@ -65,16 +65,20 @@ export function migrateNewsCatalog(
       return translations !== item.translations ? { ...item, translations } : item;
     }
 
+    const existingContentLen = (item.content || '').replace(/<[^>]+>/g, '').trim().length;
+    const seedContentLen = (ptSeed.content || '').replace(/<[^>]+>/g, '').trim().length;
+    const keepExistingBody = existingContentLen > seedContentLen + 80;
+
     return {
       ...item,
       date: item.date || ptSeed.date,
       image: item.image || ptSeed.image,
       author: item.author || ptSeed.author,
       status: item.status || ptSeed.status,
-      title: ptSeed.title,
-      content: ptSeed.content,
-      summary: ptSeed.summary ?? item.summary,
-      category: ptSeed.category,
+      title: item.title?.trim() ? item.title : ptSeed.title,
+      content: keepExistingBody ? item.content : ptSeed.content,
+      summary: item.summary?.trim() ? item.summary : (ptSeed.summary ?? item.summary),
+      category: item.category || ptSeed.category,
       translations,
     };
   });
