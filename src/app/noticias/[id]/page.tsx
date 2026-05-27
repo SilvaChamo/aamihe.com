@@ -42,7 +42,11 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
     <>
       <Header />
       <main id="main" className="blog-site-main site-main clr" role="main">
-        <BlogPageBanner title="" imageUrl={item.image || '/Imagens/BgNoticias.jpeg'} />
+        <BlogPageBanner
+          id="article-banner"
+          title=""
+          imageUrl={item.image || '/Imagens/BgNoticias.jpeg'}
+        />
         <BlogPageLayout sidebar={<BlogSidebar news={published} currentId={item.id} />}>
           <article className="single-post-content clr">
             <h1>{item.title}</h1>

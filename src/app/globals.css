@@ -1,6 +1,7 @@
 :root {
   --primary: #561713;
   --primary-hover: #3a100d;
+  --banner-overlay: rgba(0, 0, 0, 0.65);
   --accent: #cca876;
   --accent-hover: #92754c;
   --dark: #3f444a;

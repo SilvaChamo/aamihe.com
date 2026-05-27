@@ -39,9 +39,11 @@ async function pushContentToServer(news: NewsItem[], categories: NewsCategory[])
   }
 }
 
+const seedNews = () => migrateNewsCatalog(newsCatalog);
+
 export function NewsProvider({ children }: { children: React.ReactNode }) {
-  const [news, setNews] = useState<NewsItem[]>([]);
-  const [categories, setCategories] = useState<NewsCategory[]>([]);
+  const [news, setNews] = useState<NewsItem[]>(seedNews);
+  const [categories, setCategories] = useState<NewsCategory[]>(NEWS_CATEGORIES);
   const imagesSynced = useRef(false);
 
   useEffect(() => {
