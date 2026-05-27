@@ -12,6 +12,7 @@ export default function BlogPageBanner({ title = 'BLOG', imageUrl }: BlogPageBan
 
   return (
     <section
+      id="blog-banner-start"
       className={`blog-page-banner ${imageUrl ? 'blog-page-banner--image' : ''}`}
       style={style}
       aria-label={title}

@@ -83,10 +83,6 @@ const nextConfig: NextConfig = {
         destination: '/conferencia.html',
       },
       {
-        source: '/contacte-nos',
-        destination: '/contacte-nos.html',
-      },
-      {
         source: '/paises',
         destination: '/Paises membros.htm',
       },

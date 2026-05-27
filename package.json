@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "sync-images": "node scripts/sync-reference-images.mjs",
-    "upload-supabase": "node scripts/upload-all-to-supabase.mjs"
+    "upload-supabase": "node scripts/upload-all-to-supabase.mjs",
+    "import-wordpress": "node scripts/import-wordpress-news.mjs",
+    "seed-page-config": "node scripts/seed-page-config.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

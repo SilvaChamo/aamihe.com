@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlogPageBanner from '@/components/Blog/BlogPageBanner';
@@ -9,13 +9,15 @@ import BlogEntryCard from '@/components/Blog/BlogEntryCard';
 import BlogPagination from '@/components/Blog/BlogPagination';
 import BlogSidebar from '@/components/Blog/BlogSidebar';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
+import { useSitePageConfig } from '@/hooks/useSitePageConfig';
 import { filterNewsByQuery, filterNewsByYear } from '@/lib/blog-utils';
+import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import '@/components/Blog/BlogLayout.css';
-
-const PER_PAGE = 4;
 
 export default function NoticiasPage() {
   const { news } = useLocalizedNews();
+  const { pages } = useSitePageConfig();
+  const perPage = pages.blog.postsPerPage;
   const [searchQuery, setSearchQuery] = useState('');
   const [activeYear, setActiveYear] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -32,12 +34,26 @@ export default function NoticiasPage() {
     return items;
   }, [published, activeYear, searchQuery]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
 
   const paginated = useMemo(() => {
-    const start = (page - 1) * PER_PAGE;
-    return filtered.slice(start, start + PER_PAGE);
-  }, [filtered, page]);
+    const start = (page - 1) * perPage;
+    return filtered.slice(start, start + perPage);
+  }, [filtered, page, perPage]);
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      setPage(nextPage);
+      if (pages.blog.scrollToTopOnPaginate) {
+        const anchorId =
+          pages.blog.scrollTargetOnPaginate === 'banner' ? 'blog-banner-start' : 'blog-content-start';
+        requestAnimationFrame(() => {
+          scrollBelowSiteHeader(anchorId, 'smooth');
+        });
+      }
+    },
+    [pages.blog.scrollToTopOnPaginate, pages.blog.scrollTargetOnPaginate]
+  );
 
   useEffect(() => {
     setPage(1);
@@ -53,7 +69,8 @@ export default function NoticiasPage() {
     <>
       <Header />
       <main id="main" className="blog-site-main site-main clr" role="main">
-        <BlogPageBanner title="BLOG" />
+        <BlogPageBanner title={pages.blog.bannerTitle} imageUrl={pages.blog.bannerImage} />
+        <div id="blog-content-start" className="blog-content-anchor" aria-hidden="true" />
         <BlogPageLayout
           sidebar={
             <BlogSidebar
@@ -65,7 +82,13 @@ export default function NoticiasPage() {
           }
         >
           <div className="blog-entries-wrap">
-            <div id="blog-entries" className="entries clr">
+            <div
+              id="blog-entries"
+              className="entries clr"
+              style={{
+                gridTemplateColumns: `repeat(${Math.max(1, pages.blog.gridColumns)}, minmax(0, 1fr))`,
+              }}
+            >
               {filtered.length === 0 ? (
                 <p className="blog-empty-state">
                   Nenhuma notícia encontrada. Tente outra pesquisa ou ano.
@@ -84,7 +107,11 @@ export default function NoticiasPage() {
             </div>
 
             {filtered.length > 0 && (
-              <BlogPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <BlogPagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         </BlogPageLayout>

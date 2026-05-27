@@ -1,5 +1,6 @@
 'use client';
 
+import type { MouseEvent } from 'react';
 import './BlogLayout.css';
 
 type BlogPaginationProps = {
@@ -7,6 +8,16 @@ type BlogPaginationProps = {
   totalPages: number;
   onPageChange: (page: number) => void;
 };
+
+function handlePaginate(
+  e: MouseEvent<HTMLButtonElement>,
+  nextPage: number,
+  onPageChange: (page: number) => void,
+) {
+  e.preventDefault();
+  (e.currentTarget as HTMLButtonElement).blur();
+  onPageChange(nextPage);
+}
 
 export default function BlogPagination({ page, totalPages, onPageChange }: BlogPaginationProps) {
   if (totalPages <= 1) return null;
@@ -19,7 +30,8 @@ export default function BlogPagination({ page, totalPages, onPageChange }: BlogP
             type="button"
             className="blog-page-number blog-page-prev"
             disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => handlePaginate(e, page - 1, onPageChange)}
             aria-label="Página anterior"
           >
             ←
@@ -37,7 +49,8 @@ export default function BlogPagination({ page, totalPages, onPageChange }: BlogP
                 <button
                   type="button"
                   className="blog-page-number"
-                  onClick={() => onPageChange(pageNum)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => handlePaginate(e, pageNum, onPageChange)}
                 >
                   {pageNum}
                 </button>
@@ -50,7 +63,8 @@ export default function BlogPagination({ page, totalPages, onPageChange }: BlogP
             type="button"
             className="blog-page-number blog-page-next"
             disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => handlePaginate(e, page + 1, onPageChange)}
             aria-label="Página seguinte"
           >
             →

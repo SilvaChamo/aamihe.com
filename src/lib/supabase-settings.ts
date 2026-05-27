@@ -1,6 +1,9 @@
+import type { SitePageConfig } from '@/lib/site-page-config';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/server';
 
 export type SiteSettingsPayload = {
+  /** Layout blog, contactos e comportamento de scroll. */
+  publicPages?: SitePageConfig;
   // Geral
   siteName?: string;
   siteDescription?: string;
@@ -65,8 +68,11 @@ export async function loadSiteSettings(): Promise<SiteSettingsPayload | null> {
   }
 
   if (!data) return null;
-  // We store settings in the "news" column as a JSONB object
-  return data.news as unknown as SiteSettingsPayload;
+  const raw = data.news;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as SiteSettingsPayload;
+  }
+  return null;
 }
 
 export async function saveSiteSettings(settings: SiteSettingsPayload): Promise<boolean> {
@@ -77,7 +83,7 @@ export async function saveSiteSettings(settings: SiteSettingsPayload): Promise<b
     {
       site_slug: SETTINGS_SLUG,
       // Store settings in the "news" JSONB column
-      news: settings as unknown as object[],
+      news: settings as unknown as Record<string, unknown>,
       categories: [],
       documents: [],
       updated_at: new Date().toISOString(),
