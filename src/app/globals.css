@@ -12,7 +12,8 @@
   --max-width: 1280px;
   --font-admin: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
     'Helvetica Neue', sans-serif;
-  --site-header-height: 118px;
+  /* top-bar (40px) + main-nav (72px) — alinhado com Header.css */
+  --site-header-height: 112px;
   --admin-topbar-height: 36px;
   --admin-sidebar-width: 224px;
 }
@@ -35,10 +36,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.site-root:not(:has(.admin-shell)) {
-  padding-top: var(--site-header-height);
 }
 
 .site-root > main {

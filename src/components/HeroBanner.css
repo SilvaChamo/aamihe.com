@@ -4,6 +4,7 @@
   width: 100%;
   position: relative;
   z-index: 1;
+  margin-top: 0;
   overflow: visible;
   color: #fff;
   background-color: #1a1a1a;
