@@ -14,7 +14,7 @@ const SETTINGS_SLUG = 'aamihe_settings';
 
 const publicPages = {
   blog: {
-    postsPerPage: 3,
+    postsPerPage: 6,
     gridColumns: 3,
     bannerTitle: 'BLOG',
     bannerImage: '/Imagens/BgNoticias.jpeg',

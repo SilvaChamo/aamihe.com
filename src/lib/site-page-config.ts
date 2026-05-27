@@ -20,7 +20,7 @@ export type SitePageConfig = {
 
 export const DEFAULT_SITE_PAGE_CONFIG: SitePageConfig = {
   blog: {
-    postsPerPage: 3,
+    postsPerPage: 6,
     gridColumns: 3,
     bannerTitle: 'BLOG',
     bannerImage: '/Imagens/BgNoticias.jpeg',
