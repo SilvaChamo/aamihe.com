@@ -4,8 +4,8 @@
       "id": "user_1779917109331_f7ac8aae",
       "username": "silva.chamo",
       "email": "silva.chamo@gmail.com",
-      "passwordHash": "81874ce19526c1cdef353ecb5bc6f74ac84fc0914caba64ef6f88307a732b9a8a5a0b02708333785fa626fdbf15196e5f00a13c084fca15a8c490fa5432cf626",
-      "passwordSalt": "65db4321b74349beffa517f28ef42587",
+      "passwordHash": "f7743288dbc9657630976cef873ec1a20e85e8e900176e91156080936d0e44363e0196592550fe26562ddc6fc2bcdecbb9320a7e076b1f71facf13d672cedd00",
+      "passwordSalt": "7d502e314dfc64722df6feb71e1525f4",
       "role": "Administrador",
       "firstName": "Silva",
       "lastName": "Chamo",
@@ -16,7 +16,7 @@
       "telefone": "",
       "profissao": "",
       "cargo": "",
-      "avatar_url": "",
+      "avatar_url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/avatars/1779953748885-ws8o70.png",
       "created_at": "2026-05-27T21:25:09.331Z"
     }
   ]

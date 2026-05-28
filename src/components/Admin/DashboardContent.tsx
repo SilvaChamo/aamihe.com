@@ -41,7 +41,7 @@ export default function DashboardContent() {
       manageDocs: 'Gerir Documentos',
       addNews: 'Adicionar notícia',
       nextSteps: 'Próximos passos',
-      reviewConf: 'Rever submissões da conferência',
+      reviewConf: 'Gerir notícias',
       stats: 'Ver estatísticas do site',
       moreActions: 'Mais acções',
       addMedia: 'Adicionar multimédia',
@@ -64,7 +64,7 @@ export default function DashboardContent() {
       manageDocs: 'Gérer les documents',
       addNews: 'Ajouter une actualité',
       nextSteps: 'Prochaines étapes',
-      reviewConf: 'Examiner les soumissions de la conférence',
+      reviewConf: 'Gérer les actualités',
       stats: 'Voir les statistiques du site',
       moreActions: 'Plus dactions',
       addMedia: 'Ajouter du multimédia',
@@ -87,7 +87,7 @@ export default function DashboardContent() {
       manageDocs: 'Manage Documents',
       addNews: 'Add news',
       nextSteps: 'Next steps',
-      reviewConf: 'Review conference submissions',
+      reviewConf: 'Manage news',
       stats: 'View site statistics',
       moreActions: 'More actions',
       addMedia: 'Add media',
@@ -168,7 +168,7 @@ export default function DashboardContent() {
               <h3 className="dashboard-section-title">{t.nextSteps}</h3>
               <ul className="dashboard-list">
                 <li>
-                  <Link href={`${base}/documentos-gerais`} className="dashboard-list-item">
+                  <Link href={`${base}/noticias`} className="dashboard-list-item">
                     <FileUp /> {t.reviewConf}
                   </Link>
                 </li>

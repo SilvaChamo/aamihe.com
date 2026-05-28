@@ -2,33 +2,33 @@
   "documents": [],
   "media": [
     {
-      "id": "media_1779737759714_75ea59",
+      "id": "media_1779957393758_9071b9",
       "site_slug": "aamihe",
-      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
-      "url": "/gallery/news-1779723496576-c40e6429.png",
+      "title": "Universidade Metodista Unida de Moçambique (UMUM) Gradua 76 estudantes em diferentes  áreas",
+      "url": "/gallery/image-3-1.jpg",
       "category": "imagens",
       "subcategory": "Notícias",
-      "mime_type": "image/png",
+      "mime_type": "image/jpeg",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T19:35:59.714Z",
-      "updated_at": "2026-05-25T19:41:11.836Z"
+      "created_at": "2026-05-28T08:36:33.758Z",
+      "updated_at": "2026-05-28T11:33:41.278Z"
     },
     {
-      "id": "media_1779737759715_aae590",
+      "id": "media_1779957490030_f14a92",
       "site_slug": "aamihe",
-      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika em Abril, 12 de 2024",
-      "url": "/gallery/President-Kongolo-Chijika-1.jpg.webp",
+      "title": "MASHONALAND EAST DEVELOPMENT PULSE",
+      "url": "/gallery/bed4c6ab-bf65-48aa-9d9d-61de5d50f21a.jpeg.webp",
       "category": "imagens",
       "subcategory": "Notícias",
       "mime_type": "image/webp",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T19:35:59.715Z",
-      "updated_at": "2026-05-25T19:36:02.161Z"
+      "created_at": "2026-05-28T08:38:10.030Z",
+      "updated_at": "2026-05-28T08:38:10.030Z"
     },
     {
-      "id": "media_1779737762160_2da171",
+      "id": "media_1779957490030_f2a9a9",
       "site_slug": "aamihe",
       "title": "GoL, UMU, EPA Launch Ocean Acidification Training for West Africa",
       "url": "/gallery/Ocean-acidification-training.jpeg.webp",
@@ -37,21 +37,47 @@
       "mime_type": "image/webp",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T19:36:02.160Z",
-      "updated_at": "2026-05-25T19:36:02.160Z"
+      "created_at": "2026-05-28T08:38:10.030Z",
+      "updated_at": "2026-05-28T08:38:10.030Z"
     },
     {
-      "id": "media_1779737762160_7aa40e",
+      "id": "media_1779957490034_d66f5b",
       "site_slug": "aamihe",
-      "title": "Mashonaland east development pulse",
-      "url": "/gallery/bed4c6ab-bf65-48aa-9d9d-61de5d50f21a.jpeg.webp",
+      "title": "Nota de Falecimento do Rev. Prof. Dr. Kongolo Clement Chijika em Abril, 12 de 2024",
+      "url": "/gallery/President-Kongolo-Chijika-1.jpg.webp",
       "category": "imagens",
       "subcategory": "Notícias",
       "mime_type": "image/webp",
       "source": "news",
       "published": true,
-      "created_at": "2026-05-25T19:36:02.160Z",
-      "updated_at": "2026-05-25T19:36:02.160Z"
+      "created_at": "2026-05-28T08:38:10.034Z",
+      "updated_at": "2026-05-28T11:57:52.734Z"
+    },
+    {
+      "id": "media_1779957490034_c98ce3",
+      "site_slug": "aamihe",
+      "title": "Posse Histórica: Universidade Metodista Unida de Moçambique (UMUM) tem novo Reitor",
+      "url": "/gallery/nreitor.jpg",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/jpeg",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-28T08:38:10.034Z",
+      "updated_at": "2026-05-28T08:51:55.424Z"
+    },
+    {
+      "id": "media_1779957490034_5f7080",
+      "site_slug": "aamihe",
+      "title": "Informe das Cerimónias Centrais do Dia Mundial da Ciência e da II Feira de Empreendedorismo",
+      "url": "/gallery/envento-768x432-1.jpg",
+      "category": "imagens",
+      "subcategory": "Notícias",
+      "mime_type": "image/jpeg",
+      "source": "news",
+      "published": true,
+      "created_at": "2026-05-28T08:38:10.034Z",
+      "updated_at": "2026-05-28T11:33:41.177Z"
     }
   ]
 }
