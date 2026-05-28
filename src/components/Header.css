@@ -224,3 +224,31 @@
   background-color: var(--border); /* Um pouco mais escuro no hover */
   color: var(--accent);
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background-color: #4f8a3d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+}
+
+.login-btn:hover {
+  background-color: #92754c;
+  color: #fff;
+}
