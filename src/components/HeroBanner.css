@@ -7,8 +7,10 @@
   margin-top: 0;
   overflow: visible;
   color: #fff;
-  background-color: var(--primary);
-  background-image: url('/images/hero-banner-bg.webp');
+  background-color: #1a1a1a;
+  background-image:
+    radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%),
+    url('/images/hero-banner-bg.webp');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -19,15 +21,6 @@
   height: var(--hero-banner-slide-height);
   overflow: hidden;
   border-radius: inherit;
-}
-
-.hero-banner__viewport::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: var(--banner-overlay);
-  pointer-events: none;
 }
 
 .hero-banner__slide {
@@ -44,7 +37,11 @@
   opacity: 0;
   transition: opacity 1s ease-in-out;
   z-index: 0;
-  background-image: var(--hero-bg-image);
+
+  /* Imagens dinâmicas por idioma com gradiente circular pequeno para leitura */
+  background-image:
+    radial-gradient(circle, rgba(26, 13, 4, 0.4) 0%, rgba(26, 13, 4, 0.65) 50%, rgba(26, 13, 4, 0.65) 100%),
+    var(--hero-bg-image);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -53,12 +50,6 @@
 .hero-banner__slide.active {
   opacity: 1;
   z-index: 1;
-}
-
-.hero-banner__title,
-.hero-banner__description {
-  position: relative;
-  z-index: 3;
 }
 
 .hero-banner__title {
