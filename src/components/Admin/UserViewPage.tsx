@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Globe, FileText, Edit2, Loader2 } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
+import { getGravatarUrl } from '@/lib/gravatar';
 import './admin-wp.css';
 
 interface UserProfile {
@@ -107,13 +108,7 @@ export default function UserViewPage() {
                 <span className="wp-ah-green">AH</span>
               </span>
             </div>
-          ) : (
-            <img
-              src="https://secure.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=150&d=mm&r=g"
-              className="wp-profile-avatar"
-              alt=""
-            />
-          )}
+          ) : <img src={getGravatarUrl(user.email, 150)} className="wp-profile-avatar" alt="" />}
           <div>
             <h2>{fullName}</h2>
             <p className="wp-muted">@{user.username}</p>

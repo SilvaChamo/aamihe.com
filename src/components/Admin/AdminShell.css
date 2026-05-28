@@ -134,7 +134,6 @@ button.admin-brand-action {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
   font-size: 14px;
   transition: colors 0.2s;
   border-left: 3px solid transparent;
@@ -158,6 +157,8 @@ button.admin-brand-action {
   align-items: center;
   gap: 12px;
   flex: 1;
+  width: 100%;
+  padding: 8px 16px;
   text-decoration: none;
   color: inherit;
 }

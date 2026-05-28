@@ -3,8 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Camera, Trash2, Loader2 } from 'lucide-react';
+import { Camera, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
+import { getGravatarUrl } from '@/lib/gravatar';
 import './admin-wp.css';
 
 const ROLES = ['Administrador', 'Editor', 'Actor', 'Subscritor', 'Contribuidor'];
@@ -332,8 +333,9 @@ function UserFormLayout({
   onRemoveAvatar: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  const defaultAvatar =
-    'https://secure.gravatar.com/avatar/ad516503a11cd5ca435acc9bb6523536?s=150&d=mm&r=g';
+  const [showPasswordText, setShowPasswordText] = useState(false);
+  const [showConfirmPasswordText, setShowConfirmPasswordText] = useState(false);
+  const defaultAvatar = getGravatarUrl(form.email, 150);
 
   return (
     <div className="wp-admin-page wp-form-wrap">
@@ -528,13 +530,23 @@ function UserFormLayout({
                     Palavra-passe {passwordOptional ? '(deixar em branco para manter)' : '(obrigatório)'}
                   </th>
                   <td>
-                    <input
-                      type="password"
-                      className="wp-input"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required={!passwordOptional}
-                    />
+                    <div className="wp-password-field">
+                      <input
+                        type={showPasswordText ? 'text' : 'password'}
+                        className="wp-input"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required={!passwordOptional}
+                      />
+                      <button
+                        type="button"
+                        className="wp-password-toggle"
+                        onClick={() => setShowPasswordText((v) => !v)}
+                        aria-label={showPasswordText ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'}
+                      >
+                        {showPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <tr>
@@ -542,13 +554,23 @@ function UserFormLayout({
                     Confirmar palavra-passe {!passwordOptional && <span style={{ color: '#d63638' }}>*</span>}
                   </th>
                   <td>
-                    <input
-                      type="password"
-                      className="wp-input"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required={!passwordOptional && !!password}
-                    />
+                    <div className="wp-password-field">
+                      <input
+                        type={showConfirmPasswordText ? 'text' : 'password'}
+                        className="wp-input"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required={!passwordOptional && !!password}
+                      />
+                      <button
+                        type="button"
+                        className="wp-password-toggle"
+                        onClick={() => setShowConfirmPasswordText((v) => !v)}
+                        aria-label={showConfirmPasswordText ? 'Ocultar confirmação da palavra-passe' : 'Mostrar confirmação da palavra-passe'}
+                      >
+                        {showConfirmPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </>

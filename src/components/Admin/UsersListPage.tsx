@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdminBase } from '@/lib/admin-base';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
+import { getGravatarUrl } from '@/lib/gravatar';
 import './admin-wp.css';
 
 interface UserItem {
@@ -199,11 +200,11 @@ export default function UsersListPage() {
                   </td>
                   <td className="username-cell">
                     <div className="wp-user-cell">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt="" className="wp-avatar" />
-                      ) : (
-                        <div className="wp-avatar-placeholder">AH</div>
-                      )}
+                      <img
+                        src={user.avatar || getGravatarUrl(user.email, 80)}
+                        alt=""
+                        className="wp-avatar"
+                      />
                       <div>
                         <Link
                           href={`${base}/utilizadores/editar/${user.id}`}
