@@ -201,17 +201,6 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                   />
                   <button
                     type="button"
-                    className="news-form-link"
-                    disabled={imageUploading}
-                    onClick={openFilePicker}
-                  >
-                    {imageUploading ? 'A carregar...' : 'Substituir imagem'}
-                  </button>
-                  <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
-                    Escolher da biblioteca
-                  </button>
-                  <button
-                    type="button"
                     className="news-form-link news-form-link-danger"
                     onClick={() => applyFeaturedImage('')}
                   >
@@ -220,16 +209,8 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                 </div>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    className="news-form-link"
-                    disabled={imageUploading}
-                    onClick={openFilePicker}
-                  >
-                    {imageUploading ? 'A carregar...' : 'Carregar do computador'}
-                  </button>
                   <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
-                    Escolher da biblioteca
+                    Imagem de destaque
                   </button>
                 </>
               )}

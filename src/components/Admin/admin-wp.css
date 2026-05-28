@@ -369,7 +369,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: #1f6fb2;
+  color: #8c8f94;
   cursor: pointer;
   font-size: 12px;
   text-decoration: none;
@@ -378,8 +378,8 @@
 
 .wp-row-actions a:hover,
 .wp-row-actions button:hover {
-  color: #0a4b78;
-  text-decoration: underline;
+  color: #cca876;
+  text-decoration: none;
 }
 
 .wp-row-actions .delete a,
@@ -389,8 +389,8 @@
 
 .wp-row-actions .delete a:hover,
 .wp-row-actions button.delete:hover {
-  color: #8a2424;
-  text-decoration: underline;
+  color: #d63638;
+  text-decoration: none;
 }
 
 .wp-row-actions .sep {

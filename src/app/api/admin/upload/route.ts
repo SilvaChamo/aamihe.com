@@ -7,6 +7,20 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+async function ensureBucketExists(bucket: string) {
+  const { data: existing, error: getError } = await supabaseAdmin.storage.getBucket(bucket);
+  if (!getError && existing) return;
+
+  const { error: createError } = await supabaseAdmin.storage.createBucket(bucket, {
+    public: true,
+    fileSizeLimit: '5MB',
+  });
+
+  if (createError && !/already exists/i.test(createError.message)) {
+    throw new Error(createError.message);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -17,9 +31,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nenhum ficheiro enviado' }, { status: 400 });
     }
 
+    await ensureBucketExists(bucket);
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const fileExt = file.name.split('.').pop() || 'jpg';
-    const fileName = `${Date.now()}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
 
     const { error } = await supabaseAdmin.storage.from(bucket).upload(fileName, buffer, {
       contentType: file.type,

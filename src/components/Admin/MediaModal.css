@@ -1,12 +1,9 @@
 .media-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
-  z-index: 9999;
+  z-index: 100000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,7 +168,7 @@
   border: 0;
 }
 
-.media-upload-button {
+.media-modal-upload-button {
   display: inline-block;
   background: #561713;
   color: #fff;
@@ -186,7 +183,7 @@
   font-size: 14px;
 }
 
-.media-upload-button:hover {
+.media-modal-upload-button:hover {
   background: #6a1d18;
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(86, 23, 19, 0.3);

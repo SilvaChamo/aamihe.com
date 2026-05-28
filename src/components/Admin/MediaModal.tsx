@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload } from 'lucide-react';
 import MediaLibrary from './MediaLibrary';
 import { isImageFile } from '@/lib/is-image-file';
@@ -17,7 +18,12 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
   const [activeTab, setActiveTab] = useState<'upload' | 'library'>('upload');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,7 +33,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,7 +85,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
     fileInputRef.current?.click();
   };
 
-  return (
+  return createPortal(
     <div className="media-modal-overlay" onClick={onClose}>
       <div className="media-modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="media-modal-header">
@@ -135,7 +141,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
                     </div>
                     <h3>Largue os ficheiros para carregar</h3>
                     <p>ou</p>
-                    <button type="button" className="media-upload-button" onClick={openFilePicker}>
+                    <button type="button" className="media-modal-upload-button" onClick={openFilePicker}>
                       Selecionar ficheiros
                     </button>
                     <p className="media-upload-limit">Tamanho máximo do ficheiro: 512 MB.</p>
@@ -169,6 +175,7 @@ export default function MediaModal({ isOpen, onClose, onSelect }: MediaModalProp
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
