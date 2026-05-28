@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { NewsItem } from '@/data/news';
 import { getArchiveYears } from '@/lib/blog-utils';
+import { useLanguage } from '@/context/LanguageContext';
 import './BlogLayout.css';
 
 type BlogSidebarProps = {
@@ -21,7 +22,35 @@ export default function BlogSidebar({
   onYearFilter,
   activeYear,
 }: BlogSidebarProps) {
+  const { locale } = useLanguage();
   const [search, setSearch] = useState('');
+  const t = {
+    pt: {
+      sidebarLabel: 'Barra lateral do blog',
+      searchLabel: 'Pesquisar notícias',
+      searchPlaceholder: 'Procurar...',
+      latest: 'Últimas Notícias',
+      archive: 'Arquivo',
+      all: 'Todos',
+    },
+    fr: {
+      sidebarLabel: 'Barre latérale du blog',
+      searchLabel: 'Rechercher des actualités',
+      searchPlaceholder: 'Rechercher...',
+      latest: 'Dernières Actualités',
+      archive: 'Archives',
+      all: 'Tous',
+    },
+    en: {
+      sidebarLabel: 'Blog sidebar',
+      searchLabel: 'Search news',
+      searchPlaceholder: 'Search...',
+      latest: 'Latest News',
+      archive: 'Archive',
+      all: 'All',
+    },
+  } as const;
+  const tx = t[locale];
 
   const recent = useMemo(
     () => news.filter((n) => n.id !== currentId && n.status !== 'draft').slice(0, 4),
@@ -36,20 +65,20 @@ export default function BlogSidebar({
   };
 
   return (
-    <aside id="right-sidebar" className="blog-right-sidebar" aria-label="Barra lateral do blog">
+    <aside id="right-sidebar" className="blog-right-sidebar" aria-label={tx.sidebarLabel}>
       <div id="right-sidebar-inner">
         <div className="blog-sidebar-box">
           <div className="search-widget">
             <form
               onSubmit={(e) => e.preventDefault()}
               role="search"
-              aria-label="Pesquisar notícias"
+              aria-label={tx.searchLabel}
             >
               <div className="blog-search-wrap">
                 <input
                   type="search"
                   name="s"
-                  placeholder="Procurar..."
+                  placeholder={tx.searchPlaceholder}
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
                 />
@@ -65,7 +94,7 @@ export default function BlogSidebar({
         </div>
 
         <div className="blog-sidebar-box">
-          <h4 className="widget-title">Últimas Notícias</h4>
+          <h4 className="widget-title">{tx.latest}</h4>
           <div className="recent-posts-widget">
             {recent.map((item) => (
               <div key={item.id} className="recent-post-card">
@@ -92,7 +121,7 @@ export default function BlogSidebar({
 
         {years.length > 0 && (
           <div className="blog-sidebar-box">
-            <h4 className="widget-title">Arquivo</h4>
+            <h4 className="widget-title">{tx.archive}</h4>
             <ul className="archive-list">
               <li>
                 <button
@@ -109,7 +138,7 @@ export default function BlogSidebar({
                     fontSize: 14,
                   }}
                 >
-                  Todos
+                  {tx.all}
                 </button>
               </li>
               {years.map((year) => (

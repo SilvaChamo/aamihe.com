@@ -8,6 +8,7 @@ import BlogPageLayout from '@/components/Blog/BlogPageLayout';
 import BlogEntryCard from '@/components/Blog/BlogEntryCard';
 import BlogPagination from '@/components/Blog/BlogPagination';
 import BlogSidebar from '@/components/Blog/BlogSidebar';
+import { useLanguage } from '@/context/LanguageContext';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
 import { filterNewsByQuery, filterNewsByYear } from '@/lib/blog-utils';
@@ -15,7 +16,15 @@ import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import '@/components/Blog/BlogLayout.css';
 
 export default function NoticiasPage() {
+  const { locale } = useLanguage();
   const { news } = useLocalizedNews();
+  const t = {
+    pt: { empty: 'Nenhuma notícia encontrada. Tente outra pesquisa ou ano.' },
+    fr: { empty: 'Aucune actualité trouvée. Essayez une autre recherche ou année.' },
+    en: { empty: 'No news found. Try another search or year.' },
+  } as const;
+  const tx = t[locale];
+
   const { pages } = useSitePageConfig();
   const perPage = pages.blog.postsPerPage;
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,7 +100,7 @@ export default function NoticiasPage() {
             >
               {filtered.length === 0 ? (
                 <p className="blog-empty-state">
-                  Nenhuma notícia encontrada. Tente outra pesquisa ou ano.
+                  {tx.empty}
                 </p>
               ) : (
                 paginated.map((item) => (

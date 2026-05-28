@@ -1,0 +1,11 @@
+---
+description: Focar apenas na página solicitada
+alwaysApply: true
+---
+
+# Foco no solicitado
+
+- Antes de iniciar qualquer tarefa, consultar estas regras do projeto.
+- Quando o utilizador pedir alterações numa página/área específica, editar apenas esse escopo.
+- Não mexer em páginas, componentes, estilos globais ou funcionalidades não solicitadas.
+- Se houver dúvida de escopo, pedir confirmação antes de alterar.

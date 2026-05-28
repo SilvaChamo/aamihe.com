@@ -16,6 +16,7 @@ import {
   Video,
   LogOut,
   Users,
+  ChartColumnIncreasing,
 } from 'lucide-react';
 import { clearAdminSecret } from '@/lib/admin-auth';
 import { useAdminBase } from '@/lib/admin-base';
@@ -189,6 +190,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       label: 'Utilizadores',
       submenu: [
         { label: 'Todos os Utilizadores', href: `${base}/utilizadores` },
+        { label: 'Subscritores Conferência', href: `${base}/utilizadores/subscritores` },
         { label: 'Adicionar Novo', href: `${base}/utilizadores/novo` },
       ],
     },
@@ -197,7 +199,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       icon: Settings,
       label: 'Definições',
       submenu: [
-        { label: 'Geral', href: `${base}/definicoes` },
+        { label: 'Configurações do Site', href: `${base}/definicoes` },
         { label: 'Notícias', href: `${base}/definicoes/noticias` },
         { label: 'Utilizadores', href: `${base}/definicoes/utilizadores` },
         { label: 'Media', href: `${base}/definicoes/media` },
@@ -205,6 +207,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { label: 'Backup', href: `${base}/definicoes/backup` },
         { label: 'API & Integrações', href: `${base}/definicoes/api` },
       ],
+    },
+    {
+      href: `${base}/estatisticas`,
+      icon: ChartColumnIncreasing,
+      label: 'Estatísticas',
     },
   ];
 

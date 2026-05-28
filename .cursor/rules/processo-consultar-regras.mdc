@@ -1,0 +1,11 @@
+---
+description: Consultar regras antes de agir
+alwaysApply: true
+---
+
+# Processo obrigatório do agente
+
+- Antes de executar a atividade pedida, rever as regras em `.cursor/rules/`.
+- Executar apenas o que foi descrito pelo utilizador na mensagem atual.
+- Evitar alterações laterais mesmo que pareçam melhorias úteis.
+- Em deploy, publicar o estado atual do site e só excluir itens de risco real.

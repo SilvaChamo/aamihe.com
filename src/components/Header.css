@@ -28,7 +28,7 @@
 }
 
 .top-bar {
-  max-height: 80px;
+  max-height: 88px;
   transition:
     max-height 0.25s ease,
     opacity 0.2s ease,
@@ -39,7 +39,7 @@
   background-color: var(--primary);
   color: var(--white);
   font-size: 12px;
-  padding: 10px 0;
+  padding: 12px 0;
 }
 
 .top-bar-container {

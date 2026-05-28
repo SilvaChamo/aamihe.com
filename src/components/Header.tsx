@@ -9,7 +9,7 @@ import './Header.css';
 
 const SCROLL_THRESHOLD = 80;
 const SCROLL_DELTA = 6;
-const HEADER_HEIGHT_FULL = '112px';
+const HEADER_HEIGHT_FULL = '116px';
 const HEADER_HEIGHT_NAV = '72px';
 
 const translations = {

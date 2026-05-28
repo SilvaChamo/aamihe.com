@@ -1,6 +1,7 @@
 'use client';
 
 import type { MouseEvent } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 import './BlogLayout.css';
 
 type BlogPaginationProps = {
@@ -20,10 +21,17 @@ function handlePaginate(
 }
 
 export default function BlogPagination({ page, totalPages, onPageChange }: BlogPaginationProps) {
+  const { locale } = useLanguage();
+  const t = {
+    pt: { nav: 'Paginação do blog', prev: 'Página anterior', next: 'Página seguinte' },
+    fr: { nav: 'Pagination du blog', prev: 'Page précédente', next: 'Page suivante' },
+    en: { nav: 'Blog pagination', prev: 'Previous page', next: 'Next page' },
+  } as const;
+  const tx = t[locale];
   if (totalPages <= 1) return null;
 
   return (
-    <nav className="blog-pagination" aria-label="Paginação do blog">
+    <nav className="blog-pagination" aria-label={tx.nav}>
       <ul className="blog-pagination-list">
         <li>
           <button
@@ -32,7 +40,7 @@ export default function BlogPagination({ page, totalPages, onPageChange }: BlogP
             disabled={page <= 1}
             onMouseDown={(e) => e.preventDefault()}
             onClick={(e) => handlePaginate(e, page - 1, onPageChange)}
-            aria-label="Página anterior"
+            aria-label={tx.prev}
           >
             ←
           </button>
@@ -65,7 +73,7 @@ export default function BlogPagination({ page, totalPages, onPageChange }: BlogP
             disabled={page >= totalPages}
             onMouseDown={(e) => e.preventDefault()}
             onClick={(e) => handlePaginate(e, page + 1, onPageChange)}
-            aria-label="Página seguinte"
+            aria-label={tx.next}
           >
             →
           </button>
