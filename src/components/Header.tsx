@@ -64,9 +64,9 @@ export default function Header() {
         if (y < SCROLL_THRESHOLD) {
           setNavPinned(false);
         } else if (y < lastY - SCROLL_DELTA) {
-          setNavPinned(true);
-        } else if (y > lastY + SCROLL_DELTA) {
           setNavPinned(false);
+        } else if (y > lastY + SCROLL_DELTA) {
+          setNavPinned(true);
         }
 
         lastScrollY.current = y;

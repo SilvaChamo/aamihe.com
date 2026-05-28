@@ -62,13 +62,35 @@
 .newsletter-section .newsletter-form {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
   align-items: stretch;
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
+}
+
+.newsletter-form-security {
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.newsletter-section .newsletter-math-captcha label,
+.newsletter-section .newsletter-math-captcha .math-captcha-expression {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.newsletter-section .newsletter-math-captcha input[type='number'] {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.newsletter-spam-error {
+  flex: 1 1 100%;
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 0.9rem;
 }
 
 .newsletter-section .newsletter-input {

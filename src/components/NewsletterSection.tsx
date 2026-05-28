@@ -1,7 +1,9 @@
 'use client';
 
 import { useLanguage } from '@/context/LanguageContext';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, type FormEvent } from 'react';
+import FormAntiSpam from '@/components/FormAntiSpam';
+import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import './NewsletterSection.css';
 
 const translations = {
@@ -12,6 +14,8 @@ const translations = {
     placeholderEmail: 'Seu email',
     placeholderContact: 'Seu contacto',
     btn: 'ENVIAR SOLICITAÇÃO',
+    mathLabel: 'Segurança',
+    spamError: 'Verificação de segurança incorrecta.',
   },
   en: {
     title: 'JOIN THE TEAM',
@@ -20,6 +24,8 @@ const translations = {
     placeholderEmail: 'Your email',
     placeholderContact: 'Your contact',
     btn: 'SEND REQUEST',
+    mathLabel: 'Security',
+    spamError: 'Security verification failed.',
   },
   fr: {
     title: 'REJOIGNEZ L\'ÉQUIPE',
@@ -28,6 +34,8 @@ const translations = {
     placeholderEmail: 'Votre email',
     placeholderContact: 'Votre contact',
     btn: 'ENVOYER LA DEMANDE',
+    mathLabel: 'Sécurité',
+    spamError: 'Échec de la vérification de sécurité.',
   }
 };
 
@@ -36,6 +44,19 @@ export default function NewsletterSection() {
   const t = translations[locale];
   const sectionRef = useRef<HTMLElement>(null);
   const [parallaxY, setParallaxY] = useState(0);
+  const [formKey, setFormKey] = useState(0);
+  const [spamError, setSpamError] = useState('');
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const spam = validateSpamFromForm(e.currentTarget);
+    if (!spam.ok) {
+      setSpamError(spam.error);
+      return;
+    }
+    setSpamError('');
+    setFormKey((k) => k + 1);
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,11 +91,15 @@ export default function NewsletterSection() {
           {t.description}
         </p>
 
-        <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
-          <input type="text" placeholder={t.placeholderName} className="newsletter-input" />
-          <input type="email" placeholder={t.placeholderEmail} className="newsletter-input" />
+        <form key={formKey} className="newsletter-form" onSubmit={handleSubmit} noValidate>
+          <input type="text" placeholder={t.placeholderName} className="newsletter-input" required />
+          <input type="email" placeholder={t.placeholderEmail} className="newsletter-input" required />
           <input type="tel" placeholder={t.placeholderContact} className="newsletter-input" />
           <button type="submit" className="newsletter-submit">{t.btn}</button>
+          <div className="newsletter-form-security">
+            <FormAntiSpam mathLabel={t.mathLabel} mathClassName="newsletter-math-captcha" />
+          </div>
+          {spamError ? <p className="newsletter-spam-error">{spamError}</p> : null}
         </form>
       </div>
     </section>

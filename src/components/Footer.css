@@ -158,29 +158,37 @@
 }
 
 .email-wrap {
-  display: flex;
+  display: block;
   width: 100%;
 }
 
 .email-wrap input {
-  flex: 1;
-  padding: 10px;
+  width: 100%;
+  padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #fff; /* White background like in image */
+  background-color: #fff;
   color: #333;
-  border-radius: 4px 0 0 4px;
+  border-radius: 4px;
   font-size: 14px;
+  box-sizing: border-box;
 }
 
-.email-wrap .button {
+.newsletter-submit-btn {
+  width: 100%;
   padding: 10px 20px;
-  background-color: #cca876; /* Gold/brown accent */
+  background-color: #cca876;
   color: #fff;
   border: none;
-  border-radius: 0 4px 4px 0;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 700;
   text-transform: uppercase;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.newsletter-submit-btn:hover {
+  background-color: #92754c;
 }
 
 .gdpr-wrap {
@@ -195,10 +203,28 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  margin-right: 16px;
+}
+
+.footer-newsletter-security {
+  margin-top: 12px;
+}
+
+.footer-math-captcha label,
+.footer-math-captcha .math-captcha-expression {
+  color: #d8dde3;
+}
+
+.footer-math-captcha input[type='number'] {
+  background: #f8f5f1;
 }
 
 .footer-social {
   margin-top: 10px;
+}
+
+.footer-social--intro {
+  margin-top: 4px;
 }
 
 .footer-social .oceanwp-social-icons {

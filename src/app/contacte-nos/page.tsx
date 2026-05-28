@@ -13,11 +13,15 @@ import styles from './contacte.module.css';
 
 const COPY = {
   pt: {
-    name: 'Nome',
+    formTitle: 'Fale connosco',
+    firstName: 'Nome',
+    lastName: 'Apelido',
+    contact: 'Contacto',
     email: 'Email',
     message: 'Mensagem',
     terms: 'Aceite os termos e referências',
     termsRequired: 'Obrigatório',
+    mathLabel: 'Segurança',
     submit: 'ENVIAR',
     success: 'Mensagem enviada com sucesso. Obrigado pelo contacto.',
     error: 'Não foi possível enviar. Tente novamente.',
@@ -26,11 +30,15 @@ const COPY = {
     facebook: 'FACEBOOK',
   },
   fr: {
-    name: 'Nom',
+    formTitle: 'Contactez-nous',
+    firstName: 'Prénom',
+    lastName: 'Nom',
+    contact: 'Contact',
     email: 'Email',
     message: 'Message',
     terms: 'Acceptez les termes et références',
     termsRequired: 'Obligatoire',
+    mathLabel: 'Sécurité',
     submit: 'ENVOYER',
     success: 'Message envoyé avec succès. Merci pour votre contact.',
     error: "Impossible d'envoyer. Réessayez.",
@@ -39,11 +47,15 @@ const COPY = {
     facebook: 'FACEBOOK',
   },
   en: {
-    name: 'Name',
+    formTitle: 'Contact us',
+    firstName: 'First name',
+    lastName: 'Last name',
+    contact: 'Contact',
     email: 'Email',
     message: 'Message',
     terms: 'Accept the terms and references',
     termsRequired: 'Required',
+    mathLabel: 'Security',
     submit: 'SEND',
     success: 'Message sent successfully. Thank you for contacting us.',
     error: 'Could not send. Please try again.',
@@ -79,6 +91,9 @@ export default function ContacteNosPage() {
 
         <div className={`container clr ${styles['contact-layout']}`}>
           <div className={styles['contact-primary']}>
+            <div className={styles['contact-form-section']}>
+              <ContactForm labels={t} />
+            </div>
             <div className={styles['contact-map']}>
               <iframe
                 src={contact.mapEmbedUrl}
@@ -88,7 +103,6 @@ export default function ContacteNosPage() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-            <ContactForm labels={t} />
           </div>
 
           <aside className={styles['contact-sidebar']} aria-label="Pesquisa e redes sociais">
@@ -96,6 +110,14 @@ export default function ContacteNosPage() {
               <h3>{t.search}</h3>
               <div className={styles['contact-sidebar-divider']} />
               <form className={styles['contact-search']} onSubmit={handleSiteSearch} role="search">
+                <input
+                  type="text"
+                  name="company_url"
+                  className={styles['contact-honeypot']}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
                 <div className={styles['contact-search-row']}>
                   <input type="search" name="q" placeholder={t.searchPlaceholder} aria-label={t.search} />
                   <button type="submit" className={styles['contact-search-btn']} aria-label={t.search}>
@@ -110,7 +132,7 @@ export default function ContacteNosPage() {
               </form>
             </div>
 
-            <div className={styles['contact-sidebar-box']}>
+            <div className={`${styles['contact-sidebar-box']} ${styles['contact-sidebar-box--facebook']}`}>
               <h3>{t.facebook}</h3>
               <div className={styles['contact-sidebar-divider']} />
               <div className={styles['contact-facebook']}>

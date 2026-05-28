@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { validatePublicFormSpam } from '@/lib/form-spam-guard';
 import { saveUploadedBuffer } from '@/lib/persist-media';
 import { randomUUID } from 'node:crypto';
 
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
+
+    const spam = await validatePublicFormSpam(form);
+    if (!spam.ok) {
+      return NextResponse.json({ success: false, error: spam.error }, { status: 400 });
+    }
+
     const name = String(form.get('name') || '').trim();
     const email = String(form.get('email') || '').trim();
     const message = String(form.get('message') || '').trim();

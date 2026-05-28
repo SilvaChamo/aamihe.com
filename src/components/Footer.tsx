@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, type FormEvent } from 'react';
+import FormAntiSpam from '@/components/FormAntiSpam';
+import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import { useLanguage } from '@/context/LanguageContext';
 import './Footer.css';
 
@@ -24,8 +27,9 @@ const translations = {
     newsletterTitle: 'Newsletter',
     newsletterDesc: 'Registe-se para receber as nossas news letter',
     placeholderEmail: 'Seu endereço electrónico',
-    btnGo: 'Ir',
+    btnGo: 'REGISTAR',
     gdpr: 'Aceite termos e condições',
+    mathLabel: 'Segurança',
     followTitle: 'Segue-nos',
     rights: 'Todos os direitos reservados.'
   },
@@ -49,6 +53,7 @@ const translations = {
     placeholderEmail: 'Your email address',
     btnGo: 'Go',
     gdpr: 'Accept terms and conditions',
+    mathLabel: 'Security',
     followTitle: 'Follow Us',
     rights: 'All rights reserved.'
   },
@@ -72,6 +77,7 @@ const translations = {
     placeholderEmail: 'Votre adresse e-mail',
     btnGo: 'Aller',
     gdpr: 'Accepter les termes et conditions',
+    mathLabel: 'Sécurité',
     followTitle: 'Suivez-nous',
     rights: 'Tous droits réservés.'
   }
@@ -80,6 +86,16 @@ const translations = {
 export default function Footer() {
   const { locale } = useLanguage();
   const t = translations[locale];
+  const [newsletterKey, setNewsletterKey] = useState(0);
+
+  function handleNewsletterSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const spam = validateSpamFromForm(e.currentTarget);
+    if (!spam.ok) {
+      return;
+    }
+    setNewsletterKey((k) => k + 1);
+  }
 
   return (
     <footer className="footer" id="footer">
@@ -98,6 +114,30 @@ export default function Footer() {
             <p className="footer-desc">
               {t.desc}
             </p>
+            <div className="footer-social footer-social--intro">
+              <ul className="oceanwp-social-icons">
+                <li className="oceanwp-twitter">
+                  <a href="#" aria-label="X">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path></svg>
+                  </a>
+                </li>
+                <li className="oceanwp-facebook">
+                  <a href="#" aria-label="Facebook">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
+                  </a>
+                </li>
+                <li className="oceanwp-instagram">
+                  <a href="#" aria-label="Instagram">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.8 9.9 67.6 36.1 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path></svg>
+                  </a>
+                </li>
+                <li className="oceanwp-linkedin">
+                  <a href="#" aria-label="LinkedIn">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M100.28 448H7.4V148.9h92.88zm-46.44-340.77c-29.7 0-53.82-24.12-53.82-53.82S24.13 0 53.83 0s53.82 24.12 53.82 53.82-24.12 53.82-53.82 53.82zM448 448h-92.88V302.4c0-34.74-.62-79.44-48.41-79.44-48.46 0-55.88 37.86-55.88 76.94V448h-92.88V148.9h89.12v40.84h1.28c12.4-23.47 42.68-48.2 87.78-48.2 93.9 0 111.18 61.81 111.18 142.14z"></path></svg>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
           
           {/* Column 2 */}
@@ -144,44 +184,29 @@ export default function Footer() {
             <h4 className="footer-title">{t.newsletterTitle}</h4>
             <div className="oceanwp-newsletter-form">
               <div className="oceanwp-mail-text">{t.newsletterDesc}</div>
-              <form className="newsletter-form">
+              <form key={newsletterKey} className="newsletter-form" onSubmit={handleNewsletterSubmit} noValidate>
                 <div className="email-wrap">
-                  <input type="email" placeholder={t.placeholderEmail} aria-label={t.placeholderEmail} />
-                  <button type="submit" className="button btn">{t.btnGo}</button>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder={t.placeholderEmail}
+                    aria-label={t.placeholderEmail}
+                    required
+                  />
+                </div>
+                <button type="submit" className="button btn newsletter-submit-btn">
+                  {t.btnGo}
+                </button>
+                <div className="gdpr-wrap">
+                  <label>
+                    <input type="checkbox" name="GDPR" value="1" required />
+                    {t.gdpr}
+                  </label>
+                </div>
+                <div className="footer-newsletter-security">
+                  <FormAntiSpam mathLabel={t.mathLabel} mathClassName="footer-math-captcha" />
                 </div>
               </form>
-              <div className="gdpr-wrap">
-                <label>
-                  <input type="checkbox" name="GDPR" value="1" />
-                  {t.gdpr}
-                </label>
-              </div>
-            </div>
-            
-            <h4 className="footer-title">{t.followTitle}</h4>
-            <div className="footer-social">
-              <ul className="oceanwp-social-icons">
-                <li className="oceanwp-twitter">
-                  <a href="#" aria-label="X">
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path></svg>
-                  </a>
-                </li>
-                <li className="oceanwp-facebook">
-                  <a href="#" aria-label="Facebook">
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"></path></svg>
-                  </a>
-                </li>
-                <li className="oceanwp-instagram">
-                  <a href="#" aria-label="Instagram">
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.8 9.9 67.6 36.1 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path></svg>
-                  </a>
-                </li>
-                <li className="oceanwp-linkedin">
-                  <a href="#" aria-label="LinkedIn">
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M100.28 448H7.4V148.9h92.88zm-46.44-340.77c-29.7 0-53.82-24.12-53.82-53.82S24.13 0 53.83 0s53.82 24.12 53.82 53.82-24.12 53.82-53.82-53.82zM448 448h-92.88V302.4c0-34.74-.62-79.44-48.41-79.44-48.46 0-55.88 37.86-55.88 76.94V448h-92.88V148.9h89.12v40.84h1.28c12.4-23.47 42.68-48.2 87.78-48.2 93.9 0 111.18 61.81 111.18 142.14z"></path></svg>
-                  </a>
-                </li>
-              </ul>
             </div>
           </div>
         </div>

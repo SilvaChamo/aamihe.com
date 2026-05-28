@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
+import FormAntiSpam from '@/components/FormAntiSpam';
+import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import './ConferenceSubmissionForm.css';
 
 type ConferenceSubmissionFormProps = {
@@ -13,6 +15,7 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [fileName, setFileName] = useState('');
+  const [formKey, setFormKey] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,6 +24,12 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
     setError('');
 
     const form = e.currentTarget;
+    const spam = validateSpamFromForm(form);
+    if (!spam.ok) {
+      setError(spam.error);
+      setLoading(false);
+      return;
+    }
     const data = new FormData(form);
     const file = data.get('file') as File | null;
 
@@ -43,8 +52,8 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
       }
 
       setSuccess(result.message);
-      form.reset();
       setFileName('');
+      setFormKey((k) => k + 1);
       onSubmitted?.();
     } catch {
       setError('Erro ao enviar documento. Tente novamente.');
@@ -60,7 +69,7 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
         Preencha o formulário e envie o seu resumo ou documento em formato PDF para avaliação.
       </p>
 
-      <form className="conference-form" onSubmit={handleSubmit}>
+      <form key={formKey} className="conference-form" onSubmit={handleSubmit}>
         <label>
           Nome *
           <input type="text" name="name" required />
@@ -95,6 +104,8 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
           <input type="checkbox" name="accepted" required />
           Aceito os termos e condições *
         </label>
+
+        <FormAntiSpam mathLabel="Segurança" />
 
         {error && <p className="conference-form-error">{error}</p>}
         {success && <p className="conference-form-success">{success}</p>}

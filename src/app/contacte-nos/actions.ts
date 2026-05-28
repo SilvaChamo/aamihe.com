@@ -1,6 +1,6 @@
 'use server';
 
-import { verifyTurnstile } from '@/lib/turnstile';
+import { validatePublicFormSpam } from '@/lib/form-spam-guard';
 
 export type ContactFormResult = {
   success: boolean;
@@ -8,11 +8,21 @@ export type ContactFormResult = {
 };
 
 export async function submitContactForm(formData: FormData): Promise<ContactFormResult> {
-  const name = String(formData.get('name') ?? '').trim();
+  const spam = await validatePublicFormSpam(formData);
+  if (!spam.ok) {
+    return { success: false, error: spam.error };
+  }
+
+  const firstName = String(formData.get('firstName') ?? '').trim();
+  const lastName = String(formData.get('lastName') ?? '').trim();
+  const contact = String(formData.get('contact') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const message = String(formData.get('message') ?? '').trim();
   const terms = formData.get('terms');
-  const turnstileToken = String(formData.get('cf-turnstile-response') ?? '').trim();
+
+  if (!firstName || !lastName) {
+    return { success: false, error: 'Preencha o nome e o apelido.' };
+  }
 
   if (!email || !message) {
     return { success: false, error: 'Preencha o email e a mensagem.' };
@@ -22,15 +32,13 @@ export async function submitContactForm(formData: FormData): Promise<ContactForm
     return { success: false, error: 'Deve aceitar os termos para enviar.' };
   }
 
-  if (turnstileToken) {
-    const valid = await verifyTurnstile(turnstileToken);
-    if (!valid) {
-      return { success: false, error: 'Verificação de segurança falhou. Tente novamente.' };
-    }
-  }
-
-  // Reservado: integração email/CRM. Por agora validação + sucesso.
-  console.info('[contact]', { name, email, messageLength: message.length });
+  console.info('[contact]', {
+    firstName,
+    lastName,
+    contact,
+    email,
+    messageLength: message.length,
+  });
 
   return { success: true };
 }

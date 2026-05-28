@@ -1,0 +1,48 @@
+.form-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.math-captcha-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 14px;
+}
+
+.math-captcha-field label {
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.math-captcha-expression {
+  font-weight: 600;
+  color: #561713;
+  white-space: nowrap;
+}
+
+.math-captcha-field input[type='number'] {
+  width: 72px;
+  padding: 8px 10px;
+  border: 1px solid #e8e4df;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #f8f5f1;
+}
+
+.math-captcha-field input[type='number']:focus {
+  outline: none;
+  border-color: #ddd6cc;
+  background: #faf8f5;
+}
+
+.form-antispam-turnstile {
+  margin-top: 4px;
+}
