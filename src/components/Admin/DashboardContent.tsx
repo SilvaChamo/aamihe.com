@@ -31,14 +31,15 @@ interface ActivityItem {
 export default function DashboardContent() {
   const base = useAdminBase();
   const { locale } = useLanguage();
+  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
 
   const copy = {
     pt: {
       welcomeTitle: 'Bem-vindo ao painel de administração',
       welcomeSubtitle: 'Este é o painel de gestão do site AAMIHE.',
       introTitle: 'Introdução',
-      introText: 'Comece por gerir o conteúdo do site',
       manageDocs: 'Gerir Documentos',
+      addNews: 'Adicionar notícia',
       nextSteps: 'Próximos passos',
       reviewConf: 'Rever submissões da conferência',
       stats: 'Ver estatísticas do site',
@@ -60,8 +61,8 @@ export default function DashboardContent() {
       welcomeTitle: "Bienvenue dans le panneau d'administration",
       welcomeSubtitle: "Ceci est le panneau de gestion du site AAMIHE.",
       introTitle: 'Introduction',
-      introText: 'Commencez par gérer le contenu du site',
       manageDocs: 'Gérer les documents',
+      addNews: 'Ajouter une actualité',
       nextSteps: 'Prochaines étapes',
       reviewConf: 'Examiner les soumissions de la conférence',
       stats: 'Voir les statistiques du site',
@@ -83,8 +84,8 @@ export default function DashboardContent() {
       welcomeTitle: 'Welcome to the admin dashboard',
       welcomeSubtitle: 'This is the AAMIHE site management panel.',
       introTitle: 'Introduction',
-      introText: 'Start by managing site content',
       manageDocs: 'Manage Documents',
+      addNews: 'Add news',
       nextSteps: 'Next steps',
       reviewConf: 'Review conference submissions',
       stats: 'View site statistics',
@@ -104,6 +105,29 @@ export default function DashboardContent() {
     },
   } as const;
   const t = copy[locale];
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/users/me', { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok || cancelled) return;
+        const role = String(data?.user?.role || '').toLowerCase();
+        const isSuper =
+          role.includes('super') ||
+          role.includes('superadmin') ||
+          role.includes('super admin');
+        if (!cancelled) setIsSuperAdmin(isSuper);
+      } catch {
+        if (!cancelled) setIsSuperAdmin(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // Mock data for now - can be replaced with real data later
   const stats: Stats = {
     news: 0,
@@ -132,14 +156,11 @@ export default function DashboardContent() {
               <h3 className="dashboard-section-title">
                 {t.introTitle}
               </h3>
-              <p className="dashboard-section-text">
-                {t.introText}
-              </p>
               <Link 
-                href={`${base}/documentos-gerais`} 
+                href={isSuperAdmin ? `${base}/noticias/nova` : `${base}/documentos-gerais`}
                 className="dashboard-button"
               >
-                {t.manageDocs}
+                {isSuperAdmin ? t.addNews : t.manageDocs}
               </Link>
             </div>
             
