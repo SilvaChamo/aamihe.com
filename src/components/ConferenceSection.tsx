@@ -38,7 +38,7 @@ export default function ConferenceSection() {
   const t = translations[locale];
 
   return (
-    <section className="conference-section">
+    <section className="conference-section" id="conferencia">
       <div className="conference-overlay"></div>
       <div className="conference-container">
         <div className="conference-content">

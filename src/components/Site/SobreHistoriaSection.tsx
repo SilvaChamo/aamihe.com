@@ -10,32 +10,68 @@ const PDF_ICON_URL =
 const COPY = {
   pt: {
     statutesTitle: 'Estatutos e constituição',
-    statutesIntro: 'Consulte ou descarregue os documentos oficiais da associação nas três línguas de trabalho.',
-    download: 'Descarregar PDF',
+    statutesIntro: 'Documentos oficiais da associação nas três línguas de trabalho.',
+    downloadLabel: 'Descarregar',
     statutes: [
-      { label: 'AAMIHE Estatuto', sub: 'Português', href: '/estatutos/AAIMES-Constituicao.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'English', href: '/estatutos/AAMIHE-Constitution.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'Français', href: '/estatutos/AAIMES-Constitution.pdf' },
+      {
+        label: 'AAMIHE Estatuto',
+        lang: 'Português',
+        href: '/estatutos/AAIMES-Constituicao.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'English',
+        href: '/estatutos/AAMIHE-Constitution.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'Français',
+        href: '/estatutos/AAIMES-Constitution.pdf',
+      },
     ],
   },
   en: {
     statutesTitle: 'Constitution and bylaws',
-    statutesIntro: 'View or download the association’s official documents in each working language.',
-    download: 'Download PDF',
+    statutesIntro: 'Official association documents in all three working languages.',
+    downloadLabel: 'Download',
     statutes: [
-      { label: 'AAMIHE Estatuto', sub: 'Portuguese', href: '/estatutos/AAIMES-Constituicao.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'English', href: '/estatutos/AAMIHE-Constitution.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'French', href: '/estatutos/AAIMES-Constitution.pdf' },
+      {
+        label: 'AAMIHE Estatuto',
+        lang: 'Portuguese',
+        href: '/estatutos/AAIMES-Constituicao.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'English',
+        href: '/estatutos/AAMIHE-Constitution.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'French',
+        href: '/estatutos/AAIMES-Constitution.pdf',
+      },
     ],
   },
   fr: {
     statutesTitle: 'Statuts et constitution',
-    statutesIntro: 'Consultez ou téléchargez les documents officiels de l’association dans chaque langue de travail.',
-    download: 'Télécharger le PDF',
+    statutesIntro: 'Documents officiels de l’association dans les trois langues de travail.',
+    downloadLabel: 'Télécharger',
     statutes: [
-      { label: 'AAMIHE Estatuto', sub: 'Portugais', href: '/estatutos/AAIMES-Constituicao.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'Anglais', href: '/estatutos/AAMIHE-Constitution.pdf' },
-      { label: 'AAMIHE Constitution', sub: 'Français', href: '/estatutos/AAIMES-Constitution.pdf' },
+      {
+        label: 'AAMIHE Estatuto',
+        lang: 'Portugais',
+        href: '/estatutos/AAIMES-Constituicao.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'Anglais',
+        href: '/estatutos/AAMIHE-Constitution.pdf',
+      },
+      {
+        label: 'AAMIHE Constitution',
+        lang: 'Français',
+        href: '/estatutos/AAIMES-Constitution.pdf',
+      },
     ],
   },
 } as const;
@@ -56,12 +92,13 @@ export default function SobreHistoriaSection() {
           </div>
           <ul className={styles.pdfGrid}>
             {t.statutes.map((doc) => (
-              <li key={`${doc.href}-${doc.sub}`}>
+              <li key={`${doc.href}-${doc.lang}`}>
                 <a
                   href={doc.href}
                   className={styles.pdfCard}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`${doc.label} — ${doc.lang} — ${t.downloadLabel}`}
                 >
                   <span className={styles.pdfIconWrap}>
                     <Image
@@ -73,11 +110,13 @@ export default function SobreHistoriaSection() {
                       aria-hidden="true"
                     />
                   </span>
-                  <span className={styles.pdfBody}>
+                  <span className={styles.pdfContent}>
                     <span className={styles.pdfLabel}>{doc.label}</span>
-                    <span className={styles.pdfLang}>{doc.sub}</span>
+                    <span className={styles.pdfMetaRow}>
+                      <span className={styles.pdfLang}>{doc.lang}</span>
+                      <span className={styles.pdfCta}>{t.downloadLabel}</span>
+                    </span>
                   </span>
-                  <span className={styles.pdfCta}>{t.download}</span>
                 </a>
               </li>
             ))}

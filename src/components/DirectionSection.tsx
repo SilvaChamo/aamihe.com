@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useEffect, useState } from 'react';
 import './DirectionSection.css';
@@ -205,7 +206,9 @@ export default function DirectionSection() {
 
         {/* Botão de Ação Único Centrado */}
         <div className="direction-actions-center">
-          <button className="btn-direction-readmore">{t.btn1}</button>
+          <Link href="/sobre-nos#organograma" className="btn-direction-readmore">
+            {t.btn1}
+          </Link>
         </div>
       </div>
 

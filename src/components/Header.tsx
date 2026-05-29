@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type MouseEvent } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
+import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import './Header.css';
 
 const SCROLL_PIN_Y = 96;
@@ -12,32 +13,35 @@ const SCROLL_UNPIN_Y = 48;
 const HEADER_HEIGHT_FULL = '116px';
 const HEADER_HEIGHT_NAV = '72px';
 
+const HOME_SECTIONS = ['conferencia', 'direcao', 'equipa', 'noticias'] as const;
+type HomeSectionId = (typeof HOME_SECTIONS)[number];
+
 const translations = {
   pt: {
-    inicio: 'INÍCIO',
     sobre: 'SOBRE-NÓS',
-    servicos: 'SERVIÇOS',
     conferencia: 'CONFERÊNCIA',
+    direcao: 'DIRECÇÃO',
+    equipa: 'NOSSA EQUIPA',
     blog: 'BLOG',
-    contacto: 'CONTACTE-NOS',
+    contacto: 'CONTACTOS',
     entrar: 'ENTRAR',
   },
   fr: {
-    inicio: 'ACCUEIL',
     sobre: 'À PROPOS',
-    servicos: 'SERVICES',
     conferencia: 'CONFÉRENCE',
+    direcao: 'DIRECTION',
+    equipa: 'NOTRE ÉQUIPE',
     blog: 'BLOG',
-    contacto: 'CONTACTEZ-NOUS',
+    contacto: 'CONTACTS',
     entrar: 'SE CONNECTER',
   },
   en: {
-    inicio: 'HOME',
     sobre: 'ABOUT US',
-    servicos: 'SERVICES',
     conferencia: 'CONFERENCE',
+    direcao: 'LEADERSHIP',
+    equipa: 'OUR TEAM',
     blog: 'BLOG',
-    contacto: 'CONTACT US',
+    contacto: 'CONTACT',
     entrar: 'SIGN IN',
   },
 } as const;
@@ -48,6 +52,22 @@ export default function Header() {
   const [navPinned, setNavPinned] = useState(false);
 
   const t = translations[locale];
+  const isHome = pathname === '/';
+
+  const scrollToSection = useCallback((sectionId: HomeSectionId) => {
+    scrollBelowSiteHeader(sectionId);
+    window.history.replaceState(null, '', `/#${sectionId}`);
+  }, []);
+
+  const handleSectionClick = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, sectionId: HomeSectionId) => {
+      if (!isHome) return;
+
+      event.preventDefault();
+      scrollToSection(sectionId);
+    },
+    [isHome, scrollToSection],
+  );
 
   useEffect(() => {
     const syncPinned = (y: number) => {
@@ -83,6 +103,16 @@ export default function Header() {
       document.documentElement.style.setProperty('--site-header-height', HEADER_HEIGHT_FULL);
     };
   }, [navPinned]);
+
+  useEffect(() => {
+    if (!isHome) return;
+
+    const hash = window.location.hash.replace('#', '') as HomeSectionId;
+    if (!HOME_SECTIONS.includes(hash)) return;
+
+    const timer = window.setTimeout(() => scrollBelowSiteHeader(hash), 120);
+    return () => window.clearTimeout(timer);
+  }, [isHome, pathname]);
 
   return (
     <header className={`header${navPinned ? ' header--nav-pinned' : ''}`}>
@@ -140,17 +170,40 @@ export default function Header() {
           </Link>
           
           <nav className="nav">
-            <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>{t.inicio}</Link>
-            <Link href="/sobre-nos" className={`nav-link ${pathname === '/sobre-nos' ? 'active' : ''}`}>{t.sobre}</Link>
-            <Link href="/servicos" className={`nav-link ${pathname === '/servicos' ? 'active' : ''}`}>{t.servicos}</Link>
-            <Link href="/conferencia" className={`nav-link ${pathname === '/conferencia' ? 'active' : ''}`}>{t.conferencia}</Link>
-            <Link
-              href="/noticias"
-              className={`nav-link ${pathname === '/noticias' || pathname.startsWith('/noticias/') || pathname === '/blog' ? 'active' : ''}`}
+            <Link href="/sobre-nos" className={`nav-link ${pathname === '/sobre-nos' ? 'active' : ''}`}>
+              {t.sobre}
+            </Link>
+            <a
+              href="/#conferencia"
+              className="nav-link"
+              onClick={(event) => handleSectionClick(event, 'conferencia')}
+            >
+              {t.conferencia}
+            </a>
+            <a
+              href="/#direcao"
+              className="nav-link"
+              onClick={(event) => handleSectionClick(event, 'direcao')}
+            >
+              {t.direcao}
+            </a>
+            <a
+              href="/#equipa"
+              className="nav-link"
+              onClick={(event) => handleSectionClick(event, 'equipa')}
+            >
+              {t.equipa}
+            </a>
+            <a
+              href="/#noticias"
+              className="nav-link"
+              onClick={(event) => handleSectionClick(event, 'noticias')}
             >
               {t.blog}
+            </a>
+            <Link href="/contacte-nos" className={`nav-link ${pathname === '/contacte-nos' ? 'active' : ''}`}>
+              {t.contacto}
             </Link>
-            <Link href="/contacte-nos" className={`nav-link ${pathname === '/contacte-nos' ? 'active' : ''}`}>{t.contacto}</Link>
           </nav>
           
           <div className="header-actions">

@@ -76,7 +76,7 @@ export default function NewsletterSection() {
   }, []);
 
   return (
-    <section className="newsletter-section" ref={sectionRef}>
+    <section className="newsletter-section" id="equipa" ref={sectionRef}>
       {/* Camada de Fundo com Parallax Seguro */}
       <div 
         className="newsletter-parallax-bg" 

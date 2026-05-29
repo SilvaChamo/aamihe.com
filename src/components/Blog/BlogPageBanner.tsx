@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import './BlogLayout.css';
 
@@ -16,6 +17,12 @@ type BlogPageBannerProps = {
   imageUrl?: string;
   breadcrumbLabel?: string;
   breadcrumbs?: BreadcrumbItem[];
+  languageSlides?: readonly {
+    id: 'pt' | 'en' | 'fr';
+    title: string;
+    image?: string;
+    description?: string;
+  }[];
 };
 
 const HOME_LABEL = {
@@ -84,25 +91,81 @@ export default function BlogPageBanner({
   imageUrl,
   breadcrumbLabel,
   breadcrumbs,
+  languageSlides,
 }: BlogPageBannerProps) {
   const pathname = usePathname();
   const { locale } = useLanguage();
+  const [slideIndex, setSlideIndex] = useState(0);
 
-  const style = imageUrl ? { backgroundImage: `url(${imageUrl})` } : undefined;
-  const displayTitle = title?.trim() ?? '';
+  const slides = languageSlides?.length ? languageSlides : null;
+  const slideCarousel = Boolean(slides?.length && slides.every((slide) => slide.image));
+  const style =
+    imageUrl && !slideCarousel ? { backgroundImage: `url(${imageUrl})` } : undefined;
+  const displayTitle = slides ? slides[slideIndex]?.title ?? '' : title?.trim() ?? '';
   const trail =
     breadcrumbs ?? buildBreadcrumbs(pathname, locale, displayTitle, breadcrumbLabel);
+
+  useEffect(() => {
+    if (!slides) return;
+
+    const index = slides.findIndex((slide) => slide.id === locale);
+    if (index !== -1) {
+      setSlideIndex(index);
+    }
+  }, [locale, slides]);
+
+  useEffect(() => {
+    if (!slides || slides.length < 2) return;
+
+    const timer = window.setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % slides.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [slides]);
 
   return (
     <section
       id={id}
-      className={`blog-page-banner ${imageUrl ? 'blog-page-banner--image' : ''}`}
+      className={`blog-page-banner${imageUrl || slideCarousel ? ' blog-page-banner--image' : ''}${
+        slides ? ' blog-page-banner--language-slides' : ''
+      }${slideCarousel ? ' blog-page-banner--slide-carousel' : ''}`}
       style={style}
       aria-label={displayTitle || trail[trail.length - 1]?.label || 'Página'}
+      aria-roledescription={slideCarousel ? 'carousel' : undefined}
     >
+      {slideCarousel ? (
+        <div className="blog-page-banner__bg-viewport" aria-hidden="true">
+          {slides.map((slide, index) => (
+            <div
+              key={slide.id}
+              className={`blog-page-banner__bg-slide ${index === slideIndex ? 'active' : ''}`}
+              style={{ backgroundImage: `url(${slide.image})` }}
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="banner-overlay" />
       <div className="blog-page-banner-inner">
-        {displayTitle ? <h1>{displayTitle}</h1> : null}
+        {slides ? (
+          <div className="blog-page-banner-titles" aria-live="polite">
+            {slides.map((slide, index) => (
+              <div
+                key={slide.id}
+                className={`blog-page-banner-title-stack ${index === slideIndex ? 'active' : ''}`}
+                lang={slide.id}
+                aria-hidden={index !== slideIndex}
+              >
+                <h1>{slide.title}</h1>
+                {slide.description ? (
+                  <p className="blog-page-banner-slide-desc">{slide.description}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : displayTitle ? (
+          <h1>{displayTitle}</h1>
+        ) : null}
         {trail.length > 0 ? (
           <nav className="blog-page-breadcrumb" aria-label="Caminho de navegação">
             <ol>

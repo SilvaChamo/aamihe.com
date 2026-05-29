@@ -19,7 +19,7 @@ export default function NewsSection() {
   const displayedNews = news.filter((item) => item.status !== 'draft').slice(0, 4);
 
   return (
-    <section className="news-section">
+    <section className="news-section" id="noticias">
       <div className="news-container">
         <div className="news-header">
           <h2 className="news-section-title">{t.title}</h2>

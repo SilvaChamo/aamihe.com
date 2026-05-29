@@ -321,6 +321,15 @@
   filter: drop-shadow(0 0 6px rgba(204, 168, 118, 0.35));
 }
 
+.orgConnectorSvgFirst {
+  height: 88px;
+  margin-top: -3px;
+}
+
+.orgConnectorHoriz {
+  filter: drop-shadow(0 0 10px rgba(204, 168, 118, 0.55));
+}
+
 .orgConnectorPath {
   vector-effect: non-scaling-stroke;
 }
@@ -385,6 +394,7 @@
     var(--primary-hover, #3a100d) 100%
   );
   box-shadow: 0 8px 32px rgba(204, 168, 118, 0.14), 0 6px 24px rgba(26, 8, 7, 0.45);
+  margin-bottom: 0;
 }
 
 .orgNodeFeatured:hover {
@@ -493,6 +503,10 @@
 
   .orgConnectorSvg {
     height: 56px;
+  }
+
+  .orgConnectorSvgFirst {
+    height: 72px;
   }
 
   .hero {

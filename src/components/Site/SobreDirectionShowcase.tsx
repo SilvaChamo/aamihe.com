@@ -31,10 +31,52 @@ const ORG_VICE_PRESIDENTS = boardMembers.slice(0, 3);
 const ORG_OFFICERS = boardMembers.slice(3, 6);
 
 function OrgConnector({ variant }: { variant: 'one-to-three' | 'three-to-three' }) {
+  if (variant === 'one-to-three') {
+    return (
+      <svg
+        className={`${styles.orgConnectorSvg} ${styles.orgConnectorSvgFirst}`}
+        viewBox="0 0 1028 88"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          className={`${styles.orgConnectorPath} ${styles.orgConnectorHoriz}`}
+          d="M 150 34 L 878 34"
+          fill="none"
+          stroke="url(#sobre-org-line)"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          className={styles.orgConnectorPath}
+          d="M 150 34 L 150 88 M 878 34 L 878 88"
+          fill="none"
+          stroke="url(#sobre-org-line)"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <path
+          className={styles.orgConnectorPath}
+          d="M 514 0 L 514 34"
+          fill="none"
+          stroke="rgba(204, 168, 118, 0.92)"
+          strokeWidth="5"
+          strokeLinecap="butt"
+        />
+        <path
+          className={styles.orgConnectorPath}
+          d="M 514 34 L 514 84"
+          fill="none"
+          stroke="url(#sobre-org-line-v-fade)"
+          strokeWidth="5"
+          strokeLinecap="butt"
+        />
+      </svg>
+    );
+  }
+
   const path =
-    variant === 'one-to-three'
-      ? 'M 514 0 L 514 28 L 150 28 L 150 68 M 514 28 L 878 28 L 878 68'
-      : 'M 150 0 L 150 28 L 878 28 L 878 0 M 150 28 L 150 68 M 514 28 L 514 68 M 878 28 L 878 68';
+    'M 150 0 L 150 28 L 878 28 L 878 0 M 150 28 L 150 68 M 514 28 L 514 68 M 878 28 L 878 68';
 
   return (
     <svg
@@ -97,7 +139,7 @@ export default function SobreDirectionShowcase() {
   const president = boardPresident;
 
   return (
-    <section className={styles.section} aria-labelledby="sobre-org-titulo">
+    <section className={styles.section} id="organograma" aria-labelledby="sobre-org-titulo">
       <div className="container">
         <div className={styles.orgSection} aria-labelledby="sobre-org-titulo">
           <div className={styles.orgBubbles} aria-hidden="true">
@@ -122,10 +164,24 @@ export default function SobreDirectionShowcase() {
           <div className={styles.orgChart}>
             <svg width="0" height="0" aria-hidden="true">
               <defs>
-                <linearGradient id="sobre-org-line" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient
+                  id="sobre-org-line"
+                  gradientUnits="userSpaceOnUse"
+                  x1="150"
+                  y1="34"
+                  x2="878"
+                  y2="34"
+                >
                   <stop offset="0%" stopColor="rgba(204, 168, 118, 0)" />
-                  <stop offset="15%" stopColor="rgba(204, 168, 118, 0.9)" />
-                  <stop offset="85%" stopColor="rgba(204, 168, 118, 0.9)" />
+                  <stop offset="8%" stopColor="rgba(204, 168, 118, 0.92)" />
+                  <stop offset="92%" stopColor="rgba(204, 168, 118, 0.92)" />
+                  <stop offset="100%" stopColor="rgba(204, 168, 118, 0)" />
+                </linearGradient>
+                <linearGradient id="sobre-org-line-v-fade" x1="514" y1="34" x2="514" y2="84" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="rgba(204, 168, 118, 0.95)" />
+                  <stop offset="22%" stopColor="rgba(204, 168, 118, 0.82)" />
+                  <stop offset="50%" stopColor="rgba(204, 168, 118, 0.38)" />
+                  <stop offset="78%" stopColor="rgba(204, 168, 118, 0.12)" />
                   <stop offset="100%" stopColor="rgba(204, 168, 118, 0)" />
                 </linearGradient>
               </defs>
