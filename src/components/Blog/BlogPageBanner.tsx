@@ -98,9 +98,10 @@ export default function BlogPageBanner({
   const [slideIndex, setSlideIndex] = useState(0);
 
   const slides = languageSlides?.length ? languageSlides : null;
-  const slideCarousel = Boolean(slides?.length && slides.every((slide) => slide.image));
+  const carouselSlides =
+    slides && slides.length > 0 && slides.every((slide) => slide.image) ? slides : null;
   const style =
-    imageUrl && !slideCarousel ? { backgroundImage: `url(${imageUrl})` } : undefined;
+    imageUrl && !carouselSlides ? { backgroundImage: `url(${imageUrl})` } : undefined;
   const displayTitle = slides ? slides[slideIndex]?.title ?? '' : title?.trim() ?? '';
   const trail =
     breadcrumbs ?? buildBreadcrumbs(pathname, locale, displayTitle, breadcrumbLabel);
@@ -127,16 +128,16 @@ export default function BlogPageBanner({
   return (
     <section
       id={id}
-      className={`blog-page-banner${imageUrl || slideCarousel ? ' blog-page-banner--image' : ''}${
+      className={`blog-page-banner${imageUrl || carouselSlides ? ' blog-page-banner--image' : ''}${
         slides ? ' blog-page-banner--language-slides' : ''
-      }${slideCarousel ? ' blog-page-banner--slide-carousel' : ''}`}
+      }${carouselSlides ? ' blog-page-banner--slide-carousel' : ''}`}
       style={style}
       aria-label={displayTitle || trail[trail.length - 1]?.label || 'Página'}
-      aria-roledescription={slideCarousel ? 'carousel' : undefined}
+      aria-roledescription={carouselSlides ? 'carousel' : undefined}
     >
-      {slideCarousel ? (
+      {carouselSlides ? (
         <div className="blog-page-banner__bg-viewport" aria-hidden="true">
-          {slides.map((slide, index) => (
+          {carouselSlides.map((slide, index) => (
             <div
               key={slide.id}
               className={`blog-page-banner__bg-slide ${index === slideIndex ? 'active' : ''}`}
