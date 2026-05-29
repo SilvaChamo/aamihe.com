@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import './Header.css';
 
-const SCROLL_THRESHOLD = 80;
-const SCROLL_DELTA = 6;
+const SCROLL_PIN_Y = 96;
+const SCROLL_UNPIN_Y = 48;
 const HEADER_HEIGHT_FULL = '116px';
 const HEADER_HEIGHT_NAV = '72px';
 
@@ -46,30 +46,26 @@ export default function Header() {
   const pathname = usePathname();
   const { locale, setLocale } = useLanguage();
   const [navPinned, setNavPinned] = useState(false);
-  const lastScrollY = useRef(0);
 
   const t = translations[locale];
 
   useEffect(() => {
-    lastScrollY.current = window.scrollY;
+    const syncPinned = (y: number) => {
+      setNavPinned((pinned) => {
+        if (!pinned && y > SCROLL_PIN_Y) return true;
+        if (pinned && y < SCROLL_UNPIN_Y) return false;
+        return pinned;
+      });
+    };
+
+    syncPinned(window.scrollY);
 
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const lastY = lastScrollY.current;
-
-        if (y < SCROLL_THRESHOLD) {
-          setNavPinned(false);
-        } else if (y < lastY - SCROLL_DELTA) {
-          setNavPinned(false);
-        } else if (y > lastY + SCROLL_DELTA) {
-          setNavPinned(true);
-        }
-
-        lastScrollY.current = y;
+        syncPinned(window.scrollY);
         ticking = false;
       });
     };

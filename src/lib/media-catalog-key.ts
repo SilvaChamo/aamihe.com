@@ -35,12 +35,24 @@ export function mediaCatalogKey(url: string): string {
   return mediaUniqueBasename(trimmed);
 }
 
+export function isLocalMediaPath(url: string | undefined): boolean {
+  if (!url?.startsWith('/')) return false;
+  return (
+    url.startsWith('/gallery/') ||
+    url.startsWith('/uploads/') ||
+    url.startsWith('/images/') ||
+    url.startsWith('/Imagens/')
+  );
+}
+
 export function canDeleteMedia(item: { id: string; source?: string; url?: string }): boolean {
+  if (item.id.startsWith('wp_') || item.id.startsWith('doc_media_')) return false;
+  if (item.id.startsWith('site_')) return isLocalMediaPath(item.url);
   if (item.url?.includes('supabase.co/storage')) return true;
+  if (isLocalMediaPath(item.url)) return true;
+  if (item.url?.includes('blob.vercel-storage.com')) return true;
   if (item.source === 'upload' || item.source === 'news') return true;
   if (item.id.startsWith('media_')) return true;
-  if (item.id.startsWith('wp_') || item.id.startsWith('doc_media_')) return false;
-  if (item.id.startsWith('site_') && item.url?.startsWith('/')) return false;
   return true;
 }
 

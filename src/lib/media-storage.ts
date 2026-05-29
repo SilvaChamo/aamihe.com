@@ -1,7 +1,8 @@
-import { mkdir, writeFile, copyFile, access } from 'node:fs/promises';
+import { mkdir, writeFile, copyFile, access, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveMissingPublicImage } from '@/lib/reference-image-sync';
+import { BLOB_ACCESS } from '@/lib/blob-access';
 
 function hasBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -22,7 +23,7 @@ export async function storeImageBuffer(
   if (hasBlobStorage()) {
     const { put } = await import('@vercel/blob');
     const blob = await put(`gallery/${filename}`, buffer, {
-      access: 'public',
+      access: BLOB_ACCESS,
       contentType: mimeType,
       addRandomSuffix: false,
     });
@@ -47,7 +48,7 @@ export async function storeUploadBuffer(
   if (hasBlobStorage()) {
     const { put } = await import('@vercel/blob');
     const blob = await put(`${subfolder}/${filename}`, buffer, {
-      access: 'public',
+      access: BLOB_ACCESS,
       contentType: mimeType,
       addRandomSuffix: false,
     });
@@ -58,6 +59,47 @@ export async function storeUploadBuffer(
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), buffer);
   return { url: `/${subfolder}/${filename}`, filename };
+}
+
+export function isVercelBlobUrl(url: string): boolean {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host.endsWith('.public.blob.vercel-storage.com') || host.endsWith('.blob.vercel-storage.com');
+  } catch {
+    return false;
+  }
+}
+
+/** Remove ficheiro no Vercel Blob (produção). */
+export async function deleteBlobFile(url: string): Promise<boolean> {
+  if (!hasBlobStorage() || !isVercelBlobUrl(url)) return false;
+  try {
+    const { del } = await import('@vercel/blob');
+    await del(url);
+    return true;
+  } catch (error) {
+    console.error('deleteBlobFile:', url, error);
+    return false;
+  }
+}
+
+/** Remove ficheiro em public/ (ex.: /gallery/foto.jpg). */
+export async function deleteLocalPublicFile(url: string): Promise<boolean> {
+  if (!url.startsWith('/')) return false;
+
+  const relative = url.replace(/^\//, '');
+  const filePath = path.join(process.cwd(), 'public', relative);
+
+  try {
+    await unlink(filePath);
+    return true;
+  } catch (error: unknown) {
+    const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+    if (code === 'ENOENT') return true;
+    console.error('deleteLocalPublicFile:', filePath, error);
+    return false;
+  }
 }
 
 export async function ensureGalleryFile(sourceUrl: string, title: string): Promise<string> {

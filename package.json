@@ -12,7 +12,9 @@
     "sync-images": "node scripts/sync-reference-images.mjs",
     "upload-supabase": "node scripts/upload-all-to-supabase.mjs",
     "import-wordpress": "node scripts/import-wordpress-news.mjs",
-    "seed-page-config": "node scripts/seed-page-config.mjs"
+    "seed-page-config": "node scripts/seed-page-config.mjs",
+    "server:ssh": "bash scripts/server/remote.sh",
+    "server:push": "bash scripts/server/push-to-server.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

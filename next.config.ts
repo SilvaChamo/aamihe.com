@@ -71,10 +71,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/sobre-nos',
-        destination: '/sobre-nos.html',
-      },
-      {
         source: '/servicos',
         destination: '/servicos.html',
       },

@@ -32,6 +32,13 @@ export default function DashboardContent() {
   const base = useAdminBase();
   const { locale } = useLanguage();
   const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
+  const [stats, setStats] = React.useState<Stats>({
+    news: 0,
+    media: 0,
+    videos: 0,
+    documents: 0,
+  });
+  const [statsLoading, setStatsLoading] = React.useState(true);
 
   const copy = {
     pt: {
@@ -128,13 +135,48 @@ export default function DashboardContent() {
       cancelled = true;
     };
   }, []);
-  // Mock data for now - can be replaced with real data later
-  const stats: Stats = {
-    news: 0,
-    media: 0,
-    videos: 0,
-    documents: 0,
-  };
+  React.useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [mediaRes, docsRes, contentRes] = await Promise.all([
+          fetch('/api/admin/media?catalog=full', { cache: 'no-store' }),
+          fetch('/api/admin/documents', { cache: 'no-store' }),
+          fetch('/api/admin/content', { cache: 'no-store' }),
+        ]);
+
+        const [mediaData, docsData, contentData] = await Promise.all([
+          mediaRes.json(),
+          docsRes.json(),
+          contentRes.json(),
+        ]);
+
+        if (cancelled) return;
+
+        const mediaItems = Array.isArray(mediaData?.media) ? mediaData.media : [];
+        const documents = Array.isArray(docsData?.documents) ? docsData.documents : [];
+        const news = Array.isArray(contentData?.news) ? contentData.news : [];
+
+        setStats({
+          news: news.length,
+          media: mediaItems.filter((item: { category?: string }) => item?.category === 'imagens').length,
+          videos: mediaItems.filter((item: { category?: string }) => item?.category === 'videos').length,
+          documents: documents.length,
+        });
+      } catch {
+        if (!cancelled) {
+          setStats({ news: 0, media: 0, videos: 0, documents: 0 });
+        }
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const recentActivities: ActivityItem[] = [];
 
@@ -254,7 +296,7 @@ export default function DashboardContent() {
                     <FileUp />
                   </div>
                   <span className="dashboard-stat-value">
-                    {stats.documents}
+                    {statsLoading ? '...' : stats.documents}
                   </span>
                   <span className="dashboard-stat-label">
                     {t.documents}
@@ -282,7 +324,7 @@ export default function DashboardContent() {
                     <ImageIcon />
                   </div>
                   <span className="dashboard-stat-value">
-                    {stats.media}
+                    {statsLoading ? '...' : stats.media}
                   </span>
                   <span className="dashboard-stat-label">
                     {t.gallery}
@@ -296,7 +338,7 @@ export default function DashboardContent() {
                     <Video />
                   </div>
                   <span className="dashboard-stat-value">
-                    {stats.videos}
+                    {statsLoading ? '...' : stats.videos}
                   </span>
                   <span className="dashboard-stat-label">
                     {t.videos}

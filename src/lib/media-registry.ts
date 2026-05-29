@@ -113,6 +113,22 @@ export function upsertMediaRecord(
   return record;
 }
 
+/** Resolve item do catálogo (DB, Supabase ou ficheiros em public/). */
+export async function findMediaRecordById(
+  id: string,
+  db: DashboardDb
+): Promise<SiteMediaRecord | null> {
+  const inDb = db.media.find((m) => m.id === id);
+  if (inDb) return inDb;
+
+  if (id.startsWith('site_')) {
+    const collected = await collectAllSiteImages();
+    return collected.find((m) => m.id === id) ?? null;
+  }
+
+  return null;
+}
+
 export function categoryFromFile(file: { mimetype?: string; name: string }): 'imagens' | 'videos' | 'documentos' {
   if (file.mimetype) return inferMediaCategory(file.mimetype);
   return inferMediaCategoryFromUrl(file.name);

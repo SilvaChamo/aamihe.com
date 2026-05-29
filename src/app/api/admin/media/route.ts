@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { buildAdminMediaCatalog, buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
-import { canDeleteMedia } from '@/lib/media-catalog-key';
+import { deleteMediaItem } from '@/lib/media-delete';
+import { buildAdminMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
 import { ensureGalleryFile } from '@/lib/media-storage';
-import { uploadFileToStore, deleteSupabaseMedia } from '@/lib/supabase-media';
+import { uploadFileToStore } from '@/lib/supabase-media';
 import type { MediaCategory } from '@/lib/site-media';
 import { inferUploadMimeType } from '@/lib/infer-upload-mime';
 import { inferMediaCategory } from '@/lib/site-media';
@@ -90,12 +90,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as MediaCategory | null;
-    const fullCatalog = searchParams.get('catalog') === 'full';
     const db = await getDashboardDb();
-    let items = fullCatalog ? await buildMediaCatalog(db) : await buildAdminMediaCatalog(db);
-    if (category) {
-      items = items.filter((item) => item.category === category);
-    }
+    // Uma fonte: Supabase + dashboard (sem varrer public/ — evita duplicar o que já está na BD)
+    const allItems = await buildAdminMediaCatalog(db);
+    const items = category
+      ? allItems.filter((item) => item.category === category)
+      : allItems;
     return NextResponse.json(
       { success: true, media: items, supabase: isSupabaseConfigured() },
       { headers: { 'Cache-Control': 'no-store' } }
@@ -176,46 +176,15 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const url = searchParams.get('url') || undefined;
+
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID em falta' }, { status: 400 });
     }
 
-    if (id.startsWith('wp_') || id.startsWith('doc_media_')) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Itens do arquivo HTML legado não podem ser eliminados aqui.',
-        },
-        { status: 400 }
-      );
-    }
-
-    const db = await getDashboardDb();
-    const existing = db.media.find((m) => m.id === id);
-
-    if (existing && !canDeleteMedia(existing)) {
-      return NextResponse.json({ success: false, error: 'Este item não pode ser eliminado.' }, { status: 400 });
-    }
-
-    if (!existing && isSupabaseConfigured()) {
-      const { getSupabaseAdmin } = await import('@/lib/supabase/server');
-      const admin = getSupabaseAdmin();
-      if (admin) {
-        const { data: row } = await admin.from('site_media').select('url').eq('id', id).maybeSingle();
-        if (!row?.url?.includes('supabase.co/storage')) {
-          return NextResponse.json({ success: false, error: 'Este item não pode ser eliminado.' }, { status: 400 });
-        }
-      }
-    }
-
-    db.media = db.media.filter((m) => m.id !== id);
-    await saveDashboardDb(db);
-
-    if (isSupabaseConfigured()) {
-      const deletedFromSupa = await deleteSupabaseMedia(id);
-      if (!deletedFromSupa) {
-         return NextResponse.json({ success: false, error: 'Não foi possível eliminar a imagem da cloud (Supabase).' }, { status: 500 });
-      }
+    const result = await deleteMediaItem({ id, url });
+    if (!result.ok) {
+      return NextResponse.json({ success: false, error: result.error }, { status: result.status });
     }
 
     return NextResponse.json({ success: true });

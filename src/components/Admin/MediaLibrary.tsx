@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { adminFetch } from '@/lib/admin-auth';
 import { uploadMediaFiles } from '@/lib/persist-client-media';
 import { canDeleteMedia, dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
@@ -93,13 +94,13 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
   });
   const [savingMetadata, setSavingMetadata] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const loadImages = async (filter: 'all' | MediaCategory = typeFilter) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (fullCatalog) params.set('catalog', 'full');
       if (filter !== 'all') params.set('category', filter);
 
       const query = params.toString();
@@ -237,6 +238,43 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
     }
   };
 
+  const requestDelete = async (items: MediaFile[]) => {
+    if (items.length === 1) {
+      const res = await adminFetch(
+        `/api/admin/media?id=${encodeURIComponent(items[0].id)}&url=${encodeURIComponent(items[0].url)}`,
+        { method: 'DELETE' }
+      );
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Erro ao eliminar');
+      }
+      return;
+    }
+
+    const res = await adminFetch('/api/admin/media/batch-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: items.map((file) => ({ id: file.id, url: file.url })),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || Number(data.deleted) === 0) {
+      throw new Error(data.error || 'Erro ao eliminar em massa');
+    }
+    if (Array.isArray(data.failed) && data.failed.length > 0) {
+      alert(
+        `${data.deleted} eliminado(s). ${data.failed.length} item(ns) não foi/foram eliminado(s) (arquivo legado ou erro).`
+      );
+    }
+  };
+
+  const removeDeletedFromState = (deleted: MediaFile[]) => {
+    const keys = new Set(deleted.map((f) => mediaCatalogKey(f.url)));
+    const ids = new Set(deleted.map((f) => f.id));
+    setFiles((prev) => prev.filter((f) => !ids.has(f.id) && !keys.has(mediaCatalogKey(f.url))));
+  };
+
   const deleteSingle = async (file: MediaFile) => {
     if (!canDeleteMedia(file)) {
       alert('Este item do arquivo legado não pode ser eliminado aqui.');
@@ -245,15 +283,13 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
     if (!confirm('Eliminar este item permanentemente?')) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/media?id=${encodeURIComponent(file.id)}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!data.success) {
-        alert(data.error || 'Erro ao eliminar');
-        return;
-      }
+      await requestDelete([file]);
+      removeDeletedFromState([file]);
       setActiveFile(null);
       setIsEditorOpen(false);
       await loadImages();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao eliminar');
     } finally {
       setLoading(false);
     }
@@ -267,19 +303,27 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
       alert('Nenhum dos itens seleccionados pode ser eliminado.');
       return;
     }
-    if (!confirm(`Eliminar ${deletable.length} item(ns)?`)) return;
+    if (deletable.length < ids.length) {
+      const skipped = ids.length - deletable.length;
+      if (
+        !confirm(
+          `${skipped} item(ns) do arquivo legado serão ignorados. Eliminar ${deletable.length} item(ns)?`
+        )
+      ) {
+        return;
+      }
+    } else if (!confirm(`Eliminar ${deletable.length} item(ns)?`)) {
+      return;
+    }
     setLoading(true);
     try {
-      for (const file of deletable) {
-        const res = await fetch(`/api/admin/media?id=${encodeURIComponent(file.id)}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (!data.success) {
-          alert(data.error || `Erro ao eliminar ${file.name}`);
-          break;
-        }
-      }
+      await requestDelete(deletable);
+      removeDeletedFromState(deletable);
       setSelectedIds(new Set());
       setIsBulkMode(false);
+      await loadImages();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao eliminar em massa');
       await loadImages();
     } finally {
       setLoading(false);
@@ -365,6 +409,35 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
     }
   };
 
+  const runCatalogCleanup = async () => {
+    if (
+      !confirm(
+        'Limpar duplicados na base de dados?\n\nMantém uma entrada por foto (alinhada aos ficheiros em /gallery). Remove o resto.'
+      )
+    ) {
+      return;
+    }
+    setIsCleaning(true);
+    try {
+      const res = await adminFetch('/api/admin/media/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'Erro na limpeza');
+        return;
+      }
+      alert(data.message || 'Limpeza concluída.');
+      await loadImages();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro na limpeza');
+    } finally {
+      setIsCleaning(false);
+    }
+  };
+
   const formatSize = (bytes?: number) => {
     if (!bytes) return '0 B';
     const k = 1024;
@@ -414,6 +487,17 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
             <Upload className="media-toolbar-icon" />
             {isUploading ? 'A carregar...' : 'Carregar ficheiros'}
           </button>
+
+          {fullCatalog && !isModal ? (
+            <button
+              type="button"
+              className="media-bulk-button"
+              disabled={isCleaning || isUploading}
+              onClick={() => void runCatalogCleanup()}
+            >
+              {isCleaning ? 'A limpar…' : 'Limpar duplicados'}
+            </button>
+          ) : null}
 
           {!isBulkMode ? (
             <button 
@@ -555,7 +639,9 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
                   key={`${file.id}::${mediaCatalogKey(file.url)}`}
                   className={`media-list-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                   onClick={() => {
-                    if (isModal && onSelect) {
+                    if (isBulkMode) {
+                      toggleSelect(file.id);
+                    } else if (isModal && onSelect) {
                       onSelect(getPublicUrl(file));
                     } else {
                       openDetails(file);

@@ -22,6 +22,19 @@
   margin-bottom: 45px;
 }
 
+.blog-page-banner-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+  text-align: center;
+  max-width: 100%;
+}
+
 .blog-page-banner--image {
   background-size: cover;
   background-position: center;
@@ -39,12 +52,53 @@
 
 .blog-page-banner h1 {
   color: #fff;
-  font-size: 48px;
-  font-weight: bold;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 800;
   position: relative;
   z-index: 1;
   text-transform: uppercase;
   margin: 0;
+  line-height: 1.15;
+}
+
+.blog-page-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.blog-page-breadcrumb li {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.blog-page-breadcrumb li + li::before {
+  content: '/';
+  margin: 0 8px;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.blog-page-breadcrumb a {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.blog-page-breadcrumb a:hover {
+  color: #cca876;
+}
+
+.blog-page-breadcrumb [aria-current='page'] {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .blog-content-wrap {
@@ -467,7 +521,11 @@
 
 @media (max-width: 640px) {
   .blog-page-banner h1 {
-    font-size: 32px;
+    font-size: 1.35rem;
+  }
+
+  .blog-page-breadcrumb ol {
+    font-size: 12px;
   }
 
   .single-post-content h1 {

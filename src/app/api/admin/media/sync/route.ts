@@ -202,12 +202,20 @@ export async function POST() {
     }
 
     await saveDashboardDb(db);
+
+    let cleanupStats = null;
+    if (isSupabaseConfigured()) {
+      const { cleanupMediaCatalog } = await import('@/lib/media-catalog-cleanup');
+      cleanupStats = await cleanupMediaCatalog();
+    }
+
     const totalInSupabase = isSupabaseConfigured() ? (await buildMediaCatalog(db)).length : 0;
 
     return NextResponse.json({
       success: true,
       restored: uniqueRestored.length,
       supabase_synced: supabaseSynced,
+      catalog_cleanup: cleanupStats,
       catalog_total: totalInSupabase,
       failed_count: failed.length,
       failed_sample: failed.slice(0, 10),

@@ -6,11 +6,6 @@
   margin-bottom: 40px;
 }
 
-.contact-main :global(.blog-page-banner h1) {
-  font-size: clamp(1.65rem, 5vw, 2.65rem);
-  font-weight: 900;
-}
-
 .contact-honeypot {
   position: absolute;
   left: -9999px;

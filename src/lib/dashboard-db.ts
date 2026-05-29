@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import type { SiteMediaRecord } from '@/lib/site-media';
+import { BLOB_ACCESS } from '@/lib/blob-access';
 
 export type DashboardDb = {
   documents: SiteDocumentRecord[];
@@ -19,11 +20,10 @@ const EMPTY_DB: DashboardDb = { documents: [], media: [] };
 
 async function readDashboardFromBlob(): Promise<DashboardDb | null> {
   try {
-    const { head } = await import('@vercel/blob');
-    const meta = await head(BLOB_PATH);
-    const res = await fetch(meta.url);
-    if (!res.ok) return null;
-    const parsed = JSON.parse(await res.text()) as Partial<DashboardDb>;
+    const { get } = await import('@vercel/blob');
+    const result = await get(BLOB_PATH, { access: BLOB_ACCESS });
+    if (!result?.stream) return null;
+    const parsed = JSON.parse(await new Response(result.stream).text()) as Partial<DashboardDb>;
     return {
       documents: parsed.documents ?? [],
       media: parsed.media ?? [],
@@ -36,7 +36,7 @@ async function readDashboardFromBlob(): Promise<DashboardDb | null> {
 async function writeDashboardToBlob(db: DashboardDb): Promise<void> {
   const { put } = await import('@vercel/blob');
   await put(BLOB_PATH, JSON.stringify(db, null, 2), {
-    access: 'public',
+    access: BLOB_ACCESS,
     contentType: 'application/json',
     addRandomSuffix: false,
     allowOverwrite: true,

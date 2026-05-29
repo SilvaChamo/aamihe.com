@@ -2,7 +2,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { MediaCategory } from '@/lib/site-media';
 import type { SiteMediaRecord } from '@/lib/site-media';
-import { mediaCatalogKey } from '@/lib/media-catalog-key';
+import { mediaCatalogKey, mediaUniqueBasename } from '@/lib/media-catalog-key';
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
@@ -76,7 +76,7 @@ export async function upsertSupabaseMedia(
 
 export async function deleteSupabaseMedia(id: string): Promise<boolean> {
   const admin = getSupabaseAdmin();
-  if (!admin) return false;
+  if (!admin) return true;
 
   const { data: row } = await admin.from('site_media').select('storage_path').eq('id', id).maybeSingle();
 
@@ -91,6 +91,47 @@ export async function deleteSupabaseMedia(id: string): Promise<boolean> {
   }
 
   return true;
+}
+
+/** Elimina todas as linhas Supabase com o mesmo URL público. */
+export async function deleteSupabaseMediaByUrl(url: string): Promise<void> {
+  await deleteSupabaseMediaRelated(url);
+}
+
+/**
+ * Elimina na Supabase todas as entradas da mesma imagem (URL local, cloud ou catalog_key diferente).
+ */
+export async function deleteSupabaseMediaRelated(url: string): Promise<number> {
+  const admin = getSupabaseAdmin();
+  if (!admin || !url) return 0;
+
+  const basename = mediaUniqueBasename(url).toLowerCase();
+  const catalogKey = mediaCatalogKey(url).toLowerCase();
+
+  const { data: rows, error } = await admin.from('site_media').select('id, url, catalog_key, storage_path');
+  if (error) {
+    console.error('Supabase list media for delete:', error.message);
+    return 0;
+  }
+
+  const targets = (rows || []).filter((row) => {
+    const rowUrl = row.url || '';
+    if (rowUrl === url) return true;
+    if (basename && mediaUniqueBasename(rowUrl).toLowerCase() === basename) return true;
+    const rowCatalog = (row.catalog_key || '').toLowerCase();
+    if (basename && rowCatalog === basename) return true;
+    if (catalogKey && rowCatalog === catalogKey) return true;
+    return false;
+  });
+
+  let deleted = 0;
+  for (const row of targets) {
+    if (!row?.id) continue;
+    const ok = await deleteSupabaseMedia(row.id);
+    if (ok) deleted += 1;
+  }
+
+  return deleted;
 }
 
 export async function uploadFileToStore(

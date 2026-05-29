@@ -15,24 +15,7 @@
 }
 
 .header--nav-pinned .top-bar {
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    max-height 0.25s ease,
-    opacity 0.2s ease,
-    padding 0.25s ease;
-}
-
-.top-bar {
-  max-height: 88px;
-  transition:
-    max-height 0.25s ease,
-    opacity 0.2s ease,
-    padding 0.25s ease;
+  display: none;
 }
 
 .top-bar {

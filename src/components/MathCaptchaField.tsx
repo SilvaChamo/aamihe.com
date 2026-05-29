@@ -11,6 +11,7 @@ type MathCaptchaFieldProps = {
 export default function MathCaptchaField({ className = '', label = 'Segurança' }: MathCaptchaFieldProps) {
   const inputId = useId();
   const [challenge, setChallenge] = useState<{ a: number; b: number } | null>(null);
+  const [answer, setAnswer] = useState('');
 
   useEffect(() => {
     setChallenge({
@@ -19,42 +20,31 @@ export default function MathCaptchaField({ className = '', label = 'Segurança' 
     });
   }, []);
 
-  if (!challenge) {
-    return (
-      <div className={`math-captcha-field ${className}`.trim()} aria-busy="true">
-        <label htmlFor={inputId}>{label}</label>
-        <span className="math-captcha-expression" aria-hidden="true">
-          … + … =
-        </span>
-        <input
-          id={inputId}
-          name="math_answer"
-          type="number"
-          inputMode="numeric"
-          disabled
-          aria-label={label}
-        />
-      </div>
-    );
-  }
-
-  const { a, b } = challenge;
+  const ready = challenge !== null;
+  const { a, b } = challenge ?? { a: 0, b: 0 };
 
   return (
-    <div className={`math-captcha-field ${className}`.trim()}>
+    <div className={`math-captcha-field ${className}`.trim()} aria-busy={!ready}>
       <label htmlFor={inputId}>{label}</label>
       <span className="math-captcha-expression" aria-hidden="true">
-        {a} + {b} =
+        {ready ? `${a} + ${b} =` : '… + … ='}
       </span>
-      <input type="hidden" name="math_a" value={a} readOnly />
-      <input type="hidden" name="math_b" value={b} readOnly />
+      {ready ? (
+        <>
+          <input type="hidden" name="math_a" value={a} readOnly />
+          <input type="hidden" name="math_b" value={b} readOnly />
+        </>
+      ) : null}
       <input
         id={inputId}
         name="math_answer"
         type="number"
         inputMode="numeric"
-        required
-        aria-label={`${label}: ${a} mais ${b}`}
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        disabled={!ready}
+        required={ready}
+        aria-label={ready ? `${label}: ${a} mais ${b}` : label}
       />
     </div>
   );

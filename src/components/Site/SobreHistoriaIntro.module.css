@@ -1,0 +1,213 @@
+.section {
+  position: relative;
+  z-index: 2;
+  margin-top: -44px;
+  margin-bottom: 0;
+  padding: 0 0 32px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.introCard {
+  width: 100%;
+  padding: clamp(40px, 5vw, 56px) 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  background-color: #3d120f;
+  background-image:
+    linear-gradient(
+      128deg,
+      rgba(86, 23, 19, 0.88) 0%,
+      rgba(61, 18, 15, 0.9) 38%,
+      rgba(26, 8, 7, 0.93) 100%
+    ),
+    url('/Imagens/IMG_103-e1631215326375-300x160.jpg');
+  background-size: auto, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  position: relative;
+}
+
+.introCard::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  z-index: 0;
+  width: min(520px, 55vw);
+  height: min(520px, 55vw);
+  background: radial-gradient(circle, rgba(204, 168, 118, 0.14) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+.introContent {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+  color: #fff;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cca876;
+}
+
+.eyebrowDash {
+  display: inline-block;
+  width: 1.4em;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0 0 20px;
+  font-size: clamp(1.85rem, 4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+}
+
+.introLead {
+  margin: 0 auto 12px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.introActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.expandToggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: -6px 0 14px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #cca876;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.expandToggleCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(204, 168, 118, 0.7);
+  border-radius: 50%;
+  transition: transform 0.35s ease, border-color 0.2s ease;
+}
+
+.expandToggle:not(.expandToggleOpen) .expandToggleCircle {
+  animation: chevronBounce 1.6s ease-in-out infinite;
+}
+
+.expandToggle:hover .expandToggleCircle,
+.expandToggle:focus-visible .expandToggleCircle {
+  border-color: #cca876;
+}
+
+.expandToggleOpen .expandToggleCircle {
+  transform: rotate(180deg);
+  animation: none;
+}
+
+.expandToggle:focus-visible {
+  outline: 2px solid #cca876;
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+@keyframes chevronBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.moreContentWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  margin: 0;
+  transition: grid-template-rows 0.45s ease, margin 0.45s ease;
+}
+
+.moreContentWrapOpen {
+  grid-template-rows: 1fr;
+  margin: 0 0 10px;
+}
+
+.moreContentInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.moreText {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: center;
+}
+
+.moreText:last-child {
+  margin-bottom: 0;
+}
+
+.introCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  padding: 12px 28px;
+  background: #4fb87a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.introCta:hover {
+  background: #3da566;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-bottom: 24px;
+  }
+
+  .introCard {
+    padding: 32px 24px;
+  }
+}

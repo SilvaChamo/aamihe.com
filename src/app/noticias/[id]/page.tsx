@@ -68,6 +68,7 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
         <BlogPageBanner
           id="article-banner"
           title=""
+          breadcrumbLabel={item.title}
           imageUrl={item.image || '/Imagens/BgNoticias.jpeg'}
         />
         <BlogPageLayout sidebar={<BlogSidebar news={published} currentId={item.id} />}>
