@@ -6,9 +6,14 @@ import './FormAntiSpam.css';
 type MathCaptchaFieldProps = {
   className?: string;
   label?: string;
+  plusWord?: string;
 };
 
-export default function MathCaptchaField({ className = '', label = 'Segurança' }: MathCaptchaFieldProps) {
+export default function MathCaptchaField({
+  className = '',
+  label = 'Segurança',
+  plusWord = 'mais',
+}: MathCaptchaFieldProps) {
   const inputId = useId();
   const [challenge, setChallenge] = useState<{ a: number; b: number } | null>(null);
   const [answer, setAnswer] = useState('');
@@ -44,7 +49,7 @@ export default function MathCaptchaField({ className = '', label = 'Segurança' 
         onChange={(e) => setAnswer(e.target.value)}
         disabled={!ready}
         required={ready}
-        aria-label={ready ? `${label}: ${a} mais ${b}` : label}
+        aria-label={ready ? `${label}: ${a} ${plusWord} ${b}` : label}
       />
     </div>
   );

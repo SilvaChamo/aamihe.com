@@ -294,8 +294,8 @@
   justify-content: center;
   height: 38px;
   padding: 0 16px;
-  border-radius: 6px;
-  background-color: #4f8a3d;
+  border-radius: var(--site-btn-radius);
+  background-color: var(--site-action);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -518,6 +518,6 @@
 }
 
 .login-btn:hover {
-  background-color: #92754c;
+  background-color: var(--site-action-hover);
   color: #fff;
 }

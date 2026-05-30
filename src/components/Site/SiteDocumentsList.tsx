@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { FileText, Download } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { documentsListCopy } from '@/i18n/messages';
 
 type PublicDocument = {
   id: string;
@@ -12,6 +14,8 @@ type PublicDocument = {
 };
 
 export default function SiteDocumentsList({ category = 'conferencia' }: { category?: 'conferencia' | 'geral' }) {
+  const { locale } = useLanguage();
+  const t = documentsListCopy[locale];
   const [documents, setDocuments] = useState<PublicDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,13 +28,13 @@ export default function SiteDocumentsList({ category = 'conferencia' }: { catego
       .finally(() => setLoading(false));
   }, [category]);
 
-  if (loading) return <p>A carregar documentos...</p>;
+  if (loading) return <p>{t.loading}</p>;
 
   if (documents.length === 0) {
     return (
       <div className="docs-empty-state">
         <FileText size={36} />
-        <p>Nenhum documento disponível de momento.</p>
+        <p>{t.empty}</p>
       </div>
     );
   }
@@ -48,7 +52,7 @@ export default function SiteDocumentsList({ category = 'conferencia' }: { catego
           )}
           <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn">
             <Download size={14} style={{ marginRight: 6 }} />
-            Download PDF
+            {t.downloadPdf}
           </a>
         </article>
       ))}

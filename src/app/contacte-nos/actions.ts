@@ -1,6 +1,8 @@
 'use server';
 
 import { validatePublicFormSpam } from '@/lib/form-spam-guard';
+import { readLocaleFromFormData } from '@/i18n/locale';
+import { contactFormErrors } from '@/i18n/messages';
 
 export type ContactFormResult = {
   success: boolean;
@@ -20,16 +22,19 @@ export async function submitContactForm(formData: FormData): Promise<ContactForm
   const message = String(formData.get('message') ?? '').trim();
   const terms = formData.get('terms');
 
+  const locale = readLocaleFromFormData(formData);
+  const t = contactFormErrors[locale];
+
   if (!firstName || !lastName) {
-    return { success: false, error: 'Preencha o nome e o apelido.' };
+    return { success: false, error: t.nameRequired };
   }
 
   if (!email || !message) {
-    return { success: false, error: 'Preencha o email e a mensagem.' };
+    return { success: false, error: t.emailMessageRequired };
   }
 
   if (!terms) {
-    return { success: false, error: 'Deve aceitar os termos para enviar.' };
+    return { success: false, error: t.termsRequired };
   }
 
   console.info('[contact]', {

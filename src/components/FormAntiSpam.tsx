@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import MathCaptchaField from '@/components/MathCaptchaField';
+import { useLanguage } from '@/context/LanguageContext';
+import { galleryCopy } from '@/i18n/messages';
 import './FormAntiSpam.css';
 
 type FormAntiSpamProps = {
@@ -15,6 +17,7 @@ export default function FormAntiSpam({
   mathLabel = 'Segurança',
   mathClassName = '',
 }: FormAntiSpamProps) {
+  const { locale } = useLanguage();
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
 
   useEffect(() => {
@@ -34,7 +37,14 @@ export default function FormAntiSpam({
       {loadedAt !== null ? (
         <input type="hidden" name="form_loaded_at" value={loadedAt} readOnly />
       ) : null}
-      {showMath ? <MathCaptchaField className={mathClassName} label={mathLabel} /> : null}
+      <input type="hidden" name="locale" value={locale} readOnly />
+      {showMath ? (
+        <MathCaptchaField
+          className={mathClassName}
+          label={mathLabel}
+          plusWord={galleryCopy[locale].mathPlus}
+        />
+      ) : null}
     </>
   );
 }

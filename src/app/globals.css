@@ -4,9 +4,11 @@
   --banner-overlay: rgba(0, 0, 0, 0.65);
   --accent: #cca876;
   --accent-hover: #92754c;
-  --site-action: #e85d1e;
-  --site-action-hover: #cf5018;
-  --site-btn-radius: 9999px;
+  --site-action: #02af00;
+  --site-action-hover: #995b00;
+  --site-btn-radius: 4px;
+  --site-conference-btn: #cca876;
+  --site-conference-btn-hover: #561713;
   --dark: #3f444a;
   --light: #f4f4f4;
   --white: #ffffff;

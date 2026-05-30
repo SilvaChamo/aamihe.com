@@ -1,18 +1,75 @@
 import { initialNewsData, type NewsItem, type NewsLocale, type NewsTranslation } from '@/data/news';
 
-export function localizeNewsItem(item: NewsItem, locale: NewsLocale): NewsItem {
-  if (locale === 'pt') return item;
+/** IDs do catálogo WordPress → IDs do seed local (initialNewsData). */
+const SEED_ID_BY_CATALOG_ID: Record<number, number> = {
+  7879: 1,
+  7857: 2,
+  7249: 3,
+  7240: 4,
+};
 
-  const translation = item.translations?.[locale];
-  if (!translation) return item;
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function resolveSeedId(item: NewsItem): number {
+  return SEED_ID_BY_CATALOG_ID[item.id] ?? item.id;
+}
+
+function findSeedRow(item: NewsItem, locale: NewsLocale): NewsItem | undefined {
+  const seedId = resolveSeedId(item);
+  const byId = initialNewsData[locale]?.find((row) => row.id === seedId);
+  if (byId) return byId;
+
+  if (!item.image) return undefined;
+  const image = item.image.trim();
+  return initialNewsData[locale]?.find((row) => row.image?.trim() === image);
+}
+
+function seedToTranslation(seed: NewsItem): NewsTranslation {
+  return {
+    title: seed.title,
+    content: seed.content,
+    summary: seed.summary,
+    category: seed.category,
+  };
+}
+
+function applySeedFields(item: NewsItem, seed: NewsItem, preferSeedBody = false): NewsItem {
+  const itemBodyLen = stripHtml(item.content || '').length;
+  const seedBodyLen = stripHtml(seed.content || '').length;
+  const keepItemBody = !preferSeedBody && itemBodyLen > seedBodyLen + 80;
 
   return {
     ...item,
-    title: translation.title || item.title,
-    content: translation.content || item.content,
-    summary: translation.summary ?? item.summary,
-    category: translation.category || item.category,
+    title: seed.title || item.title,
+    content: keepItemBody ? item.content : seed.content || item.content,
+    summary: seed.summary ?? item.summary,
+    category: seed.category || item.category,
+    date: seed.date || item.date,
   };
+}
+
+export function localizeNewsItem(item: NewsItem, locale: NewsLocale): NewsItem {
+  if (locale !== 'pt') {
+    const stored = item.translations?.[locale];
+    if (stored?.title?.trim()) {
+      return {
+        ...item,
+        title: stored.title || item.title,
+        content: stored.content || item.content,
+        summary: stored.summary ?? item.summary,
+        category: stored.category || item.category,
+      };
+    }
+  }
+
+  const seed = findSeedRow(item, locale);
+  if (seed) {
+    return applySeedFields(item, seed, locale !== 'pt');
+  }
+
+  return item;
 }
 
 export function localizeNewsList(items: NewsItem[], locale: NewsLocale): NewsItem[] {
@@ -20,27 +77,17 @@ export function localizeNewsList(items: NewsItem[], locale: NewsLocale): NewsIte
 }
 
 function translationFromSeed(item: NewsItem): NewsItem['translations'] {
-  const fr = initialNewsData.fr.find((row) => row.id === item.id);
-  const en = initialNewsData.en.find((row) => row.id === item.id);
+  const fr = findSeedRow(item, 'fr');
+  const en = findSeedRow(item, 'en');
 
   const translations: NonNullable<NewsItem['translations']> = { ...item.translations };
 
   if (fr && !translations.fr) {
-    translations.fr = {
-      title: fr.title,
-      content: fr.content,
-      summary: fr.summary,
-      category: fr.category,
-    };
+    translations.fr = seedToTranslation(fr);
   }
 
   if (en && !translations.en) {
-    translations.en = {
-      title: en.title,
-      content: en.content,
-      summary: en.summary,
-      category: en.category,
-    };
+    translations.en = seedToTranslation(en);
   }
 
   return Object.keys(translations).length > 0 ? translations : item.translations;
@@ -52,7 +99,7 @@ export function migrateNewsCatalog(
   options?: { applySeedPortuguese?: boolean }
 ): NewsItem[] {
   return items.map((item) => {
-    const ptSeed = initialNewsData.pt.find((row) => row.id === item.id);
+    const ptSeed = findSeedRow(item, 'pt');
     const translations = translationFromSeed(item);
 
     if (!ptSeed) {
@@ -62,11 +109,13 @@ export function migrateNewsCatalog(
     }
 
     if (!options?.applySeedPortuguese) {
-      return translations !== item.translations ? { ...item, translations } : item;
+      const withTranslations =
+        translations !== item.translations ? { ...item, translations } : item;
+      return applySeedFields(withTranslations, ptSeed);
     }
 
-    const existingContentLen = (item.content || '').replace(/<[^>]+>/g, '').trim().length;
-    const seedContentLen = (ptSeed.content || '').replace(/<[^>]+>/g, '').trim().length;
+    const existingContentLen = stripHtml(item.content || '').length;
+    const seedContentLen = stripHtml(ptSeed.content || '').length;
     const keepExistingBody = existingContentLen > seedContentLen + 80;
 
     return {
@@ -75,10 +124,10 @@ export function migrateNewsCatalog(
       image: item.image || ptSeed.image,
       author: item.author || ptSeed.author,
       status: item.status || ptSeed.status,
-      title: item.title?.trim() ? item.title : ptSeed.title,
+      title: ptSeed.title || item.title,
       content: keepExistingBody ? item.content : ptSeed.content,
       summary: item.summary?.trim() ? item.summary : (ptSeed.summary ?? item.summary),
-      category: item.category || ptSeed.category,
+      category: ptSeed.category || item.category,
       translations,
     };
   });
@@ -89,21 +138,12 @@ export function readNewsFieldsForLocale(item: NewsItem | undefined, locale: News
     return { title: '', content: '', summary: '', category: '' };
   }
 
-  if (locale === 'pt') {
-    return {
-      title: item.title,
-      content: item.content,
-      summary: item.summary || '',
-      category: item.category,
-    };
-  }
-
-  const translation = item.translations?.[locale];
+  const localized = localizeNewsItem(item, locale);
   return {
-    title: translation?.title || '',
-    content: translation?.content || '',
-    summary: translation?.summary || '',
-    category: translation?.category || item.category,
+    title: localized.title,
+    content: localized.content,
+    summary: localized.summary || '',
+    category: localized.category,
   };
 }
 

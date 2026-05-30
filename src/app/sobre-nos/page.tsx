@@ -8,12 +8,17 @@ import SobreDirectionShowcase from '@/components/Site/SobreDirectionShowcase';
 import SobreHistoriaIntro from '@/components/Site/SobreHistoriaIntro';
 import SobreHistoriaSection from '@/components/Site/SobreHistoriaSection';
 import SobreOQueFazemos from '@/components/Site/SobreOQueFazemos';
+import { useLanguage } from '@/context/LanguageContext';
+import { sobrePageCopy } from '@/i18n/messages';
 import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import styles from './sobre-nos.module.css';
 
 const BANNER_IMAGE = '/Imagens/sobre-nos-banner.png';
 
 export default function SobreNosPage() {
+  const { locale } = useLanguage();
+  const t = sobrePageCopy[locale];
+
   useEffect(() => {
     const hash = window.location.hash.replace('#', '');
     if (!hash) return;
@@ -27,8 +32,8 @@ export default function SobreNosPage() {
       <Header />
       <main id="main" className={`site-main clr ${styles['sobre-main']}`} role="main">
         <BlogPageBanner
-          title="SOBRE-NÓS"
-          breadcrumbLabel="Sobre-nós"
+          title={t.bannerTitle}
+          breadcrumbLabel={t.breadcrumb}
           imageUrl={BANNER_IMAGE}
         />
 

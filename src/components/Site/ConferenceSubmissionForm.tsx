@@ -5,6 +5,8 @@ import { Upload, X } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import { adminFetch } from '@/lib/admin-auth';
+import { useLanguage } from '@/context/LanguageContext';
+import { conferenceFormExtra } from '@/i18n/messages';
 import {
   CONFERENCE_FILE_ACCEPT,
   CONFERENCE_MAX_FILES,
@@ -59,6 +61,8 @@ export default function ConferenceSubmissionForm({
   defaultEmail = '',
   authenticated = false,
 }: ConferenceSubmissionFormProps) {
+  const { locale } = useLanguage();
+  const extra = conferenceFormExtra[locale];
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -69,7 +73,7 @@ export default function ConferenceSubmissionForm({
   function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const list = Array.from(e.target.files || []);
     if (list.length > CONFERENCE_MAX_FILES) {
-      setError(`Seleccione no máximo ${CONFERENCE_MAX_FILES} ficheiros por envio.`);
+      setError(extra.maxFilesError(CONFERENCE_MAX_FILES));
       e.target.value = '';
       return;
     }
@@ -102,7 +106,7 @@ export default function ConferenceSubmissionForm({
     }
 
     if (selectedFiles.length === 0) {
-      setError('Seleccione pelo menos um documento.');
+      setError(extra.selectAtLeastOne);
       setLoading(false);
       return;
     }
@@ -164,7 +168,7 @@ export default function ConferenceSubmissionForm({
         </label>
 
         <label>
-          {labels.file} * <span className="conference-form-hint">(máx. {CONFERENCE_MAX_FILES})</span>
+          {labels.file} * <span className="conference-form-hint">({extra.maxFilesHint} {CONFERENCE_MAX_FILES})</span>
           {authenticated ? (
             <div className="subscriber-doc-upload-box">
               <Upload size={18} />
@@ -195,7 +199,7 @@ export default function ConferenceSubmissionForm({
               />
               <span>
                 {selectedFiles.length > 0
-                  ? `${selectedFiles.length} ficheiro(s) seleccionado(s)`
+                  ? extra.filesSelected(selectedFiles.length)
                   : labels.filePlaceholder}
               </span>
             </div>
@@ -214,7 +218,7 @@ export default function ConferenceSubmissionForm({
                   type="button"
                   className="conference-form-file-remove"
                   onClick={() => removeFile(index)}
-                  aria-label={`Remover ${file.name}`}
+                  aria-label={extra.removeFile(file.name)}
                 >
                   <X size={14} />
                 </button>
@@ -224,9 +228,7 @@ export default function ConferenceSubmissionForm({
         ) : null}
 
         <p className="conference-form-formats">
-          {authenticated
-            ? 'Formatos: PDF, Word e PowerPoint até 10 MB cada.'
-            : 'Formatos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx, .csv), PowerPoint (.ppt, .pptx), OpenDocument (.odt, .ods, .odp), TXT, RTF — até 15 MB cada.'}
+          {authenticated ? extra.formatsAuth : extra.formatsPublic}
         </p>
 
         <label className="conference-form-checkbox">

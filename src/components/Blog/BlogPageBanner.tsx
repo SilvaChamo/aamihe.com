@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { commonUiCopy } from '@/i18n/messages';
 import './BlogLayout.css';
 
 export type BreadcrumbItem = {
@@ -95,6 +96,7 @@ export default function BlogPageBanner({
 }: BlogPageBannerProps) {
   const pathname = usePathname();
   const { locale } = useLanguage();
+  const ui = commonUiCopy[locale];
   const [slideIndex, setSlideIndex] = useState(0);
 
   const slides = languageSlides?.length ? languageSlides : null;
@@ -132,7 +134,7 @@ export default function BlogPageBanner({
         slides ? ' blog-page-banner--language-slides' : ''
       }${carouselSlides ? ' blog-page-banner--slide-carousel' : ''}`}
       style={style}
-      aria-label={displayTitle || trail[trail.length - 1]?.label || 'Página'}
+      aria-label={displayTitle || trail[trail.length - 1]?.label || ui.pageFallback}
       aria-roledescription={carouselSlides ? 'carousel' : undefined}
     >
       {carouselSlides ? (
@@ -168,7 +170,7 @@ export default function BlogPageBanner({
           <h1>{displayTitle}</h1>
         ) : null}
         {trail.length > 0 ? (
-          <nav className="blog-page-breadcrumb" aria-label="Caminho de navegação">
+          <nav className="blog-page-breadcrumb" aria-label={ui.breadcrumbNav}>
             <ol>
               {trail.map((item, index) => {
                 const isLast = index === trail.length - 1;

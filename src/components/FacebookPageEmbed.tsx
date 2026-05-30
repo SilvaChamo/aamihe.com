@@ -1,25 +1,29 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const FB_SDK_ID = 'facebook-jssdk';
 const FB_PAGE_URL = 'https://www.facebook.com/GBHEMLEADHubs';
 
 export default function FacebookPageEmbed() {
+  const { locale } = useLanguage();
+  const fbLocale = locale === 'pt' ? 'pt_PT' : locale === 'fr' ? 'fr_FR' : 'en_US';
+
   useEffect(() => {
-    if (document.getElementById(FB_SDK_ID)) {
-      window.FB?.XFBML?.parse?.();
-      return;
+    const existing = document.getElementById(FB_SDK_ID);
+    if (existing) {
+      existing.remove();
     }
 
     const script = document.createElement('script');
     script.id = FB_SDK_ID;
-    script.src = 'https://connect.facebook.net/pt_PT/sdk.js#xfbml=1&version=v18.0';
+    script.src = `https://connect.facebook.net/${fbLocale}/sdk.js#xfbml=1&version=v18.0`;
     script.async = true;
     script.defer = true;
     script.crossOrigin = 'anonymous';
     document.body.appendChild(script);
-  }, []);
+  }, [fbLocale]);
 
   return (
     <div

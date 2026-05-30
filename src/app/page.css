@@ -23,15 +23,15 @@ main {
 
 .btn-primary {
   display: inline-block;
-  background-color: #cca876;
+  background-color: var(--site-action);
   color: #fff;
   padding: 12px 24px;
-  border-radius: 4px;
+  border-radius: var(--site-btn-radius);
   font-weight: 600;
   text-decoration: none;
   transition: background-color 0.2s;
 }
 
 .btn-primary:hover {
-  background-color: #b39265;
+  background-color: var(--site-action-hover);
 }

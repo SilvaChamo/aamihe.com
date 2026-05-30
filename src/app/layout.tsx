@@ -5,6 +5,7 @@ import './globals.css';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { NewsProvider } from '@/context/NewsContext';
 import ScrollRevealHandler from '@/components/ScrollRevealHandler';
+import HtmlLangUpdater from '@/components/HtmlLangUpdater';
 import localFont from 'next/font/local';
 
 const robotoSlab = localFont({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <LanguageProvider>
           <NewsProvider>
             <ScrollRevealHandler />
+            <HtmlLangUpdater />
             <div className="site-root">{children}</div>
           </NewsProvider>
         </LanguageProvider>

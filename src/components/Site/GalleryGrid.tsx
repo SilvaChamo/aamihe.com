@@ -6,6 +6,8 @@ import { FileText, Play } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import OptimizedImage from '@/components/ui/OptimizedImage';
+import { useLanguage } from '@/context/LanguageContext';
+import { galleryCopy } from '@/i18n/messages';
 import './GalleryGrid.css';
 
 const GALLERY_IMAGE_SIZES =
@@ -22,19 +24,6 @@ type MediaItem = {
 
 const PAGE_SIZE = 24;
 
-const TYPE_OPTIONS: { value: 'all' | MediaCategory; label: string }[] = [
-  { value: 'imagens', label: 'Imagens' },
-  { value: 'documentos', label: 'Documentos' },
-  { value: 'videos', label: 'Vídeos' },
-  { value: 'all', label: 'Todos' },
-];
-
-const SUBCATEGORY_OPTIONS = [
-  { value: '', label: 'Todas as origens' },
-  { value: 'Notícias', label: 'Notícias' },
-  { value: 'Galeria', label: 'Galeria' },
-];
-
 function buildMediaUrl(typeFilter: 'all' | MediaCategory): string {
   const params = new URLSearchParams();
   if (typeFilter !== 'all') {
@@ -45,6 +34,8 @@ function buildMediaUrl(typeFilter: 'all' | MediaCategory): string {
 }
 
 export default function GalleryGrid() {
+  const { locale } = useLanguage();
+  const t = galleryCopy[locale];
   const searchParams = useSearchParams();
   const tipoParam = searchParams.get('tipo') as MediaCategory | null;
   const initialType =
@@ -56,6 +47,26 @@ export default function GalleryGrid() {
   const [searchQuery, setSearchQuery] = useState('');
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const typeOptions = useMemo(
+    () =>
+      [
+        { value: 'imagens' as const, label: t.images },
+        { value: 'documentos' as const, label: t.documents },
+        { value: 'videos' as const, label: t.videos },
+        { value: 'all' as const, label: t.allTypes },
+      ] satisfies { value: 'all' | MediaCategory; label: string }[],
+    [t],
+  );
+
+  const subcategoryOptions = useMemo(
+    () => [
+      { value: '', label: t.allOrigins },
+      { value: 'Notícias', label: t.news },
+      { value: 'Galeria', label: t.gallery },
+    ],
+    [t],
+  );
 
   const loadGallery = useCallback(async (filter: 'all' | MediaCategory) => {
     setLoading(true);
@@ -133,9 +144,9 @@ export default function GalleryGrid() {
           className="gallery-type-select"
           value={typeFilter}
           onChange={(e) => handleTypeChange(e.target.value as 'all' | MediaCategory)}
-          aria-label="Filtrar por tipo"
+          aria-label={t.filterType}
         >
-          {TYPE_OPTIONS.map((option) => (
+          {typeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -149,9 +160,9 @@ export default function GalleryGrid() {
             setSubcategoryFilter(e.target.value);
             setVisibleCount(PAGE_SIZE);
           }}
-          aria-label="Filtrar por origem"
+          aria-label={t.filterOrigin}
         >
-          {SUBCATEGORY_OPTIONS.map((option) => (
+          {subcategoryOptions.map((option) => (
             <option key={option.value || 'all'} value={option.value}>
               {option.label}
             </option>
@@ -160,12 +171,12 @@ export default function GalleryGrid() {
 
         <div className="gallery-toolbar-right">
           <span className="gallery-count">
-            {visibleItems.length} de {filtered.length} itens
+            {t.itemsCount(visibleItems.length, filtered.length)}
           </span>
           <input
             type="search"
             className="gallery-search"
-            placeholder="Pesquisar..."
+            placeholder={t.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -176,9 +187,9 @@ export default function GalleryGrid() {
       </div>
 
       {loading ? (
-        <p className="gallery-empty">A carregar galeria...</p>
+        <p className="gallery-empty">{t.loadingGallery}</p>
       ) : filtered.length === 0 ? (
-        <p className="gallery-empty">Nenhum conteúdo encontrado para este filtro.</p>
+        <p className="gallery-empty">{t.empty}</p>
       ) : (
         <>
           <div
@@ -217,7 +228,7 @@ export default function GalleryGrid() {
                       rel="noopener noreferrer"
                       className="gallery-item-link"
                     >
-                      {kind === 'documentos' ? 'Abrir documento' : 'Ver ficheiro'}
+                      {kind === 'documentos' ? t.openDocument : t.viewFile}
                     </a>
                   </div>
                 </article>
@@ -232,7 +243,7 @@ export default function GalleryGrid() {
                 className="gallery-load-more-btn"
                 onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
               >
-                Carregar mais ({filtered.length - visibleCount} restantes)
+                {t.loadMore(filtered.length - visibleCount)}
               </button>
             </div>
           )}

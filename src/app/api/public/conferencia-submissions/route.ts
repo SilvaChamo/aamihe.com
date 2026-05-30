@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { readSpamFields, validateSpamFields } from '@/lib/form-spam-guard';
+import { readLocaleFromFormData, type Locale } from '@/i18n/locale';
+import { conferenceApiErrors } from '@/i18n/messages';
 import {
   CONFERENCE_MAX_FILES,
   validateConferenceFile,
@@ -26,10 +28,14 @@ function collectFiles(form: FormData): File[] {
 }
 
 export async function POST(request: Request) {
+  let locale: Locale = 'pt';
+
   try {
     const form = await request.formData();
+    locale = readLocaleFromFormData(form);
+    const api = conferenceApiErrors[locale];
 
-    const spam = validateSpamFields(readSpamFields(form));
+    const spam = validateSpamFields(readSpamFields(form), locale);
     if (!spam.ok) {
       return NextResponse.json({ success: false, error: spam.error }, { status: 400 });
     }
@@ -52,26 +58,26 @@ export async function POST(request: Request) {
     }
 
     if (!name || !email) {
-      return NextResponse.json({ success: false, error: 'Nome e e-mail são obrigatórios.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: api.nameEmailRequired }, { status: 400 });
     }
 
     if (!accepted) {
-      return NextResponse.json({ success: false, error: 'Deve aceitar os termos e condições.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: api.termsRequired }, { status: 400 });
     }
 
     if (files.length === 0) {
-      return NextResponse.json({ success: false, error: 'Seleccione pelo menos um documento.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: api.selectFile }, { status: 400 });
     }
 
     if (files.length > CONFERENCE_MAX_FILES) {
       return NextResponse.json(
-        { success: false, error: `Máximo de ${CONFERENCE_MAX_FILES} ficheiros por envio.` },
+        { success: false, error: api.maxFiles(CONFERENCE_MAX_FILES) },
         { status: 400 },
       );
     }
 
     for (const file of files) {
-      const check = validateConferenceFile(file);
+      const check = validateConferenceFile(file, locale);
       if (!check.ok) {
         return NextResponse.json({ success: false, error: check.error }, { status: 400 });
       }
@@ -163,14 +169,14 @@ export async function POST(request: Request) {
     const count = records.length;
     return NextResponse.json({
       success: true,
-      message:
-        count === 1
-          ? 'Documento enviado com sucesso. Será publicado após revisão.'
-          : `${count} documentos enviados com sucesso. Serão publicados após revisão.`,
+      message: count === 1 ? api.successOne : api.successMany(count),
       documents: records,
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, error: 'Erro ao enviar documento.' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: conferenceApiErrors[locale].sendError },
+      { status: 500 },
+    );
   }
 }

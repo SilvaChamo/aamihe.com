@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { heroBannerCopy } from '@/i18n/messages';
 import './HeroBanner.css';
 
 const slides = [
@@ -46,6 +47,7 @@ function SlideContent({
 
 export default function HeroBanner() {
   const { locale } = useLanguage();
+  const t = heroBannerCopy[locale];
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   // Quando a língua muda, pula para o slide correspondente
@@ -68,7 +70,7 @@ export default function HeroBanner() {
     <section
       className="hero-banner"
       aria-roledescription="carousel"
-      aria-label="Boas-vindas"
+      aria-label={t.ariaLabel}
     >
       <div className="hero-banner__viewport">
         {slides.map((slide, index) => (

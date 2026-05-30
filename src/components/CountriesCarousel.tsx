@@ -3,11 +3,15 @@
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PAISES_CAROUSEL } from '@/data/paisesCarousel';
+import { useLanguage } from '@/context/LanguageContext';
+import { countriesCarouselCopy } from '@/i18n/messages';
 import './CountriesCarousel.css';
 
 const AUTOPLAY_MS = 3000; // Reduzido para 3 segundos para ficar mais dinâmico
 
 export default function CountriesCarousel() {
+  const { locale } = useLanguage();
+  const t = countriesCarouselCopy[locale];
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -41,12 +45,12 @@ export default function CountriesCarousel() {
   }, [scrollNext]);
 
   return (
-    <section className="countries-carousel-section" aria-label="Carrossel de países membros">
+    <section className="countries-carousel-section" aria-label={t.ariaLabel}>
       <div className="countries-carousel">
         <button
           type="button"
           className="countries-carousel__arrow countries-carousel__arrow--prev"
-          aria-label="Anterior"
+          aria-label={t.prev}
           onClick={scrollPrev}
         >
           <ChevronLeft />
@@ -78,7 +82,7 @@ export default function CountriesCarousel() {
         <button
           type="button"
           className="countries-carousel__arrow countries-carousel__arrow--next"
-          aria-label="Seguinte"
+          aria-label={t.next}
           onClick={scrollNext}
         >
           <ChevronRight />

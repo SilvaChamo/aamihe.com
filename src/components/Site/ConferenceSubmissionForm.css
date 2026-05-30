@@ -72,10 +72,10 @@
 
 .conference-form-submit {
   justify-self: start;
-  background: #00a651;
+  background: var(--site-action);
   color: white;
-  border: 1px solid #00a651;
-  border-radius: 6px;
+  border: 1px solid var(--site-action);
+  border-radius: var(--site-btn-radius);
   padding: 10px 18px;
   min-height: 36px;
   font-weight: 600;
@@ -84,8 +84,8 @@
 }
 
 .conference-form-submit:hover:not(:disabled) {
-  background: var(--primary, #561713);
-  border-color: var(--primary, #561713);
+  background: var(--site-action-hover);
+  border-color: var(--site-action-hover);
 }
 
 .conference-form-submit:disabled {

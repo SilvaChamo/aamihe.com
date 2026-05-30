@@ -169,19 +169,19 @@
   justify-content: center;
   margin-top: 0;
   padding: 12px 28px;
-  background: #4fb87a;
+  background: var(--site-action);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: var(--site-btn-radius);
   transition: background 0.2s ease;
 }
 
 .introCta:hover {
-  background: #3da566;
+  background: var(--site-action-hover);
   color: #fff;
 }
 

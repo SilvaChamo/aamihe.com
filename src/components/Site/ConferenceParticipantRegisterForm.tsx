@@ -7,6 +7,8 @@ import { Eye, EyeOff } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import { setAdminSecret } from '@/lib/admin-auth';
+import { useLanguage } from '@/context/LanguageContext';
+import { commonUiCopy } from '@/i18n/messages';
 import styles from './ConferenceParticipantRegisterForm.module.css';
 
 export type ConferenceRegisterFormLabels = {
@@ -32,6 +34,8 @@ export default function ConferenceParticipantRegisterForm({
   labels,
 }: ConferenceParticipantRegisterFormProps) {
   const router = useRouter();
+  const { locale } = useLanguage();
+  const ui = commonUiCopy[locale];
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -149,7 +153,7 @@ export default function ConferenceParticipantRegisterForm({
               <button
                 type="button"
                 className={styles.togglePassword}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={showPassword ? ui.hidePassword : ui.showPassword}
                 onClick={() => setShowPassword((prev) => !prev)}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -171,7 +175,7 @@ export default function ConferenceParticipantRegisterForm({
               <button
                 type="button"
                 className={styles.togglePassword}
-                aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={showConfirmPassword ? ui.hidePassword : ui.showPassword}
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

@@ -1,3 +1,6 @@
+import type { Locale } from '@/i18n/locale';
+import { conferenceApiErrors } from '@/i18n/messages';
+
 export const CONFERENCE_MAX_FILES = 10;
 export const CONFERENCE_MAX_FILE_BYTES = 15 * 1024 * 1024;
 
@@ -94,21 +97,23 @@ export function resolveConferenceMimeType(file: File): string | null {
   return allowed[0] || null;
 }
 
-export function validateConferenceFile(file: File): { ok: true } | { ok: false; error: string } {
+export function validateConferenceFile(
+  file: File,
+  locale: Locale = 'pt',
+): { ok: true } | { ok: false; error: string } {
+  const api = conferenceApiErrors[locale];
+
   if (!file || file.size === 0) {
-    return { ok: false, error: 'Ficheiro vazio.' };
+    return { ok: false, error: api.emptyFile };
   }
 
   if (file.size > CONFERENCE_MAX_FILE_BYTES) {
-    return { ok: false, error: `«${file.name}» excede o limite de 15 MB.` };
+    return { ok: false, error: api.fileTooLarge(file.name) };
   }
 
   const mime = resolveConferenceMimeType(file);
   if (!mime) {
-    return {
-      ok: false,
-      error: `Formato não suportado: «${file.name}». Use PDF, Word, Excel, PowerPoint ou formatos comuns.`,
-    };
+    return { ok: false, error: api.unsupportedFormat(file.name) };
   }
 
   return { ok: true };

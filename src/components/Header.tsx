@@ -121,13 +121,36 @@ export default function Header() {
 
   const handleSectionClick = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, sectionId: HomeSectionId) => {
-      if (!isHome) return;
-
       event.preventDefault();
       scrollToSection(sectionId);
     },
-    [isHome, scrollToSection],
+    [scrollToSection],
   );
+
+  const renderSectionNavLink = (
+    sectionId: HomeSectionId,
+    pagePath: string,
+    label: string,
+    className: string,
+  ) => {
+    if (isHome) {
+      return (
+        <a
+          href={`#${sectionId}`}
+          className={className}
+          onClick={(event) => handleSectionClick(event, sectionId)}
+        >
+          {label}
+        </a>
+      );
+    }
+
+    return (
+      <Link href={pagePath} className={className}>
+        {label}
+      </Link>
+    );
+  };
 
   const handleSobreSectionClick = useCallback(
     (event: MouseEvent<HTMLAnchorElement>, sectionId: SobreSectionId) => {
@@ -318,34 +341,20 @@ export default function Header() {
                 ))}
               </ul>
             </div>
-            <Link
-              href="/#conferencia"
-              className={`nav-link ${pathname === '/conferencia' ? 'active' : ''}`}
-              onClick={(event) => handleSectionClick(event, 'conferencia')}
-            >
-              {t.conferencia}
-            </Link>
-            <a
-              href="/#direcao"
-              className="nav-link"
-              onClick={(event) => handleSectionClick(event, 'direcao')}
-            >
-              {t.direcao}
-            </a>
-            <a
-              href="/#equipa"
-              className="nav-link"
-              onClick={(event) => handleSectionClick(event, 'equipa')}
-            >
-              {t.equipa}
-            </a>
-            <a
-              href="/#noticias"
-              className="nav-link"
-              onClick={(event) => handleSectionClick(event, 'noticias')}
-            >
-              {t.blog}
-            </a>
+            {renderSectionNavLink(
+              'conferencia',
+              '/conferencia',
+              t.conferencia,
+              `nav-link ${pathname === '/conferencia' ? 'active' : ''}`,
+            )}
+            {renderSectionNavLink('direcao', '/#direcao', t.direcao, 'nav-link')}
+            {renderSectionNavLink('equipa', '/#equipa', t.equipa, 'nav-link')}
+            {renderSectionNavLink(
+              'noticias',
+              '/noticias',
+              t.blog,
+              `nav-link ${pathname === '/noticias' || pathname.startsWith('/noticias/') ? 'active' : ''}`,
+            )}
             <Link href="/contacte-nos" className={`nav-link ${pathname === '/contacte-nos' ? 'active' : ''}`}>
               {t.contacto}
             </Link>

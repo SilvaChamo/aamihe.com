@@ -10,6 +10,7 @@ import FacebookPageEmbed from '@/components/FacebookPageEmbed';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
 import { contactPageCopy } from '@/data/contact-content';
+import { contactPageExtra } from '@/i18n/messages';
 import styles from './contacte.module.css';
 
 export default function ContacteNosPage() {
@@ -17,6 +18,7 @@ export default function ContacteNosPage() {
   const { pages } = useSitePageConfig();
   const router = useRouter();
   const t = contactPageCopy[locale];
+  const extra = contactPageExtra[locale];
   const { contact } = pages;
 
   function handleSiteSearch(e: FormEvent<HTMLFormElement>) {
@@ -44,7 +46,7 @@ export default function ContacteNosPage() {
             <div className={styles['contact-map']}>
               <iframe
                 src={contact.mapEmbedUrl}
-                title="Localização AAMIHE"
+                title={extra.mapTitle}
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
@@ -52,7 +54,7 @@ export default function ContacteNosPage() {
             </div>
           </div>
 
-          <aside className={styles['contact-sidebar']} aria-label="Pesquisa e redes sociais">
+          <aside className={styles['contact-sidebar']} aria-label={extra.sidebarAria}>
             <div className={styles['contact-sidebar-box']}>
               <h3>{t.search}</h3>
               <div className={styles['contact-sidebar-divider']} />
