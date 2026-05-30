@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { adminFetch } from '@/lib/admin-auth';
+import { adminFetch, getSessionProfile, setSessionProfile } from '@/lib/admin-auth';
 import { isSubscriberRole, type UserProfile } from '@/lib/user-types';
 
 type SessionState = {
@@ -13,7 +13,7 @@ type SessionState = {
 };
 
 export function useSessionUser(): SessionState {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => getSessionProfile());
   const [isAdminSecret, setIsAdminSecret] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -27,12 +27,15 @@ export function useSessionUser(): SessionState {
         if (cancelled) return;
         if (res.ok) {
           setIsAdminSecret(Boolean(data.isAdminSecret));
-          setUser(data.user ?? null);
+          const nextUser = (data.user as UserProfile | null) ?? null;
+          setUser(nextUser);
+          setSessionProfile(nextUser);
         }
       } catch {
         if (!cancelled) {
           setUser(null);
           setIsAdminSecret(false);
+          setSessionProfile(null);
         }
       } finally {
         if (!cancelled) setLoading(false);

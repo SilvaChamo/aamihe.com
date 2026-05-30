@@ -84,9 +84,15 @@ export default function ConferenceSubscribersPage() {
     <div className="wp-admin-page">
       <div className="wp-page-header">
         <h1>Subscritores da Conferência</h1>
-        <Link href={`${base}/documentos-gerais`} className="wp-btn wp-btn-outline">
-          Ver submissões
-        </Link>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
+          <Link href={`${base}/enviar-email`} className="wp-btn wp-btn-primary">
+            <Mail size={14} />
+            Enviar e-mail a todos
+          </Link>
+          <Link href={`${base}/documentos-gerais`} className="wp-btn wp-btn-outline">
+            Ver submissões
+          </Link>
+        </div>
       </div>
 
       <div className="wp-list-toolbar">

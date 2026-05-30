@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveSessionUser } from '@/lib/admin-session';
-import { updateUser, verifyUserPassword } from '@/lib/users';
+import {
+  findUserByLogin,
+  getUserById,
+  listUsers,
+  mapUserToProfile,
+  updateUser,
+  verifyUserPassword,
+} from '@/lib/users';
+
+async function resolveAdminLinkedProfile(loginHint?: string | null) {
+  if (loginHint) {
+    const stored = await findUserByLogin(loginHint);
+    if (stored) return mapUserToProfile(stored);
+  }
+
+  const admins = (await listUsers()).filter((entry) => entry.role === 'Administrador');
+  if (admins.length === 1) {
+    return (await getUserById(admins[0].id)) ?? null;
+  }
+
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +31,11 @@ export async function GET(req: NextRequest) {
     }
 
     if (session.type === 'admin') {
-      return NextResponse.json({ isAdminSecret: true, user: null });
+      const profile = await resolveAdminLinkedProfile(req.headers.get('x-logged-username'));
+      return NextResponse.json({
+        isAdminSecret: true,
+        user: profile ? { ...profile, articles: 0 } : null,
+      });
     }
 
     return NextResponse.json({ isAdminSecret: false, user: { ...session.user, articles: 0 } });

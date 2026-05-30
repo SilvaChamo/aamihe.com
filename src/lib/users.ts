@@ -97,6 +97,24 @@ function getDisplayName(user: StoredUser) {
   return full || user.username;
 }
 
+function collectUserLoginValues(user: StoredUser): string[] {
+  const values = new Set<string>();
+  const push = (value?: string) => {
+    const normalized = value?.trim().toLowerCase();
+    if (normalized) values.add(normalized);
+  };
+
+  push(user.username);
+  push(user.email);
+  push(user.firstName);
+  push(user.lastName);
+  push(user.alcunha);
+  push(`${user.firstName} ${user.lastName}`.trim());
+  push(getDisplayName(user));
+
+  return [...values];
+}
+
 export function mapUserToListItem(user: StoredUser): UserListItem {
   return {
     id: user.id,
@@ -139,6 +157,11 @@ export async function listUsers() {
   return db.users.map(mapUserToListItem);
 }
 
+export async function listUserIds() {
+  const db = await readUsersDb();
+  return db.users.map((user) => user.id);
+}
+
 export async function getUserById(id: string) {
   const db = await readUsersDb();
   const user = db.users.find((entry) => entry.id === id);
@@ -147,10 +170,17 @@ export async function getUserById(id: string) {
 
 export async function findUserByLogin(login: string) {
   const db = await readUsersDb();
-  const value = login.toLowerCase();
-  return db.users.find(
+  const value = login.trim().toLowerCase();
+  if (!value) return undefined;
+
+  const matches = db.users.filter((user) => collectUserLoginValues(user).includes(value));
+  if (matches.length === 1) return matches[0];
+  if (matches.length === 0) return undefined;
+
+  const exact = matches.find(
     (user) => user.username.toLowerCase() === value || user.email.toLowerCase() === value,
   );
+  return exact;
 }
 
 export async function verifyUserPassword(userId: string, password: string) {

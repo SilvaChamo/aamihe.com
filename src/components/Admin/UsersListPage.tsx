@@ -20,12 +20,14 @@ interface UserItem {
 }
 
 const ROLES = ['Administrador', 'Editor', 'Actor', 'Subscritor', 'Contribuidor'];
+const ROLE_TABS = ['Todos', 'Administrador', 'Editor', 'Subscritor'] as const;
+type RoleTab = (typeof ROLE_TABS)[number];
 
 export default function UsersListPage() {
   const base = useAdminBase();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('Todos');
+  const [filter, setFilter] = useState<RoleTab>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -55,7 +57,7 @@ export default function UsersListPage() {
     return matchesRole && matchesSearch;
   });
 
-  const getRoleCount = (role: string) => {
+  const getRoleCount = (role: RoleTab) => {
     if (role === 'Todos') return users.length;
     return users.filter((u) => u.role === role).length;
   };
@@ -102,7 +104,7 @@ export default function UsersListPage() {
     }
   };
 
-  const roleFilters = ['Todos', ...ROLES].filter((role) => role === 'Todos' || getRoleCount(role) > 0);
+  const roleFilters = ROLE_TABS;
 
   return (
     <div className="wp-admin-page">
@@ -113,17 +115,18 @@ export default function UsersListPage() {
         </Link>
       </div>
 
-      <ul className="wp-subsubsub">
-        {roleFilters.map((role) => (
+      <ul className="wp-subsubsub wp-role-tabs">
+        {roleFilters.map((role, index) => (
           <li key={role}>
             <button
               type="button"
               className={filter === role ? 'is-active' : ''}
               onClick={() => setFilter(role)}
+              aria-pressed={filter === role}
             >
               {role} <span className="count">({getRoleCount(role)})</span>
             </button>
-            {role !== roleFilters[roleFilters.length - 1] ? ' |' : null}
+            {index < roleFilters.length - 1 ? <span className="wp-role-tab-sep" aria-hidden>|</span> : null}
           </li>
         ))}
       </ul>

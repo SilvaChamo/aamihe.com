@@ -9,6 +9,7 @@ export type DashboardDb = {
   documents: SiteDocumentRecord[];
   media: SiteMediaRecord[];
   notifications?: SubscriberNotification[];
+  emailSendLog?: { days: Record<string, number> };
 };
 
 const LOCAL_PATH = path.join(process.cwd(), 'aamihe_dashboard.json');

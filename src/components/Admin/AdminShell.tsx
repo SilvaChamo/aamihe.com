@@ -19,10 +19,13 @@ import {
   ChartColumnIncreasing,
   UserCircle,
   Bell,
+  Mail,
 } from 'lucide-react';
-import { clearAdminSecret } from '@/lib/admin-auth';
-import { useAdminBase } from '@/lib/admin-base';
+import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
+import { getGravatarUrl } from '@/lib/gravatar';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import { resolveUserDisplayName } from '@/lib/user-types';
+import { useAdminBase } from '@/lib/admin-base';
 import { useNotificationUnread } from '@/hooks/useNotificationUnread';
 import './AdminShell.css';
 import './admin-buttons.css';
@@ -161,10 +164,29 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const base = useAdminBase();
-  const { isSubscriber, loading: sessionLoading } = useSessionUser();
+  const { user, isAdminSecret, isSubscriber, loading: sessionLoading } = useSessionUser();
   const unreadNotifications = useNotificationUnread();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
+  const loggedUserLabel = sessionLoading
+    ? '…'
+    : user
+      ? resolveUserDisplayName(user)
+      : isAdminSecret
+        ? getLoggedUsername() || 'Administrador'
+        : '';
+
+  const accountEmail = sessionLoading ? '…' : user?.email || '';
+
+  const accountAvatar =
+    !sessionLoading && user?.avatar
+      ? user.avatar
+      : !sessionLoading && user?.email
+        ? getGravatarUrl(user.email, 80)
+        : null;
+
+  const showAccountFooter = sessionLoading || !!loggedUserLabel;
 
   const subscriberPaths = [
     '/dashboard',
@@ -251,7 +273,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           {
             href: `${base}/submissao-resumo`,
             icon: FileUp,
-            label: 'Submissão de resumo',
+            label: 'RESUMOS',
           },
         ]
       : [
@@ -270,6 +292,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { label: 'Subscritores Conferência', href: `${base}/utilizadores/subscritores` },
         { label: 'Adicionar Novo', href: `${base}/utilizadores/novo` },
       ],
+    },
+    {
+      href: `${base}/enviar-email/normal`,
+      icon: Mail,
+      label: 'Enviar e-mail',
     },
     {
       href: `${base}/definicoes`,
@@ -297,19 +324,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push('/admin/login');
   };
 
-  const homeHref = base === '/dashboard' ? '/dashboard' : '/admin/dashboard';
-
   return (
     <div className="admin-shell">
       <header className="admin-brand-bar">
         <div className="admin-brand-left">
-          <Link href={homeHref} className="admin-brand-logo">
-            AAMIHE
-          </Link>
-          <Link href="/" target="_blank" className="admin-brand-action">
-            <ExternalLink className="admin-brand-action-icon" />
-            Ver Site
-          </Link>
+          <span className="admin-brand-title">AAMIHE</span>
         </div>
         <div className="admin-brand-right">
           {showSubscriberNav ? (
@@ -330,9 +349,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               </span>
               Notificações
             </Link>
-          ) : (
-            <span className="admin-brand-tagline">Painel de administração</span>
-          )}
+          ) : null}
+          <Link href="/" target="_blank" className="admin-brand-action">
+            <ExternalLink className="admin-brand-action-icon" />
+            Ver Site
+          </Link>
           <button type="button" onClick={handleLogout} className="admin-brand-action">
             <LogOut className="admin-brand-action-icon" />
             Sair
@@ -352,7 +373,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 ? false
                 : hasSubmenu
                   ? isChildActive || pathname === item.href
-                  : pathname === item.href;
+                  : item.href?.includes('/enviar-email')
+                    ? pathname.includes('/enviar-email')
+                    : pathname === item.href;
               const shouldBeOpen = openSubmenu === item.label || isChildActive;
 
               return (
@@ -372,6 +395,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               );
             })}
           </nav>
+          {showAccountFooter ? (
+            <div className="admin-sidebar-account">
+              <div className="admin-sidebar-account-avatar" aria-hidden>
+                {accountAvatar ? (
+                  <img src={accountAvatar} alt="" className="admin-sidebar-account-avatar-img" />
+                ) : (
+                  <UserCircle className="admin-sidebar-account-avatar-icon" />
+                )}
+              </div>
+              <div className="admin-sidebar-account-details">
+                <span className="admin-sidebar-account-name">{loggedUserLabel}</span>
+                {accountEmail ? (
+                  <span className="admin-sidebar-account-email">{accountEmail}</span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </aside>
 
         <main className="admin-main">

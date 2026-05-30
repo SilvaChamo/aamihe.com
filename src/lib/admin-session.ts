@@ -1,33 +1,26 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { getUserById } from '@/lib/users';
+import { getUserById, listUserIds } from '@/lib/users';
 import type { UserProfile } from '@/lib/user-types';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { isSubscriberRole } from '@/lib/user-types';
 
 function getSessionSecret() {
   return process.env.AAMIHE_ADMIN_SECRET || 'aamihe-session';
 }
 
-export function createUserSessionToken(userId: string) {
+function signUserSession(userId: string) {
   return createHmac('sha256', getSessionSecret()).update(`user:${userId}`).digest('hex');
 }
 
+export function createUserSessionToken(userId: string) {
+  return `${userId}.${signUserSession(userId)}`;
+}
+
 export function isUserSessionToken(token: string, userId: string) {
-  const expected = createUserSessionToken(userId);
+  const expected = signUserSession(userId);
   const a = Buffer.from(token);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
-}
-
-async function readAllUserIds() {
-  try {
-    const raw = await readFile(path.join(process.cwd(), 'aamihe_users.json'), 'utf8');
-    const db = JSON.parse(raw);
-    return (db.users || []).map((user: { id: string }) => user.id);
-  } catch {
-    return [];
-  }
 }
 
 export function extractBearerToken(request: Request) {
@@ -36,6 +29,26 @@ export function extractBearerToken(request: Request) {
 }
 
 export type SessionUser = { type: 'admin' } | { type: 'user'; user: UserProfile };
+
+async function resolveUserFromToken(token: string): Promise<UserProfile | null> {
+  const dot = token.indexOf('.');
+  if (dot > 0) {
+    const userId = token.slice(0, dot);
+    const signature = token.slice(dot + 1);
+    if (userId && signature && isUserSessionToken(signature, userId)) {
+      return (await getUserById(userId)) ?? null;
+    }
+  }
+
+  const userIds = await listUserIds();
+  for (const userId of userIds) {
+    if (isUserSessionToken(token, userId)) {
+      return (await getUserById(userId)) ?? null;
+    }
+  }
+
+  return null;
+}
 
 export async function resolveSessionUser(request: Request): Promise<SessionUser | null> {
   const token = extractBearerToken(request);
@@ -46,15 +59,29 @@ export async function resolveSessionUser(request: Request): Promise<SessionUser 
     return { type: 'admin' };
   }
 
-  const userIds = await readAllUserIds();
-  for (const userId of userIds) {
-    if (isUserSessionToken(token, userId)) {
-      const user = await getUserById(userId);
-      return user ? { type: 'user', user } : null;
-    }
-  }
+  const user = await resolveUserFromToken(token);
+  return user ? { type: 'user', user } : null;
+}
 
-  return null;
+export function isStaffSession(session: SessionUser | null): session is SessionUser {
+  if (!session) return false;
+  if (session.type === 'admin') return true;
+  if (session.type === 'user') {
+    if (session.user.isAdmin) return true;
+    if (!isSubscriberRole(session.user.role)) return true;
+  }
+  return false;
+}
+
+export async function requireStaffSession(request: Request) {
+  const session = await resolveSessionUser(request);
+  if (!session) {
+    return { error: 'Acesso não autorizado.', status: 401 as const };
+  }
+  if (!isStaffSession(session)) {
+    return { error: 'Acesso não autorizado.', status: 403 as const };
+  }
+  return { session };
 }
 
 export async function requireAdminAuth(request: Request) {

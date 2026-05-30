@@ -42,20 +42,12 @@
   gap: 16px;
 }
 
-.admin-brand-logo {
-  color: var(--white);
-  text-decoration: none;
+.admin-brand-title {
+  color: #fff;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.5px;
-}
-
-.admin-brand-logo:hover {
-  color: var(--accent);
-}
-
-.admin-brand-tagline {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.6px;
+  white-space: nowrap;
 }
 
 .admin-brand-action {
@@ -163,7 +155,9 @@ button.admin-brand-action {
   flex-shrink: 0;
   width: var(--admin-sidebar-width);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-sidebar.closed {
@@ -172,6 +166,70 @@ button.admin-brand-action {
 
 .admin-sidebar-nav {
   margin-top: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-sidebar-account {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(204, 168, 118, 0.35);
+  background: var(--primary-hover);
+}
+
+.admin-sidebar-account-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar-account-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-sidebar-account-avatar-icon {
+  width: 28px;
+  height: 28px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.admin-sidebar-account-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sidebar-account-name {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-account-email {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Sidebar Item */
@@ -281,6 +339,8 @@ button.admin-brand-action {
 .sidebar-chevron {
   width: 16px;
   height: 16px;
+  margin-right: 10px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: transform 0.2s;
 }

@@ -96,7 +96,7 @@ export default function ConferenceParticipantRegisterForm({
         return;
       }
 
-      setAdminSecret(loginResult.token);
+      setAdminSecret(loginResult.token, loginResult.username, loginResult.user ?? null);
       router.push('/dashboard');
     } catch {
       setError(labels.error);

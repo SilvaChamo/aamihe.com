@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Eye, FileText, Trash2 } from 'lucide-react';
+import { FileText, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import {
   getAdminStatusLabel,
@@ -81,9 +81,6 @@ export default function ConferenceSubmissionsList({ viewPath }: ConferenceSubmis
           <div className="docs-admin-grid">
             {documents.map((doc) => (
               <article key={doc.id} className="docs-admin-card">
-                <div className="docs-admin-card-icon">
-                  <FileText size={28} />
-                </div>
                 <h3>{doc.title_pt}</h3>
                 <p className="docs-admin-card-meta">
                   {[doc.author, doc.email, doc.year].filter(Boolean).join(' · ')}
@@ -91,10 +88,9 @@ export default function ConferenceSubmissionsList({ viewPath }: ConferenceSubmis
                 <span className={`docs-admin-badge ${getStatusBadgeClass(doc, 'admin')}`}>
                   {getAdminStatusLabel(doc)}
                 </span>
-                <div className="docs-admin-card-actions">
+                <div className="docs-admin-card-actions docs-admin-card-actions--inline">
                   <Link href={`${viewPath}/${doc.id}`} className="docs-admin-action docs-admin-action--primary">
-                    <Eye size={14} />
-                    Ver documento
+                    Ver
                   </Link>
                   <button
                     type="button"

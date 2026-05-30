@@ -188,6 +188,17 @@
   margin-top: auto;
 }
 
+.docs-admin-card-actions--inline {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.docs-admin-card-actions--inline .docs-admin-action {
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
 .docs-admin-action {
   display: inline-flex;
   align-items: center;

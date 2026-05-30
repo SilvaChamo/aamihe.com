@@ -7,6 +7,7 @@ export const CONFERENCE_SUBMISSION_NOTIFY_EMAILS = [
 
 type NotifyEmailInput = {
   to?: string | string[];
+  from?: string;
   subject: string;
   text: string;
   html?: string;
@@ -16,7 +17,7 @@ export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
   const to = Array.isArray(input.to)
     ? input.to.filter(Boolean)
     : [input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO];
-  const from = process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>';
+  const from = input.from || process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>';
   const resendKey = process.env.RESEND_API_KEY;
 
   if (resendKey) {

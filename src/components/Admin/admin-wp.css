@@ -175,22 +175,38 @@
 .wp-subsubsub a {
   background: none;
   border: none;
-  padding: 0;
+  padding: 4px 10px;
   font-size: 13px;
-  color: #2271b1;
+  color: #561713;
   cursor: pointer;
   text-decoration: none;
+  border-radius: 4px;
 }
 
 .wp-subsubsub button:hover,
 .wp-subsubsub a:hover {
-  color: #135e96;
+  color: #00a651;
+  background: rgba(0, 166, 81, 0.08);
 }
 
 .wp-subsubsub button.is-active {
-  color: #1d2327;
-  font-weight: 600;
+  color: #561713;
+  font-weight: 700;
   cursor: default;
+  background: rgba(86, 23, 19, 0.08);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.wp-role-tabs li {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wp-role-tab-sep {
+  color: #c3c4c7;
+  user-select: none;
 }
 
 .wp-subsubsub .count {

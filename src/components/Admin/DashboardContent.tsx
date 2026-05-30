@@ -8,7 +8,8 @@ import {
   Activity, 
   Video, 
   FileUp,
-  Settings
+  Settings,
+  Mail,
 } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
@@ -52,6 +53,7 @@ export default function DashboardContent() {
       reviewConf: 'Gerir notícias',
       stats: 'Ver estatísticas do site',
       moreActions: 'Mais acções',
+      sendEmail: 'Enviar e-mail',
       addMedia: 'Adicionar multimédia',
       siteConfig: 'Configurações do site',
       conferenceSummary: 'Resumo da Conferência',
@@ -76,6 +78,7 @@ export default function DashboardContent() {
       reviewConf: 'Gérer les actualités',
       stats: 'Voir les statistiques du site',
       moreActions: 'Plus dactions',
+      sendEmail: 'Envoyer un e-mail',
       addMedia: 'Ajouter du multimédia',
       siteConfig: 'Paramètres du site',
       conferenceSummary: 'Résumé de la conférence',
@@ -100,6 +103,7 @@ export default function DashboardContent() {
       reviewConf: 'Manage news',
       stats: 'View site statistics',
       moreActions: 'More actions',
+      sendEmail: 'Send email',
       addMedia: 'Add media',
       siteConfig: 'Site settings',
       conferenceSummary: 'Conference summary',
@@ -226,6 +230,11 @@ export default function DashboardContent() {
             <div>
               <h3 className="dashboard-section-title">{t.moreActions}</h3>
               <ul className="dashboard-list">
+                <li>
+                  <Link href={`${base}/enviar-email`} className="dashboard-list-item">
+                    <Mail /> {t.sendEmail}
+                  </Link>
+                </li>
                 <li>
                   <Link href={`${base}/media`} className="dashboard-list-item">
                     <Plus /> {t.addMedia}
