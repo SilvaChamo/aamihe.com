@@ -3,7 +3,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import './AboutSection.css';
 
-const translations = {
+export const homeAboutCopy = {
   pt: {
     sobre_title: 'Sobre Nós',
     sobre_text: 'A AAIMES – Associação Africana de Instituições Metodistas de Ensino Superior é uma associação de instituições de ensino superior da Igreja Metodista Unida ou relacionadas.',
@@ -29,7 +29,7 @@ const translations = {
 
 export default function AboutSection() {
   const { locale } = useLanguage();
-  const t = translations[locale];
+  const t = homeAboutCopy[locale];
 
   return (
     <section className="about-section" id="sobre-nos">

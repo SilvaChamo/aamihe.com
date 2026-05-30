@@ -6,11 +6,47 @@ import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import './ConferenceSubmissionForm.css';
 
-type ConferenceSubmissionFormProps = {
-  onSubmitted?: () => void;
+type ConferenceFormLabels = {
+  title: string;
+  intro: string;
+  name: string;
+  email: string;
+  message: string;
+  file: string;
+  filePlaceholder: string;
+  terms: string;
+  security: string;
+  submit: string;
+  submitting: string;
+  success: string;
+  error: string;
 };
 
-export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubmissionFormProps) {
+type ConferenceSubmissionFormProps = {
+  onSubmitted?: () => void;
+  labels?: ConferenceFormLabels;
+};
+
+const DEFAULT_LABELS: ConferenceFormLabels = {
+  title: 'Submissão de documentos',
+  intro: 'Preencha o formulário e envie o seu resumo ou documento em formato PDF para avaliação.',
+  name: 'Nome',
+  email: 'E-mail',
+  message: 'Mensagem',
+  file: 'Enviar documento (PDF)',
+  filePlaceholder: 'Seleccionar PDF',
+  terms: 'Aceito os termos e condições',
+  security: 'Segurança',
+  submit: 'Enviar documento',
+  submitting: 'A enviar...',
+  success: 'Documento enviado com sucesso. Será publicado após revisão.',
+  error: 'Erro ao enviar documento. Tente novamente.',
+};
+
+export default function ConferenceSubmissionForm({
+  onSubmitted,
+  labels = DEFAULT_LABELS,
+}: ConferenceSubmissionFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -47,16 +83,16 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
       const result = await res.json();
 
       if (!result.success) {
-        setError(result.error || 'Erro ao enviar.');
+        setError(result.error || labels.error);
         return;
       }
 
-      setSuccess(result.message);
+      setSuccess(result.message || labels.success);
       setFileName('');
       setFormKey((k) => k + 1);
       onSubmitted?.();
     } catch {
-      setError('Erro ao enviar documento. Tente novamente.');
+      setError(labels.error);
     } finally {
       setLoading(false);
     }
@@ -64,29 +100,27 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
 
   return (
     <section className="conference-form-section">
-      <h2 className="conference-form-title">Submissão de documentos</h2>
-      <p className="conference-form-intro">
-        Preencha o formulário e envie o seu resumo ou documento em formato PDF para avaliação.
-      </p>
+      <h2 className="conference-form-title">{labels.title}</h2>
+      <p className="conference-form-intro">{labels.intro}</p>
 
       <form key={formKey} className="conference-form" onSubmit={handleSubmit}>
         <label>
-          Nome *
+          {labels.name} *
           <input type="text" name="name" required />
         </label>
 
         <label>
-          E-mail *
+          {labels.email} *
           <input type="email" name="email" required />
         </label>
 
         <label>
-          Mensagem
+          {labels.message}
           <textarea name="message" rows={4} />
         </label>
 
         <label className="conference-form-upload">
-          Enviar documento (PDF) *
+          {labels.file} *
           <div className="conference-form-upload-box">
             <Upload size={20} />
             <input
@@ -96,22 +130,22 @@ export default function ConferenceSubmissionForm({ onSubmitted }: ConferenceSubm
               required
               onChange={(e) => setFileName(e.target.files?.[0]?.name || '')}
             />
-            <span>{fileName || 'Seleccionar PDF'}</span>
+            <span>{fileName || labels.filePlaceholder}</span>
           </div>
         </label>
 
         <label className="conference-form-checkbox">
           <input type="checkbox" name="accepted" required />
-          Aceito os termos e condições *
+          {labels.terms} *
         </label>
 
-        <FormAntiSpam mathLabel="Segurança" />
+        <FormAntiSpam mathLabel={labels.security} />
 
         {error && <p className="conference-form-error">{error}</p>}
         {success && <p className="conference-form-success">{success}</p>}
 
         <button type="submit" disabled={loading} className="conference-form-submit">
-          {loading ? 'A enviar...' : 'Enviar documento'}
+          {loading ? labels.submitting : labels.submit}
         </button>
       </form>
     </section>

@@ -2,7 +2,27 @@ import { NextResponse } from 'next/server';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { validatePublicFormSpam } from '@/lib/form-spam-guard';
 import { saveUploadedBuffer } from '@/lib/persist-media';
+import { notifySiteEmail } from '@/lib/notify-email';
+import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
+import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { randomUUID } from 'node:crypto';
+
+async function storeConferencePdf(buffer: Buffer, originalName: string): Promise<string> {
+  if (isSupabaseConfigured()) {
+    const { uploadFileToStore } = await import('@/lib/supabase-media');
+    const record = await uploadFileToStore(
+      buffer,
+      originalName,
+      'application/pdf',
+      'documentos',
+      'Conferência',
+    );
+    return record.url;
+  }
+
+  const saved = await saveUploadedBuffer(buffer, originalName, 'uploads/conferencia');
+  return saved.url;
+}
 
 export async function POST(request: Request) {
   try {
@@ -40,7 +60,7 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const saved = await saveUploadedBuffer(buffer, file.name, 'uploads/conferencia');
+    const fileUrl = await storeConferencePdf(buffer, file.name);
     const db = await getDashboardDb();
     const now = new Date().toISOString();
 
@@ -50,7 +70,7 @@ export async function POST(request: Request) {
       title_pt: file.name.replace(/\.pdf$/i, ''),
       title_en: null,
       title_fr: null,
-      file_url: saved.url,
+      file_url: fileUrl,
       language: 'pt' as const,
       category: 'conferencia' as const,
       published: false,
@@ -66,6 +86,27 @@ export async function POST(request: Request) {
 
     db.documents.push(record);
     await saveDashboardDb(db);
+    await syncDocumentsToSupabase();
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
+    const adminUrl = `${siteUrl}/admin/documentos-gerais`;
+
+    await notifySiteEmail({
+      subject: `Nova submissão da conferência — ${name}`,
+      text: [
+        'Nova submissão de documento da conferência AAMIHE.',
+        '',
+        `Nome: ${name}`,
+        `E-mail: ${email}`,
+        message ? `Mensagem: ${message}` : '',
+        `Ficheiro: ${file.name}`,
+        `URL: ${fileUrl.startsWith('/') ? siteUrl + fileUrl : fileUrl}`,
+        '',
+        `Rever no painel: ${adminUrl}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    });
 
     return NextResponse.json({
       success: true,

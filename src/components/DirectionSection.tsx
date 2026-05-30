@@ -75,7 +75,7 @@ const boardMembers = [
   },
 ];
 
-const translations = {
+export const homeDirectionCopy = {
   pt: {
     title: 'A Direcção',
     subtitle: 'A AAIMES é uma associação de instituições de ensino superior da Igreja Metodista Unida ou relacionadas, unanimamente criada numa conferência das instituições de ensino superior da Igreja Metodista Unida em África, em Setembro de 2014, em Nairóbi – Quênia.',
@@ -110,7 +110,7 @@ const translations = {
 
 export default function DirectionSection() {
   const { locale } = useLanguage();
-  const t = translations[locale];
+  const t = homeDirectionCopy[locale];
   const [activeIndex, setActiveIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
 

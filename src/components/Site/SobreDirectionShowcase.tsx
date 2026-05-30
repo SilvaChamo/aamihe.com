@@ -9,7 +9,7 @@ import {
 } from '@/data/board-members';
 import styles from './SobreDirectionShowcase.module.css';
 
-const COPY = {
+export const sobreDirectionCopy = {
   pt: {
     orgEyebrow: 'A nossa estrutura',
     orgTitle: 'Liderança',
@@ -135,7 +135,7 @@ function OrgNode({
 
 export default function SobreDirectionShowcase() {
   const { locale } = useLanguage();
-  const t = COPY[locale];
+  const t = sobreDirectionCopy[locale];
   const president = boardPresident;
 
   return (
@@ -150,11 +150,11 @@ export default function SobreDirectionShowcase() {
           </div>
 
           <header className={styles.orgHeader}>
-            <div className={styles.orgEyebrow}>
-              <span className={styles.orgEyebrowLine} />
-              <span>{t.orgEyebrow}</span>
-              <span className={styles.orgEyebrowLine} />
-            </div>
+            <span className={`site-eyebrow ${styles.orgEyebrow}`}>
+              <span className="site-eyebrow-dash" aria-hidden="true" />
+              {t.orgEyebrow}
+              <span className="site-eyebrow-dash" aria-hidden="true" />
+            </span>
             <h2 id="sobre-org-titulo" className={styles.orgTitle}>
               {t.orgTitle}
             </h2>

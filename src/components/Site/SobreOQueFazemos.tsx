@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './SobreOQueFazemos.module.css';
 
-const COPY = {
+export const sobreOQueFazemosCopy = {
   pt: {
     eyebrow: 'O que fazemos',
     title: 'Serviços da AAMIHE',
@@ -62,15 +62,15 @@ const PARTNERS = [
 
 export default function SobreOQueFazemos() {
   const { locale } = useLanguage();
-  const t = COPY[locale];
+  const t = sobreOQueFazemosCopy[locale];
 
   return (
-    <section className={styles.section} aria-labelledby="sobre-o-que-fazemos-titulo">
+    <section id="sobre-o-que-fazemos" className={styles.section} aria-labelledby="sobre-o-que-fazemos-titulo">
       <div className={styles.inner}>
-        <span className={styles.eyebrow}>
-          <span className={styles.eyebrowDash} aria-hidden="true" />
+        <span className={`site-eyebrow ${styles.eyebrow}`}>
+          <span className="site-eyebrow-dash" aria-hidden="true" />
           {t.eyebrow}
-          <span className={styles.eyebrowDash} aria-hidden="true" />
+          <span className="site-eyebrow-dash" aria-hidden="true" />
         </span>
         <h2 id="sobre-o-que-fazemos-titulo" className={styles.title}>
           {t.title}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlogPageBanner from '@/components/Blog/BlogPageBanner';
@@ -16,6 +17,7 @@ import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import '@/components/Blog/BlogLayout.css';
 
 export default function NoticiasPage() {
+  const searchParams = useSearchParams();
   const { locale } = useLanguage();
   const { news } = useLocalizedNews();
   const t = {
@@ -63,6 +65,11 @@ export default function NoticiasPage() {
     },
     [pages.blog.scrollToTopOnPaginate, pages.blog.scrollTargetOnPaginate]
   );
+
+  useEffect(() => {
+    const q = searchParams.get('q')?.trim();
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
 
   useEffect(() => {
     setPage(1);

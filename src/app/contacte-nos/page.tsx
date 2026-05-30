@@ -9,67 +9,14 @@ import ContactForm from '@/components/ContactForm';
 import FacebookPageEmbed from '@/components/FacebookPageEmbed';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
+import { contactPageCopy } from '@/data/contact-content';
 import styles from './contacte.module.css';
-
-const COPY = {
-  pt: {
-    formTitle: 'Fale connosco',
-    firstName: 'Nome',
-    lastName: 'Apelido',
-    contact: 'Contacto',
-    email: 'Email',
-    message: 'Mensagem',
-    terms: 'Aceite os termos e referências',
-    termsRequired: 'Obrigatório',
-    mathLabel: 'Segurança',
-    submit: 'ENVIAR',
-    success: 'Mensagem enviada com sucesso. Obrigado pelo contacto.',
-    error: 'Não foi possível enviar. Tente novamente.',
-    search: 'PROCURAR',
-    searchPlaceholder: 'Procurar…',
-    facebook: 'FACEBOOK',
-  },
-  fr: {
-    formTitle: 'Contactez-nous',
-    firstName: 'Prénom',
-    lastName: 'Nom',
-    contact: 'Contact',
-    email: 'Email',
-    message: 'Message',
-    terms: 'Acceptez les termes et références',
-    termsRequired: 'Obligatoire',
-    mathLabel: 'Sécurité',
-    submit: 'ENVOYER',
-    success: 'Message envoyé avec succès. Merci pour votre contact.',
-    error: "Impossible d'envoyer. Réessayez.",
-    search: 'RECHERCHER',
-    searchPlaceholder: 'Rechercher…',
-    facebook: 'FACEBOOK',
-  },
-  en: {
-    formTitle: 'Contact us',
-    firstName: 'First name',
-    lastName: 'Last name',
-    contact: 'Contact',
-    email: 'Email',
-    message: 'Message',
-    terms: 'Accept the terms and references',
-    termsRequired: 'Required',
-    mathLabel: 'Security',
-    submit: 'SEND',
-    success: 'Message sent successfully. Thank you for contacting us.',
-    error: 'Could not send. Please try again.',
-    search: 'SEARCH',
-    searchPlaceholder: 'Search…',
-    facebook: 'FACEBOOK',
-  },
-} as const;
 
 export default function ContacteNosPage() {
   const { locale } = useLanguage();
   const { pages } = useSitePageConfig();
   const router = useRouter();
-  const t = COPY[locale];
+  const t = contactPageCopy[locale];
   const { contact } = pages;
 
   function handleSiteSearch(e: FormEvent<HTMLFormElement>) {

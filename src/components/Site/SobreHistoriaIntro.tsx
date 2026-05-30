@@ -5,7 +5,7 @@ import { useId, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './SobreHistoriaIntro.module.css';
 
-const COPY = {
+export const sobreHistoriaCopy = {
   pt: {
     eyebrow: 'História da AAMIHE',
     title: 'Raízes, missão e compromisso',
@@ -69,19 +69,19 @@ function ChevronDownIcon() {
 
 export default function SobreHistoriaIntro() {
   const { locale } = useLanguage();
-  const t = COPY[locale];
+  const t = sobreHistoriaCopy[locale];
   const [moreOpen, setMoreOpen] = useState(false);
   const moreId = useId();
 
   return (
-    <section className={styles.section} aria-labelledby="sobre-historia-titulo">
+    <section id="sobre-historia" className={styles.section} aria-labelledby="sobre-historia-titulo">
       <div className="container">
         <div className={styles.introCard}>
           <div className={styles.introContent}>
-            <span className={styles.eyebrow}>
-              <span className={styles.eyebrowDash} aria-hidden="true" />
+            <span className={`site-eyebrow ${styles.eyebrow}`}>
+              <span className="site-eyebrow-dash" aria-hidden="true" />
               {t.eyebrow}
-              <span className={styles.eyebrowDash} aria-hidden="true" />
+              <span className="site-eyebrow-dash" aria-hidden="true" />
             </span>
             <h2 id="sobre-historia-titulo" className={styles.title}>
               {t.title}

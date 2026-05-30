@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 import type { SiteDocumentCategory } from '@/lib/site-documents';
 
 export async function GET(request: Request) {
@@ -34,6 +35,7 @@ export async function PUT(request: Request) {
       updated_at: new Date().toISOString(),
     };
     await saveDashboardDb(db);
+    await syncDocumentsToSupabase();
     return NextResponse.json({ success: true, document: db.documents[index] });
   } catch (error) {
     console.error(error);
@@ -52,6 +54,7 @@ export async function DELETE(request: Request) {
     const db = await getDashboardDb();
     db.documents = db.documents.filter((d) => d.id !== id);
     await saveDashboardDb(db);
+    await syncDocumentsToSupabase();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

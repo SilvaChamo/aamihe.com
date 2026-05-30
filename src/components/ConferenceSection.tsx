@@ -3,7 +3,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import './ConferenceSection.css';
 
-const translations = {
+export const homeConferenceCopy = {
   pt: {
     subtitle: 'CONFERÊNCIA PAN-AFRICANA',
     title: 'A Conferência',
@@ -35,7 +35,7 @@ const translations = {
 
 export default function ConferenceSection() {
   const { locale } = useLanguage();
-  const t = translations[locale];
+  const t = homeConferenceCopy[locale];
 
   return (
     <section className="conference-section" id="conferencia">

@@ -75,10 +75,6 @@ const nextConfig: NextConfig = {
         destination: '/servicos.html',
       },
       {
-        source: '/conferencia',
-        destination: '/conferencia.html',
-      },
-      {
         source: '/paises',
         destination: '/Paises membros.htm',
       },

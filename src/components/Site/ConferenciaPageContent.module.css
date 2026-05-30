@@ -1,0 +1,342 @@
+.sectionDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0 24px;
+  color: var(--primary, #561713);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sectionDivider::before,
+.sectionDivider::after {
+  content: '';
+  flex: 1;
+  max-width: 180px;
+  height: 1px;
+  background: rgba(86, 23, 19, 0.25);
+}
+
+.sectionDivider span {
+  padding: 0 16px;
+}
+
+.subthemesSection {
+  padding: 0 0 40px;
+  margin-top: -8px;
+  background: #f4f4f4;
+}
+
+.subthemesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.subthemeCard {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-height: 100%;
+  padding: 16px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(204, 168, 118, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.subthemeIndex {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(86, 23, 19, 0.08);
+  color: var(--primary, #561713);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.subthemeCard p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text, #2d2d2d);
+}
+
+.planSection {
+  padding: 48px 0;
+  background: #fff;
+}
+
+.planHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.planEyebrow {
+  color: #8a6b66;
+}
+
+.feesEyebrow {
+  color: #cca876;
+}
+
+.planTitle {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  color: var(--primary, #561713);
+  text-transform: uppercase;
+}
+
+.planLine {
+  width: 72px;
+  height: 2px;
+  margin: 14px auto 0;
+  background: #cca876;
+}
+
+.timelineGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.timelineCard {
+  padding: 18px 14px;
+  border-radius: 10px;
+  background: #faf8f6;
+  border: 1px solid rgba(204, 168, 118, 0.2);
+  text-align: center;
+}
+
+.timelineCard h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--primary, #561713);
+}
+
+.timelineCard p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #646970;
+}
+
+.feesSection {
+  padding: 48px 0;
+  background: linear-gradient(165deg, #561713 0%, #3a100d 100%);
+  color: #fff;
+  text-align: center;
+}
+
+.feesHeader .feesEyebrow {
+  margin-bottom: 6px;
+}
+
+.feesHeader h2 {
+  margin: 0 0 24px;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  letter-spacing: 0.06em;
+}
+
+.feesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.feeCard {
+  padding: 20px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(204, 168, 118, 0.28);
+}
+
+.feeLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #cca876;
+}
+
+.feeCard strong {
+  font-size: 1.35rem;
+}
+
+.registerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border-radius: 4px;
+  background: #cca876;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.registerBtn:hover {
+  background: #fff;
+  color: var(--primary, #561713);
+  transform: translateY(-2px);
+}
+
+.registerNote {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.partnersSection {
+  padding: 48px 0;
+  background: #fff;
+}
+
+.partnersGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.partnerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-height: 100%;
+  padding: 20px 16px;
+  border-radius: 10px;
+  background: #faf8f6;
+  border: 1px solid rgba(204, 168, 118, 0.18);
+  text-align: center;
+}
+
+.partnerCard h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary, #561713);
+}
+
+.partnerLogoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+}
+
+.partnerLogo {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 72px;
+  object-fit: contain;
+}
+
+.submissionSection {
+  padding: 48px 0;
+  background: #f4f4f4;
+}
+
+.submissionIntro,
+.submissionNote {
+  max-width: 760px;
+  margin: 0 auto 12px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text, #2d2d2d);
+}
+
+.formPanel {
+  max-width: 760px;
+  margin: 28px auto 0;
+  padding: 28px 24px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.publishedTitle {
+  margin: 36px 0 16px;
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--primary, #561713);
+}
+
+.contactSection {
+  padding: 0 0 48px;
+  background: #f4f4f4;
+}
+
+.contactCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.contactName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary, #561713);
+}
+
+.contactEmail,
+.contactGeneral {
+  font-size: 15px;
+  color: #646970;
+  text-decoration: none;
+}
+
+.contactEmail:hover,
+.contactGeneral:hover {
+  color: var(--primary, #561713);
+}
+
+@media (max-width: 1024px) {
+  .timelineGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .partnersGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .subthemesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .timelineGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .feesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .partnersGrid {
+    grid-template-columns: 1fr;
+  }
+}

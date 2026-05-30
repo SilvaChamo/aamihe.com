@@ -21,18 +21,21 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
   const t = {
     pt: {
       banner: 'BLOG',
+      newsBanner: 'NOTÍCIA',
       notFoundTitle: 'Notícia não encontrada',
       notFoundText: 'A publicação que procura não existe ou foi removida.',
       back: '← Voltar ao blog',
     },
     fr: {
       banner: 'BLOG',
+      newsBanner: 'ACTUALITÉ',
       notFoundTitle: 'Actualité introuvable',
       notFoundText: 'La publication recherchée n’existe pas ou a été supprimée.',
       back: '← Retour au blog',
     },
     en: {
       banner: 'BLOG',
+      newsBanner: 'NEWS',
       notFoundTitle: 'News not found',
       notFoundText: 'The post you are looking for does not exist or was removed.',
       back: '← Back to blog',
@@ -67,7 +70,7 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
       <main id="main" className="blog-site-main site-main clr" role="main">
         <BlogPageBanner
           id="article-banner"
-          title=""
+          title={tx.newsBanner}
           breadcrumbLabel={item.title}
           imageUrl={item.image || '/Imagens/BgNoticias.jpeg'}
         />

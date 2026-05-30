@@ -7,7 +7,7 @@ import styles from './SobreHistoriaSection.module.css';
 const PDF_ICON_URL =
   'https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/legacy/ref/Documentos%20gerais_files/PDF-1-1.png.webp';
 
-const COPY = {
+export const sobreHistoriaSectionCopy = {
   pt: {
     statutesTitle: 'Estatutos e constituição',
     statutesIntro: 'Documentos oficiais da associação nas três línguas de trabalho.',
@@ -78,7 +78,7 @@ const COPY = {
 
 export default function SobreHistoriaSection() {
   const { locale } = useLanguage();
-  const t = COPY[locale];
+  const t = sobreHistoriaSectionCopy[locale];
 
   return (
     <section className={styles.section} aria-labelledby="sobre-estatutos-titulo">

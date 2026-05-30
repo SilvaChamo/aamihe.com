@@ -27,24 +27,7 @@
 }
 
 .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7em;
-  margin-bottom: 14px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: #cca876;
-}
-
-.eyebrowDash {
-  display: inline-block;
-  width: 1.4em;
-  height: 2px;
-  border-radius: 1px;
-  background: currentColor;
-  flex-shrink: 0;
 }
 
 .title {

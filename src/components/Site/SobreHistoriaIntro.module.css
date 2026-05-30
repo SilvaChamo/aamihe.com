@@ -23,7 +23,7 @@
       rgba(61, 18, 15, 0.9) 38%,
       rgba(26, 8, 7, 0.93) 100%
     ),
-    url('/Imagens/IMG_103-e1631215326375-300x160.jpg');
+    url('/Imagens/sobre-historia-bg.png');
   background-size: auto, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -53,24 +53,7 @@
 }
 
 .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7em;
-  margin-bottom: 14px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: #cca876;
-}
-
-.eyebrowDash {
-  display: inline-block;
-  width: 1.4em;
-  height: 2px;
-  border-radius: 1px;
-  background: currentColor;
-  flex-shrink: 0;
 }
 
 .title {
@@ -99,7 +82,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: -6px 0 14px;
+  margin: 22px 0 30px;
   padding: 0;
   border: none;
   background: transparent;
