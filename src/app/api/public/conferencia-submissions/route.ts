@@ -1,28 +1,28 @@
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { readSpamFields, validateSpamFields } from '@/lib/form-spam-guard';
-import { saveUploadedBuffer } from '@/lib/persist-media';
+import {
+  CONFERENCE_MAX_FILES,
+  validateConferenceFile,
+  resolveConferenceMimeType,
+  getFileExtension,
+  titleFromFileName,
+} from '@/lib/conference-document-files';
+import { storeConferenceFile } from '@/lib/conference-document-storage';
 import { notifySiteEmail, CONFERENCE_SUBMISSION_NOTIFY_EMAILS } from '@/lib/notify-email';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
-import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { resolveSessionUser } from '@/lib/admin-session';
-import { randomUUID } from 'node:crypto';
+import type { SiteDocumentRecord } from '@/lib/site-documents';
 
-async function storeConferencePdf(buffer: Buffer, originalName: string): Promise<string> {
-  if (isSupabaseConfigured()) {
-    const { uploadFileToStore } = await import('@/lib/supabase-media');
-    const record = await uploadFileToStore(
-      buffer,
-      originalName,
-      'application/pdf',
-      'documentos',
-      'Conferência',
-    );
-    return record.url;
-  }
+function collectFiles(form: FormData): File[] {
+  const fromArray = form.getAll('files').filter((item): item is File => item instanceof File && item.size > 0);
+  if (fromArray.length > 0) return fromArray;
 
-  const saved = await saveUploadedBuffer(buffer, originalName, 'uploads/conferencia');
-  return saved.url;
+  const single = form.get('file');
+  if (single instanceof File && single.size > 0) return [single];
+
+  return [];
 }
 
 export async function POST(request: Request) {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     let email = String(form.get('email') || '').trim();
     const message = String(form.get('message') || '').trim();
     const accepted = form.get('accepted') === 'true';
-    const file = form.get('file') as File | null;
+    const files = collectFiles(form);
 
     if (sessionUser) {
       email = sessionUser.email;
@@ -59,88 +59,115 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Deve aceitar os termos e condições.' }, { status: 400 });
     }
 
-    if (!file || file.size === 0) {
-      return NextResponse.json({ success: false, error: 'Envie um documento em PDF.' }, { status: 400 });
+    if (files.length === 0) {
+      return NextResponse.json({ success: false, error: 'Seleccione pelo menos um documento.' }, { status: 400 });
     }
 
-    const isPdf =
-      file.type === 'application/pdf' ||
-      file.name.toLowerCase().endsWith('.pdf');
-
-    if (!isPdf) {
-      return NextResponse.json({ success: false, error: 'Apenas ficheiros PDF são aceites.' }, { status: 400 });
+    if (files.length > CONFERENCE_MAX_FILES) {
+      return NextResponse.json(
+        { success: false, error: `Máximo de ${CONFERENCE_MAX_FILES} ficheiros por envio.` },
+        { status: 400 },
+      );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileUrl = await storeConferencePdf(buffer, file.name);
+    for (const file of files) {
+      const check = validateConferenceFile(file);
+      if (!check.ok) {
+        return NextResponse.json({ success: false, error: check.error }, { status: 400 });
+      }
+    }
+
     const db = await getDashboardDb();
     const now = new Date().toISOString();
+    let sortOrder = db.documents.length + 1;
 
-    const record = {
-      id: `doc_${randomUUID().slice(0, 8)}`,
-      site_slug: 'aamihe',
-      title_pt: file.name.replace(/\.pdf$/i, ''),
-      title_en: null,
-      title_fr: null,
-      file_url: fileUrl,
-      language: 'pt' as const,
-      category: 'conferencia' as const,
-      published: false,
-      sort_order: db.documents.length + 1,
-      author: name,
-      email,
-      user_id: sessionUser?.id,
-      message: message || undefined,
-      review_status: 'submitted' as const,
-      year: String(new Date().getFullYear()),
-      source: 'form' as const,
-      created_at: now,
-      updated_at: now,
-    };
+    const records: SiteDocumentRecord[] = await Promise.all(
+      files.map(async (file) => {
+        const mimeType = resolveConferenceMimeType(file)!;
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const fileUrl = await storeConferenceFile(buffer, file.name, mimeType);
+        const ext = getFileExtension(file.name);
 
-    db.documents.push(record);
+        const record: SiteDocumentRecord = {
+          id: `doc_${randomUUID().slice(0, 8)}`,
+          site_slug: 'aamihe',
+          title_pt: titleFromFileName(file.name),
+          title_en: null,
+          title_fr: null,
+          file_url: fileUrl,
+          file_type: ext,
+          mime_type: mimeType,
+          language: 'pt',
+          category: 'conferencia',
+          published: false,
+          sort_order: sortOrder++,
+          author: name,
+          email,
+          user_id: sessionUser?.id,
+          message: message || undefined,
+          review_status: 'submitted',
+          year: String(new Date().getFullYear()),
+          source: 'form',
+          created_at: now,
+          updated_at: now,
+        };
+
+        return record;
+      }),
+    );
+
+    db.documents.push(...records);
     await saveDashboardDb(db);
     await syncDocumentsToSupabase();
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
     const adminUrl = `${siteUrl}/admin/documentos-gerais`;
-    const docUrl = fileUrl.startsWith('http') ? fileUrl : `${siteUrl}${fileUrl}`;
-
-    const emailLines = [
-      'Nova submissão de documento da conferência AAMIHE.',
-      '',
-      `Nome: ${name}`,
-      `E-mail: ${email}`,
-      message ? `Mensagem: ${message}` : '',
-      `Ficheiro: ${file.name}`,
-      '',
-      `Abrir painel: ${adminUrl}`,
-      `Ver documento: ${docUrl}`,
-    ].filter(Boolean);
+    const fileLines = records.map(
+      (record, index) =>
+        `${index + 1}. ${files[index].name} — ${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}`,
+    );
 
     await notifySiteEmail({
       to: [...CONFERENCE_SUBMISSION_NOTIFY_EMAILS],
-      subject: `Nova submissão da conferência — ${name}`,
-      text: emailLines.join('\n'),
+      subject: `Nova submissão da conferência — ${name} (${records.length} ficheiro${records.length > 1 ? 's' : ''})`,
+      text: [
+        'Nova submissão de documento(s) da conferência AAMIHE.',
+        '',
+        `Nome: ${name}`,
+        `E-mail: ${email}`,
+        message ? `Mensagem: ${message}` : '',
+        '',
+        'Ficheiros:',
+        ...fileLines,
+        '',
+        `Abrir painel: ${adminUrl}`,
+      ].filter(Boolean).join('\n'),
       html: [
-        '<p>Nova submissão de documento da conferência AAMIHE.</p>',
+        '<p>Nova submissão de documento(s) da conferência AAMIHE.</p>',
         '<ul>',
         `<li><strong>Nome:</strong> ${name}</li>`,
         `<li><strong>E-mail:</strong> ${email}</li>`,
         message ? `<li><strong>Mensagem:</strong> ${message}</li>` : '',
-        `<li><strong>Ficheiro:</strong> ${file.name}</li>`,
+        `<li><strong>Ficheiros (${records.length}):</strong></li>`,
+        ...records.map(
+          (record, index) =>
+            `<li><a href="${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}">${files[index].name}</a></li>`,
+        ),
         '</ul>',
         `<p><a href="${adminUrl}">Abrir painel de administração</a></p>`,
-        `<p><a href="${docUrl}">Ver documento PDF</a></p>`,
       ]
         .filter(Boolean)
         .join('\n'),
     });
 
+    const count = records.length;
     return NextResponse.json({
       success: true,
-      message: 'Documento enviado com sucesso. Será publicado após revisão.',
-      document: record,
+      message:
+        count === 1
+          ? 'Documento enviado com sucesso. Será publicado após revisão.'
+          : `${count} documentos enviados com sucesso. Serão publicados após revisão.`,
+      documents: records,
     });
   } catch (error) {
     console.error(error);

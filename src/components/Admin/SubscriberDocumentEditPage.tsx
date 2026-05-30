@@ -3,22 +3,29 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2, Upload } from 'lucide-react';
+import { Eye, Loader2, Upload } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
+import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
+import { CONFERENCE_FILE_ACCEPT } from '@/lib/conference-document-files';
+import {
+  getDocumentReviewStatus,
+  getStatusBadgeClass,
+  getSubscriberStatusLabel,
+} from '@/lib/document-review';
+import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
-type OwnDocument = {
-  id: string;
-  title_pt: string;
-  message?: string;
-  file_url: string;
-  review_comment?: string;
-  review_status?: string;
-};
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('pt-PT', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export default function SubscriberDocumentEditPage({ id }: { id: string }) {
   const router = useRouter();
-  const [document, setDocument] = useState<OwnDocument | null>(null);
+  const [document, setDocument] = useState<SiteDocumentRecord | null>(null);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [fileName, setFileName] = useState('');
@@ -100,6 +107,8 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
     );
   }
 
+  const badgeClass = getStatusBadgeClass(document, 'subscriber');
+
   return (
     <div className="docs-admin-page">
       <div className="docs-admin-header">
@@ -111,7 +120,7 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="docs-admin-container">
+      <div className="docs-admin-container docs-edit-form-wrap">
         {document.review_comment ? (
           <div className="docs-subscriber-feedback docs-subscriber-feedback--edit">
             <strong>Resposta da comissão</strong>
@@ -119,9 +128,35 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
           </div>
         ) : null}
 
-        <div className="docs-admin-card-preview docs-admin-card-preview--edit">
-          <iframe src={`${document.file_url}#toolbar=0&navpanes=0`} title={document.title_pt} />
-        </div>
+        <article className="docs-subscriber-card docs-edit-summary-card">
+          <div className="docs-subscriber-card-thumb">
+            <DocumentFilePreview url={document.file_url} title={document.title_pt} mimeType={document.mime_type} />
+            <div className="docs-subscriber-card-hover">
+              <div className="docs-subscriber-card-actions-minimal">
+                <a
+                  href={document.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="docs-subscriber-icon-btn"
+                  title="Ver PDF"
+                >
+                  <Eye size={14} />
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="docs-subscriber-card-base">
+            <h3>{document.title_pt}</h3>
+            <div className="docs-subscriber-card-meta-row">
+              <p className="docs-subscriber-card-date">{formatDate(document.created_at)}</p>
+              <span className={`docs-admin-badge ${badgeClass}`}>
+                {getSubscriberStatusLabel(document)}
+              </span>
+            </div>
+          </div>
+        </article>
+
+        <h2 className="docs-edit-section-title">Detalhes do envio</h2>
 
         <form className="subscriber-doc-edit-form" onSubmit={handleSubmit}>
           {error ? <p className="conference-form-error">{error}</p> : null}
@@ -143,7 +178,7 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
               <input
                 type="file"
                 name="file"
-                accept="application/pdf,.pdf"
+                accept={CONFERENCE_FILE_ACCEPT}
                 onChange={(e) => setFileName(e.target.files?.[0]?.name || '')}
               />
               <span>{fileName || 'Seleccionar novo PDF'}</span>

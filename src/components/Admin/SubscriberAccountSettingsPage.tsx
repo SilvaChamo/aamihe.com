@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Camera, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
+import { compressAvatarImage } from '@/lib/compress-image';
+import { getGravatarUrl } from '@/lib/gravatar';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import type { UserProfile } from '@/lib/user-types';
 import './admin-wp.css';
@@ -35,6 +37,10 @@ function profileToForm(user: UserProfile): FormState {
 export default function SubscriberAccountSettingsPage() {
   const { user, loading: sessionLoading } = useSessionUser();
   const [form, setForm] = useState<FormState | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -48,8 +54,32 @@ export default function SubscriberAccountSettingsPage() {
   useEffect(() => {
     if (user) {
       setForm(profileToForm(user));
+      setAvatarPreview(user.avatar);
+      setAvatarFile(null);
+      setRemoveAvatar(false);
     }
   }, [user]);
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setRemoveAvatar(false);
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveAvatar() {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setRemoveAvatar(true);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  const defaultAvatar = user ? getGravatarUrl(form?.email || user.email, 150) : '';
+  const displayAvatar = removeAvatar ? defaultAvatar : avatarPreview || defaultAvatar;
+  const hasCustomAvatar = Boolean(!removeAvatar && (avatarPreview || user?.avatar));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +99,25 @@ export default function SubscriberAccountSettingsPage() {
 
     setSaving(true);
     try {
+      let avatarUrl: string | undefined;
+
+      if (avatarFile) {
+        const compressedBlob = await compressAvatarImage(avatarFile);
+        const compressedFile = new File([compressedBlob], avatarFile.name, { type: 'image/jpeg' });
+        const uploadData = new FormData();
+        uploadData.append('file', compressedFile);
+        uploadData.append('bucket', 'avatars');
+        const uploadRes = await adminFetch('/api/admin/upload', { method: 'POST', body: uploadData });
+        const uploadJson = await uploadRes.json();
+        if (!uploadRes.ok) {
+          setError(uploadJson.error || 'Erro ao carregar a miniatura.');
+          return;
+        }
+        avatarUrl = uploadJson.url;
+      } else if (removeAvatar) {
+        avatarUrl = '';
+      }
+
       const res = await adminFetch('/api/admin/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +129,7 @@ export default function SubscriberAccountSettingsPage() {
           profissao: form.profissao,
           bio: form.bio,
           website: form.website,
+          ...(avatarUrl !== undefined ? { avatarUrl } : {}),
           currentPassword: currentPassword || undefined,
           newPassword: newPassword || undefined,
         }),
@@ -91,6 +141,9 @@ export default function SubscriberAccountSettingsPage() {
       }
       if (data.user) {
         setForm(profileToForm(data.user));
+        setAvatarPreview(data.user.avatar);
+        setAvatarFile(null);
+        setRemoveAvatar(false);
       }
       setSuccess('Alterações guardadas com sucesso.');
       setCurrentPassword('');
@@ -142,6 +195,41 @@ export default function SubscriberAccountSettingsPage() {
               <th colSpan={2}>
                 <h2>Informação pessoal</h2>
               </th>
+            </tr>
+            <tr>
+              <th scope="row">Miniatura</th>
+              <td>
+                <div className="wp-avatar-upload">
+                  <img src={displayAvatar} alt="" className="wp-avatar-lg" />
+                  <div className="wp-avatar-upload-btns">
+                    <button
+                      type="button"
+                      className="wp-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Camera size={14} />
+                      {hasCustomAvatar ? 'Trocar miniatura' : 'Editar miniatura'}
+                    </button>
+                    {hasCustomAvatar ? (
+                      <button
+                        type="button"
+                        className="wp-btn wp-btn-danger"
+                        onClick={handleRemoveAvatar}
+                      >
+                        <Trash2 size={14} />
+                        Remover
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  style={{ display: 'none' }}
+                />
+              </td>
             </tr>
             <tr>
               <th scope="row">Nome de utilizador</th>

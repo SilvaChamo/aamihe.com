@@ -10,6 +10,7 @@ import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
 } from '@/lib/document-review';
+import { getFileTypeLabel, isPdfPreviewable } from '@/lib/conference-document-files';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
@@ -140,10 +141,22 @@ export default function ConferenceDocumentReviewPage({
 
       <div className="docs-review-layout">
         <div className="docs-review-reader">
-          <iframe
-            src={`${document.file_url}#toolbar=1&navpanes=0`}
-            title={document.title_pt}
-          />
+          {isPdfPreviewable(document.file_url, document.mime_type) ? (
+            <iframe
+              src={`${document.file_url}#toolbar=1&navpanes=0&view=FitH`}
+              title={document.title_pt}
+            />
+          ) : (
+            <div className="docs-review-file-fallback">
+              <p>
+                Pré-visualização indisponível para ficheiros{' '}
+                <strong>{getFileTypeLabel(document.file_url)}</strong>.
+              </p>
+              <a href={document.file_url} target="_blank" rel="noopener noreferrer" className="docs-admin-add">
+                Descarregar documento
+              </a>
+            </div>
+          )}
         </div>
 
         <aside className="docs-review-panel">

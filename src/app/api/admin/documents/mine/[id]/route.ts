@@ -2,26 +2,14 @@ import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
 import { documentBelongsToUser } from '@/lib/document-ownership';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { saveUploadedBuffer } from '@/lib/persist-media';
+import {
+  getFileExtension,
+  resolveConferenceMimeType,
+  titleFromFileName,
+  validateConferenceFile,
+} from '@/lib/conference-document-files';
+import { storeConferenceFile } from '@/lib/conference-document-storage';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
-import { isSupabaseConfigured } from '@/lib/supabase/server';
-
-async function storeConferencePdf(buffer: Buffer, originalName: string): Promise<string> {
-  if (isSupabaseConfigured()) {
-    const { uploadFileToStore } = await import('@/lib/supabase-media');
-    const record = await uploadFileToStore(
-      buffer,
-      originalName,
-      'application/pdf',
-      'documentos',
-      'Conferência',
-    );
-    return record.url;
-  }
-
-  const saved = await saveUploadedBuffer(buffer, originalName, 'uploads/conferencia');
-  return saved.url;
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -81,15 +69,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     if (file && file.size > 0) {
-      const isPdf =
-        file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      if (!isPdf) {
-        return NextResponse.json({ success: false, error: 'Apenas ficheiros PDF são aceites.' }, { status: 400 });
+      const check = validateConferenceFile(file);
+      if (!check.ok) {
+        return NextResponse.json({ success: false, error: check.error }, { status: 400 });
       }
+
+      const mimeType = resolveConferenceMimeType(file)!;
       const buffer = Buffer.from(await file.arrayBuffer());
-      current.file_url = await storeConferencePdf(buffer, file.name);
+      current.file_url = await storeConferenceFile(buffer, file.name, mimeType);
+      current.file_type = getFileExtension(file.name);
+      current.mime_type = mimeType;
       if (!title) {
-        current.title_pt = file.name.replace(/\.pdf$/i, '');
+        current.title_pt = titleFromFileName(file.name);
       }
     }
 

@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Upload, X } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import { adminFetch } from '@/lib/admin-auth';
+import {
+  CONFERENCE_FILE_ACCEPT,
+  CONFERENCE_MAX_FILES,
+  getFileTypeLabel,
+} from '@/lib/conference-document-files';
 import './ConferenceSubmissionForm.css';
 
 type ConferenceFormLabels = {
@@ -33,17 +38,17 @@ type ConferenceSubmissionFormProps = {
 
 const DEFAULT_LABELS: ConferenceFormLabels = {
   title: 'Submissão de documentos',
-  intro: 'Preencha o formulário e envie o seu resumo ou documento em formato PDF para avaliação.',
+  intro: 'Envie um ou vários documentos (PDF, Word, Excel, PowerPoint e outros formatos comuns) para avaliação.',
   name: 'Nome',
   email: 'E-mail',
   message: 'Mensagem',
-  file: 'Enviar documento (PDF)',
-  filePlaceholder: 'Seleccionar PDF',
+  file: 'Documentos',
+  filePlaceholder: 'Seleccionar ficheiros',
   terms: 'Aceito os termos e condições',
   security: 'Segurança',
-  submit: 'Enviar documento',
+  submit: 'Enviar documentos',
   submitting: 'A enviar...',
-  success: 'Documento enviado com sucesso. Será publicado após revisão.',
+  success: 'Documento(s) enviado(s) com sucesso. Será(ão) publicado(s) após revisão.',
   error: 'Erro ao enviar documento. Tente novamente.',
 };
 
@@ -57,8 +62,30 @@ export default function ConferenceSubmissionForm({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formKey, setFormKey] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = Array.from(e.target.files || []);
+    if (list.length > CONFERENCE_MAX_FILES) {
+      setError(`Seleccione no máximo ${CONFERENCE_MAX_FILES} ficheiros por envio.`);
+      e.target.value = '';
+      return;
+    }
+    setError('');
+    setSelectedFiles(list);
+  }
+
+  function removeFile(index: number) {
+    setSelectedFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0 && fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return next;
+    });
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -73,13 +100,16 @@ export default function ConferenceSubmissionForm({
       setLoading(false);
       return;
     }
-    const data = new FormData(form);
-    const file = data.get('file') as File | null;
 
-    if (file) {
-      data.set('file', file);
+    if (selectedFiles.length === 0) {
+      setError('Seleccione pelo menos um documento.');
+      setLoading(false);
+      return;
     }
 
+    const data = new FormData(form);
+    data.delete('files');
+    selectedFiles.forEach((file) => data.append('files', file));
     data.set('accepted', String((form.elements.namedItem('accepted') as HTMLInputElement)?.checked));
 
     try {
@@ -96,7 +126,7 @@ export default function ConferenceSubmissionForm({
       }
 
       setSuccess(result.message || labels.success);
-      setFileName('');
+      setSelectedFiles([]);
       setFormKey((k) => k + 1);
       onSubmitted?.();
     } catch {
@@ -134,19 +164,50 @@ export default function ConferenceSubmissionForm({
         </label>
 
         <label className="conference-form-upload">
-          {labels.file} *
+          {labels.file} * <span className="conference-form-hint">(máx. {CONFERENCE_MAX_FILES})</span>
           <div className="conference-form-upload-box">
             <Upload size={20} />
             <input
+              ref={fileInputRef}
               type="file"
-              name="file"
-              accept="application/pdf,.pdf"
-              required
-              onChange={(e) => setFileName(e.target.files?.[0]?.name || '')}
+              name="files"
+              accept={CONFERENCE_FILE_ACCEPT}
+              multiple
+              onChange={handleFilesChange}
             />
-            <span>{fileName || labels.filePlaceholder}</span>
+            <span>
+              {selectedFiles.length > 0
+                ? `${selectedFiles.length} ficheiro(s) seleccionado(s)`
+                : labels.filePlaceholder}
+            </span>
           </div>
         </label>
+
+        {selectedFiles.length > 0 ? (
+          <ul className="conference-form-file-list">
+            {selectedFiles.map((file, index) => (
+              <li key={`${file.name}-${index}`}>
+                <span>
+                  {file.name}{' '}
+                  <em>({getFileTypeLabel(file.name)}, {(file.size / 1024 / 1024).toFixed(1)} MB)</em>
+                </span>
+                <button
+                  type="button"
+                  className="conference-form-file-remove"
+                  onClick={() => removeFile(index)}
+                  aria-label={`Remover ${file.name}`}
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <p className="conference-form-formats">
+          Formatos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx, .csv), PowerPoint (.ppt, .pptx),
+          OpenDocument (.odt, .ods, .odp), TXT, RTF — até 15 MB cada.
+        </p>
 
         <label className="conference-form-checkbox">
           <input type="checkbox" name="accepted" required />

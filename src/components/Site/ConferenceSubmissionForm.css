@@ -102,3 +102,56 @@
   margin: 0;
   font-size: 14px;
 }
+
+.conference-form-hint {
+  font-weight: 400;
+  color: #646970;
+  font-size: 12px;
+}
+
+.conference-form-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conference-form-file-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.conference-form-file-list em {
+  color: #646970;
+  font-style: normal;
+  font-size: 11px;
+}
+
+.conference-form-file-remove {
+  border: none;
+  background: transparent;
+  color: #646970;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+.conference-form-file-remove:hover {
+  color: #b32d2e;
+}
+
+.conference-form-formats {
+  margin: 0;
+  font-size: 12px;
+  color: #646970;
+  line-height: 1.45;
+}

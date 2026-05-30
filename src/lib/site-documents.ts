@@ -18,6 +18,8 @@ export type SiteDocumentRecord = {
   user_id?: string;
   message?: string;
   year?: string;
+  file_type?: string;
+  mime_type?: string;
   source?: 'form' | 'manual';
   review_status?: DocumentReviewStatus;
   review_comment?: string;

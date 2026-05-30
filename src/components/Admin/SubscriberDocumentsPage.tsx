@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Eye, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
+import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
+import { getFileTypeLabel } from '@/lib/conference-document-files';
 import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
@@ -101,46 +103,50 @@ export default function SubscriberDocumentsPage() {
               return (
                 <div key={doc.id} className="docs-subscriber-wrap">
                   <article className="docs-subscriber-card">
-                    <div className="docs-subscriber-card-base">
-                      <h3>{doc.title_pt}</h3>
-                      <p className="docs-subscriber-card-date">{formatDate(doc.created_at)}</p>
-                      <span className={`docs-admin-badge ${badgeClass}`}>
-                        {getSubscriberStatusLabel(doc)}
-                      </span>
+                    <div className="docs-subscriber-card-thumb">
+                      <DocumentFilePreview
+                        url={doc.file_url}
+                        title={doc.title_pt}
+                        mimeType={doc.mime_type}
+                      />
+                      <div className="docs-subscriber-card-hover">
+                        <div className="docs-subscriber-card-actions-minimal">
+                          <a
+                            href={doc.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="docs-subscriber-icon-btn"
+                            title={`Ver ${getFileTypeLabel(doc.file_url)}`}
+                          >
+                            <Eye size={14} />
+                          </a>
+                          <Link
+                            href={`/dashboard/meus-documentos/editar/${doc.id}`}
+                            className="docs-subscriber-icon-btn"
+                            title="Editar"
+                          >
+                            <Pencil size={14} />
+                          </Link>
+                          <button
+                            type="button"
+                            className="docs-subscriber-icon-btn docs-subscriber-icon-btn--danger"
+                            title="Eliminar"
+                            disabled={deletingId === doc.id}
+                            onClick={() => handleDelete(doc.id, doc.title_pt)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="docs-subscriber-card-hover">
-                      <div className="docs-subscriber-card-hover-info">
-                        <strong>{doc.title_pt}</strong>
-                        <span>{formatDate(doc.created_at)}</span>
-                        {doc.message ? <p>{doc.message}</p> : null}
-                      </div>
-                      <div className="docs-subscriber-card-actions-minimal">
-                        <a
-                          href={doc.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="docs-subscriber-icon-btn"
-                          title="Ver PDF"
-                        >
-                          <Eye size={14} />
-                        </a>
-                        <Link
-                          href={`/dashboard/meus-documentos/editar/${doc.id}`}
-                          className="docs-subscriber-icon-btn"
-                          title="Editar"
-                        >
-                          <Pencil size={14} />
-                        </Link>
-                        <button
-                          type="button"
-                          className="docs-subscriber-icon-btn docs-subscriber-icon-btn--danger"
-                          title="Eliminar"
-                          disabled={deletingId === doc.id}
-                          onClick={() => handleDelete(doc.id, doc.title_pt)}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                    <div className="docs-subscriber-card-base">
+                      <h3>{doc.title_pt}</h3>
+                      <div className="docs-subscriber-card-meta-row">
+                        <p className="docs-subscriber-card-date">{formatDate(doc.created_at)}</p>
+                        <span className={`docs-admin-badge ${badgeClass}`}>
+                          {getSubscriberStatusLabel(doc)}
+                        </span>
                       </div>
                     </div>
                   </article>

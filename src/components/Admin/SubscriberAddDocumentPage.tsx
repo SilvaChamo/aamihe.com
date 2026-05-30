@@ -26,7 +26,7 @@ export default function SubscriberAddDocumentPage() {
     <div className="docs-admin-page">
       <div className="docs-admin-header">
         <div>
-          <h1 className="docs-admin-title">Enviar documento</h1>
+          <h1 className="docs-admin-title">Enviar documentos</h1>
           <p className="docs-admin-intro">{t.dashboardSubmissionIntro}</p>
         </div>
       </div>
