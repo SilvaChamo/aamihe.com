@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
-import { getDashboardDb } from '@/lib/dashboard-db';
+import { documentBelongsToUser } from '@/lib/document-ownership';
+import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 
 export async function GET(request: Request) {
   try {
@@ -9,15 +10,27 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: session.error }, { status: session.status });
     }
 
-    const email = session.user.email.toLowerCase();
     const db = await getDashboardDb();
+    let dirty = false;
+
+    for (const doc of db.documents) {
+      if (
+        doc.category === 'conferencia' &&
+        !doc.user_id &&
+        documentBelongsToUser(doc, session.user)
+      ) {
+        doc.user_id = session.user.id;
+        dirty = true;
+      }
+    }
+
+    if (dirty) {
+      await saveDashboardDb(db);
+    }
+
     const documents = db.documents
       .filter(
-        (item) =>
-          item.category === 'conferencia' &&
-          String(item.email || '')
-            .trim()
-            .toLowerCase() === email,
+        (item) => item.category === 'conferencia' && documentBelongsToUser(item, session.user),
       )
       .sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),

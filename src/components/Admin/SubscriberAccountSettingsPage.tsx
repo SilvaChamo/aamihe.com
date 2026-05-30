@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import type { UserProfile } from '@/lib/user-types';
 import './admin-wp.css';
 
 type FormState = {
+  username: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -17,17 +19,22 @@ type FormState = {
   website: string;
 };
 
+function profileToForm(user: UserProfile): FormState {
+  return {
+    username: user.username || '',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    email: user.email || '',
+    telefone: user.telefone || '',
+    profissao: user.profissao || '',
+    bio: user.bio || '',
+    website: user.website || '',
+  };
+}
+
 export default function SubscriberAccountSettingsPage() {
   const { user, loading: sessionLoading } = useSessionUser();
-  const [form, setForm] = useState<FormState>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    telefone: '',
-    profissao: '',
-    bio: '',
-    website: '',
-  });
+  const [form, setForm] = useState<FormState | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,20 +46,14 @@ export default function SubscriberAccountSettingsPage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (!user) return;
-    setForm({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-      telefone: user.telefone || '',
-      profissao: user.profissao || '',
-      bio: user.bio || '',
-      website: user.website || '',
-    });
+    if (user) {
+      setForm(profileToForm(user));
+    }
   }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form) return;
     setError('');
     setSuccess('');
 
@@ -88,6 +89,9 @@ export default function SubscriberAccountSettingsPage() {
         setError(data.error || 'Não foi possível guardar as alterações.');
         return;
       }
+      if (data.user) {
+        setForm(profileToForm(data.user));
+      }
       setSuccess('Alterações guardadas com sucesso.');
       setCurrentPassword('');
       setNewPassword('');
@@ -99,10 +103,21 @@ export default function SubscriberAccountSettingsPage() {
     }
   }
 
-  if (sessionLoading) {
+  if (sessionLoading || !form) {
     return (
       <div className="wp-admin-page">
-        <p className="wp-muted">A carregar…</p>
+        <div className="wp-loading-center">
+          <Loader2 className="wp-spin" size={28} aria-hidden />
+          <p>A carregar dados da conta…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="wp-admin-page">
+        <p className="wp-notice wp-notice-error">Não foi possível carregar a sua conta.</p>
       </div>
     );
   }
@@ -120,13 +135,19 @@ export default function SubscriberAccountSettingsPage() {
       {error ? <div className="wp-notice-error">{error}</div> : null}
       {success ? <div className="wp-notice-success">{success}</div> : null}
 
-      <form onSubmit={handleSubmit}>
+      <form key={user.id} onSubmit={handleSubmit}>
         <table className="wp-form-table">
           <tbody>
             <tr className="section-row">
               <th colSpan={2}>
                 <h2>Informação pessoal</h2>
               </th>
+            </tr>
+            <tr>
+              <th scope="row">Nome de utilizador</th>
+              <td>
+                <input type="text" className="wp-input" value={form.username} readOnly disabled />
+              </td>
             </tr>
             <tr>
               <th scope="row">Nome próprio</th>

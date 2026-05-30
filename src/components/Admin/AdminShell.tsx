@@ -29,6 +29,14 @@ interface SubmenuEntry {
   href: string;
 }
 
+interface MenuItem {
+  href?: string;
+  onClick?: () => void;
+  icon: React.ElementType;
+  label: string;
+  submenu?: SubmenuEntry[];
+}
+
 function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string | null {
   const matches = submenu
     .filter((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
@@ -37,7 +45,8 @@ function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string
 }
 
 interface SidebarItemProps {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   icon: React.ElementType;
   label: string;
   active?: boolean;
@@ -49,6 +58,7 @@ interface SidebarItemProps {
 
 const SidebarItem = ({
   href,
+  onClick,
   icon: Icon,
   label,
   active,
@@ -59,12 +69,18 @@ const SidebarItem = ({
 }: SidebarItemProps) => {
   const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
-  const isDashboard = label === 'Dashboard';
   const mainClassName = ['sidebar-item-main', active ? 'active' : ''].filter(Boolean).join(' ');
 
   React.useEffect(() => {
     if (isChildActive && !isOpen && onToggle) onToggle();
   }, [isChildActive, isOpen, onToggle]);
+
+  const linkContent = (
+    <>
+      <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
+      <span className="sidebar-label">{label}</span>
+    </>
+  );
 
   return (
     <div
@@ -74,10 +90,15 @@ const SidebarItem = ({
     >
       <div className="sidebar-item-content">
         <div className={mainClassName}>
-          <Link href={href} className="sidebar-item-link">
-            <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
-            <span className="sidebar-label">{label}</span>
-          </Link>
+          {onClick ? (
+            <button type="button" className="sidebar-item-link sidebar-item-button" onClick={onClick}>
+              {linkContent}
+            </button>
+          ) : (
+            <Link href={href || '#'} className="sidebar-item-link">
+              {linkContent}
+            </Link>
+          )}
           {submenu && (
             <ChevronDown
               onClick={(e) => {
@@ -170,7 +191,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     }
   }, [pathname, openSubmenu, base]);
 
-  const menuItems = showSubscriberNav
+  const menuItems: MenuItem[] = showSubscriberNav
     ? [
         { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
@@ -291,15 +312,18 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               const activeSubHref = subs ? getActiveSubmenuHref(pathname, subs) : null;
               const isChildActive = !!activeSubHref;
               const hasSubmenu = !!subs?.length;
-              const isActive = hasSubmenu
-                ? isChildActive || pathname === item.href
-                : pathname === item.href;
+              const isActive = item.onClick
+                ? false
+                : hasSubmenu
+                  ? isChildActive || pathname === item.href
+                  : pathname === item.href;
               const shouldBeOpen = openSubmenu === item.label || isChildActive;
 
               return (
                 <SidebarItem
-                  key={item.href}
+                  key={item.href || item.label}
                   href={item.href}
+                  onClick={item.onClick}
                   icon={item.icon}
                   label={item.label}
                   submenu={item.submenu}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Activity, FileUp, Settings, UserCircle } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import SubscriberConferenceExitDialog from '@/components/Admin/SubscriberConferenceExitDialog';
 import './DashboardContent.css';
 
 type OwnDocument = {
@@ -18,6 +19,7 @@ export default function SubscriberWelcomeContent() {
   const { user, loading: sessionLoading } = useSessionUser();
   const [documents, setDocuments] = React.useState<OwnDocument[]>([]);
   const [statsLoading, setStatsLoading] = React.useState(true);
+  const [conferenceDialogOpen, setConferenceDialogOpen] = React.useState(false);
 
   const displayName = user?.firstName || user?.username || 'participante';
 
@@ -68,8 +70,8 @@ export default function SubscriberWelcomeContent() {
           <div className="dashboard-grid">
             <div>
               <h3 className="dashboard-section-title">Introdução</h3>
-              <Link href="/dashboard/meus-documentos" className="dashboard-button">
-                Submeter resumo
+              <Link href="/dashboard/meus-documentos/novo" className="dashboard-button">
+                Enviar documento
               </Link>
             </div>
 
@@ -104,13 +106,17 @@ export default function SubscriberWelcomeContent() {
               <h3 className="dashboard-summary-title">Conferência AAMIHE</h3>
               <ul className="dashboard-list">
                 <li>
-                  <Link href="/conferencia" className="dashboard-list-item">
+                  <button
+                    type="button"
+                    className="dashboard-list-item dashboard-list-button"
+                    onClick={() => setConferenceDialogOpen(true)}
+                  >
                     <Activity /> Página da conferência
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link href="/dashboard/meus-documentos" className="dashboard-list-item">
-                    <FileUp /> Submissão de resumo
+                  <Link href="/dashboard/meus-documentos/novo" className="dashboard-list-item">
+                    <FileUp /> Enviar documento
                   </Link>
                 </li>
               </ul>
@@ -202,6 +208,11 @@ export default function SubscriberWelcomeContent() {
           </div>
         </div>
       </div>
+
+      <SubscriberConferenceExitDialog
+        open={conferenceDialogOpen}
+        onClose={() => setConferenceDialogOpen(false)}
+      />
     </div>
   );
 }

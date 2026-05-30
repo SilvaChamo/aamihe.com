@@ -1,14 +1,21 @@
 const DEFAULT_TO = 'geral@aamihe.com';
 
+export const CONFERENCE_SUBMISSION_NOTIFY_EMAILS = [
+  'geral@aamihe.com',
+  // 'bernadogerson@gmail.com', // desactivado temporariamente (testes)
+] as const;
+
 type NotifyEmailInput = {
-  to?: string;
+  to?: string | string[];
   subject: string;
   text: string;
   html?: string;
 };
 
 export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
-  const to = input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO;
+  const to = Array.isArray(input.to)
+    ? input.to.filter(Boolean)
+    : [input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO];
   const from = process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>';
   const resendKey = process.env.RESEND_API_KEY;
 
@@ -22,7 +29,7 @@ export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
         },
         body: JSON.stringify({
           from,
-          to: [to],
+          to,
           subject: input.subject,
           text: input.text,
           html: input.html ?? input.text.replace(/\n/g, '<br />'),

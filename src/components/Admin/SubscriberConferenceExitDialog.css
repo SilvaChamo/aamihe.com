@@ -1,0 +1,76 @@
+.subscriber-exit-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.subscriber-exit-dialog {
+  width: min(100%, 420px);
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.subscriber-exit-dialog-title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1d2327;
+}
+
+.subscriber-exit-dialog-text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #50575e;
+}
+
+.subscriber-exit-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subscriber-exit-dialog-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #ccd0d4;
+  border-radius: 3px;
+  background: #f6f7f7;
+  color: #2c3338;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subscriber-exit-dialog-btn:hover {
+  background: #f0f0f1;
+}
+
+.subscriber-exit-dialog-btn.primary {
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+}
+
+.subscriber-exit-dialog-btn.primary:hover {
+  background: #135e96;
+  border-color: #135e96;
+}
+
+.subscriber-exit-dialog-btn.danger {
+  background: #d63638;
+  border-color: #d63638;
+  color: #fff;
+}
+
+.subscriber-exit-dialog-btn.danger:hover {
+  background: #b32d2e;
+  border-color: #b32d2e;
+}

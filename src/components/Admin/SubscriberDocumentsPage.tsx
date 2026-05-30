@@ -1,11 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Download, FileText } from 'lucide-react';
-import { useLanguage } from '@/context/LanguageContext';
-import { CONFERENCIA_COPY } from '@/data/conferencia-content';
+import Link from 'next/link';
+import { Eye, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
-import ConferenceSubmissionForm from '@/components/Site/ConferenceSubmissionForm';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
 type OwnDocument = {
@@ -18,12 +16,16 @@ type OwnDocument = {
   email?: string;
 };
 
+function fileTypeLabel(url: string) {
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+  if (ext === 'pdf') return 'PDF';
+  return ext?.toUpperCase() || 'DOC';
+}
+
 export default function SubscriberDocumentsPage() {
-  const { locale } = useLanguage();
-  const t = CONFERENCIA_COPY[locale];
   const [documents, setDocuments] = useState<OwnDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadDocuments = useCallback(async () => {
     setLoading(true);
@@ -44,48 +46,64 @@ export default function SubscriberDocumentsPage() {
 
   useEffect(() => {
     loadDocuments();
-  }, [loadDocuments, refreshKey]);
+  }, [loadDocuments]);
 
-  const handleSubmitted = useCallback(() => {
-    setRefreshKey((k) => k + 1);
-  }, []);
+  async function handleDelete(id: string, title: string) {
+    if (!confirm(`Eliminar «${title}»? Esta acção não pode ser desfeita.`)) return;
+
+    setDeletingId(id);
+    try {
+      const res = await adminFetch(`/api/admin/documents/mine/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+      } else {
+        alert(data.error || 'Não foi possível eliminar o documento.');
+      }
+    } catch {
+      alert('Erro de ligação. Tente novamente.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div className="docs-admin-page">
       <div className="docs-admin-header">
         <div>
           <h1 className="docs-admin-title">Documentos</h1>
-          <p className="docs-admin-intro">{t.dashboardSubmissionIntro}</p>
+          <p className="docs-admin-intro">
+            Consulte e gira as submissões que enviou para a conferência.
+          </p>
         </div>
-      </div>
-
-      <div className="docs-admin-container" style={{ marginBottom: 24 }}>
-        <ConferenceSubmissionForm
-          key={refreshKey}
-          labels={t.form}
-          onSubmitted={handleSubmitted}
-        />
+        <Link href="/dashboard/meus-documentos/novo" className="docs-admin-add">
+          <Plus size={16} />
+          Enviar documento
+        </Link>
       </div>
 
       <div className="docs-admin-container">
-        <h2 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#1d2327' }}>
-          As minhas submissões
-        </h2>
-
         {loading ? (
           <p className="docs-admin-empty">A carregar...</p>
         ) : documents.length === 0 ? (
           <div className="docs-admin-empty-state">
             <FileText size={40} />
             <h2>Nenhuma submissão encontrada</h2>
-            <p>Utilize o formulário acima para enviar o resumo da sua apresentação em PDF.</p>
+            <p>
+              Ainda não enviou nenhum documento. Clique em «Enviar documento» para submeter o
+              resumo da sua apresentação em PDF.
+            </p>
           </div>
         ) : (
           <div className="docs-admin-grid">
             {documents.map((doc) => (
-              <article key={doc.id} className="docs-admin-card">
-                <div className="docs-admin-card-icon">
-                  <FileText size={28} />
+              <article key={doc.id} className="docs-admin-card docs-admin-card--with-preview">
+                <div className="docs-admin-card-preview">
+                  <iframe
+                    src={`${doc.file_url}#toolbar=0&navpanes=0&view=FitH`}
+                    title={`Pré-visualização — ${doc.title_pt}`}
+                    loading="lazy"
+                  />
                 </div>
                 <h3>{doc.title_pt}</h3>
                 <p className="docs-admin-card-meta">
@@ -95,8 +113,8 @@ export default function SubscriberDocumentsPage() {
                     year: 'numeric',
                   })}
                 </p>
-                <span className={`docs-admin-badge ${doc.published ? 'published' : 'pending'}`}>
-                  {doc.published ? 'Publicado' : 'Em revisão'}
+                <span className={`docs-admin-badge ${doc.published ? 'published' : 'sent'}`}>
+                  {doc.published ? 'Publicado' : 'Enviado'}
                 </span>
                 <div className="docs-admin-card-actions">
                   <a
@@ -105,9 +123,25 @@ export default function SubscriberDocumentsPage() {
                     rel="noopener noreferrer"
                     className="docs-admin-action"
                   >
-                    <Download size={14} />
-                    Ver PDF
+                    <Eye size={14} />
+                    Ver ({fileTypeLabel(doc.file_url)})
                   </a>
+                  <Link
+                    href={`/dashboard/meus-documentos/editar/${doc.id}`}
+                    className="docs-admin-action"
+                  >
+                    <Pencil size={14} />
+                    Editar
+                  </Link>
+                  <button
+                    type="button"
+                    className="docs-admin-action danger"
+                    disabled={deletingId === doc.id}
+                    onClick={() => handleDelete(doc.id, doc.title_pt)}
+                  >
+                    <Trash2 size={14} />
+                    {deletingId === doc.id ? 'A eliminar…' : 'Eliminar'}
+                  </button>
                 </div>
               </article>
             ))}

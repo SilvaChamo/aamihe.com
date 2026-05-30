@@ -14,6 +14,7 @@ export type SiteDocumentRecord = {
   sort_order: number;
   author?: string;
   email?: string;
+  user_id?: string;
   message?: string;
   year?: string;
   source?: 'form' | 'manual';

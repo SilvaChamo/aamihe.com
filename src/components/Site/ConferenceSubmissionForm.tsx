@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
+import { adminFetch } from '@/lib/admin-auth';
 import './ConferenceSubmissionForm.css';
 
 type ConferenceFormLabels = {
@@ -25,6 +26,9 @@ type ConferenceFormLabels = {
 type ConferenceSubmissionFormProps = {
   onSubmitted?: () => void;
   labels?: ConferenceFormLabels;
+  defaultName?: string;
+  defaultEmail?: string;
+  authenticated?: boolean;
 };
 
 const DEFAULT_LABELS: ConferenceFormLabels = {
@@ -46,6 +50,9 @@ const DEFAULT_LABELS: ConferenceFormLabels = {
 export default function ConferenceSubmissionForm({
   onSubmitted,
   labels = DEFAULT_LABELS,
+  defaultName = '',
+  defaultEmail = '',
+  authenticated = false,
 }: ConferenceSubmissionFormProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -76,7 +83,8 @@ export default function ConferenceSubmissionForm({
     data.set('accepted', String((form.elements.namedItem('accepted') as HTMLInputElement)?.checked));
 
     try {
-      const res = await fetch('/api/public/conferencia-submissions', {
+      const submit = authenticated ? adminFetch : fetch;
+      const res = await submit('/api/public/conferencia-submissions', {
         method: 'POST',
         body: data,
       });
@@ -106,12 +114,18 @@ export default function ConferenceSubmissionForm({
       <form key={formKey} className="conference-form" onSubmit={handleSubmit}>
         <label>
           {labels.name} *
-          <input type="text" name="name" required />
+          <input type="text" name="name" defaultValue={defaultName} required />
         </label>
 
         <label>
           {labels.email} *
-          <input type="email" name="email" required />
+          <input
+            type="email"
+            name="email"
+            defaultValue={defaultEmail}
+            readOnly={authenticated}
+            required
+          />
         </label>
 
         <label>

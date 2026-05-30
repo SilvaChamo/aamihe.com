@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { validatePublicFormSpam } from '@/lib/form-spam-guard';
+import { readSpamFields, validateSpamFields } from '@/lib/form-spam-guard';
 import { saveUploadedBuffer } from '@/lib/persist-media';
-import { notifySiteEmail } from '@/lib/notify-email';
+import { notifySiteEmail, CONFERENCE_SUBMISSION_NOTIFY_EMAILS } from '@/lib/notify-email';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
+import { resolveSessionUser } from '@/lib/admin-session';
 import { randomUUID } from 'node:crypto';
 
 async function storeConferencePdf(buffer: Buffer, originalName: string): Promise<string> {
@@ -28,16 +29,27 @@ export async function POST(request: Request) {
   try {
     const form = await request.formData();
 
-    const spam = await validatePublicFormSpam(form);
+    const spam = validateSpamFields(readSpamFields(form));
     if (!spam.ok) {
       return NextResponse.json({ success: false, error: spam.error }, { status: 400 });
     }
 
-    const name = String(form.get('name') || '').trim();
-    const email = String(form.get('email') || '').trim();
+    const session = await resolveSessionUser(request);
+    const sessionUser = session?.type === 'user' ? session.user : null;
+
+    let name = String(form.get('name') || '').trim();
+    let email = String(form.get('email') || '').trim();
     const message = String(form.get('message') || '').trim();
     const accepted = form.get('accepted') === 'true';
     const file = form.get('file') as File | null;
+
+    if (sessionUser) {
+      email = sessionUser.email;
+      if (!name) {
+        name = [sessionUser.firstName, sessionUser.lastName].filter(Boolean).join(' ').trim()
+          || sessionUser.username;
+      }
+    }
 
     if (!name || !email) {
       return NextResponse.json({ success: false, error: 'Nome e e-mail são obrigatórios.' }, { status: 400 });
@@ -77,6 +89,7 @@ export async function POST(request: Request) {
       sort_order: db.documents.length + 1,
       author: name,
       email,
+      user_id: sessionUser?.id,
       message: message || undefined,
       year: String(new Date().getFullYear()),
       source: 'form' as const,
@@ -90,19 +103,34 @@ export async function POST(request: Request) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
     const adminUrl = `${siteUrl}/admin/documentos-gerais`;
+    const docUrl = fileUrl.startsWith('http') ? fileUrl : `${siteUrl}${fileUrl}`;
+
+    const emailLines = [
+      'Nova submissão de documento da conferência AAMIHE.',
+      '',
+      `Nome: ${name}`,
+      `E-mail: ${email}`,
+      message ? `Mensagem: ${message}` : '',
+      `Ficheiro: ${file.name}`,
+      '',
+      `Abrir painel: ${adminUrl}`,
+      `Ver documento: ${docUrl}`,
+    ].filter(Boolean);
 
     await notifySiteEmail({
+      to: [...CONFERENCE_SUBMISSION_NOTIFY_EMAILS],
       subject: `Nova submissão da conferência — ${name}`,
-      text: [
-        'Nova submissão de documento da conferência AAMIHE.',
-        '',
-        `Nome: ${name}`,
-        `E-mail: ${email}`,
-        message ? `Mensagem: ${message}` : '',
-        `Ficheiro: ${file.name}`,
-        `URL: ${fileUrl.startsWith('/') ? siteUrl + fileUrl : fileUrl}`,
-        '',
-        `Rever no painel: ${adminUrl}`,
+      text: emailLines.join('\n'),
+      html: [
+        '<p>Nova submissão de documento da conferência AAMIHE.</p>',
+        '<ul>',
+        `<li><strong>Nome:</strong> ${name}</li>`,
+        `<li><strong>E-mail:</strong> ${email}</li>`,
+        message ? `<li><strong>Mensagem:</strong> ${message}</li>` : '',
+        `<li><strong>Ficheiro:</strong> ${file.name}</li>`,
+        '</ul>',
+        `<p><a href="${adminUrl}">Abrir painel de administração</a></p>`,
+        `<p><a href="${docUrl}">Ver documento PDF</a></p>`,
       ]
         .filter(Boolean)
         .join('\n'),

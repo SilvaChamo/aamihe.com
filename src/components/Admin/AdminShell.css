@@ -163,6 +163,14 @@ button.admin-brand-action {
   color: inherit;
 }
 
+.sidebar-item-button {
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
 .sidebar-icon {
   width: 20px;
   height: 20px;

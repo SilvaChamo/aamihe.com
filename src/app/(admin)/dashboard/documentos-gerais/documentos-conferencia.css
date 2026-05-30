@@ -42,6 +42,27 @@
   background: #008f45;
 }
 
+.docs-admin-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #561713;
+  padding: 10px 16px;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.docs-admin-header-btn:hover {
+  background: #f6f7f7;
+  border-color: #8c8f94;
+}
+
 .docs-admin-container {
   background: white;
   border: 1px solid #ccd0d4;
@@ -63,6 +84,37 @@
   flex-direction: column;
   gap: 10px;
   background: #fafafa;
+}
+
+.docs-admin-card--with-preview {
+  padding-top: 0;
+  overflow: hidden;
+}
+
+.docs-admin-card-preview {
+  margin: 0 -20px 4px;
+  height: 180px;
+  background: #ececec;
+  border-bottom: 1px solid #dcdcde;
+  overflow: hidden;
+}
+
+.docs-admin-card-preview iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}
+
+.docs-admin-card-preview--edit {
+  margin: 0 0 20px;
+  height: 320px;
+  border-radius: 8px;
+  border: 1px solid #dcdcde;
+}
+
+.docs-admin-card-preview--edit iframe {
+  pointer-events: auto;
 }
 
 .docs-admin-card-icon {
@@ -130,6 +182,52 @@
 .docs-admin-badge.published {
   background: #edfaef;
   color: #008a20;
+}
+
+.docs-admin-badge.sent {
+  background: #eef3f8;
+  color: #2271b1;
+}
+
+.subscriber-doc-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.subscriber-doc-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.subscriber-doc-edit-form input[type='text'],
+.subscriber-doc-edit-form textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+}
+
+.subscriber-doc-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px dashed #ccd0d4;
+  border-radius: 6px;
+  background: #fff;
+  font-weight: 400;
+  color: #646970;
+}
+
+.subscriber-doc-upload-box input[type='file'] {
+  font-size: 12px;
 }
 
 .docs-admin-empty,
