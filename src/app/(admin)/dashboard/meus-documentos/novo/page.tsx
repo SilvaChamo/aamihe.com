@@ -1,7 +1,7 @@
 'use client';
 
-import SubscriberAddDocumentPage from '@/components/Admin/SubscriberAddDocumentPage';
+import SubscriberSubmissionPage from '@/components/Admin/SubscriberSubmissionPage';
 
 export default function NovoDocumentoSubscritorPage() {
-  return <SubscriberAddDocumentPage />;
+  return <SubscriberSubmissionPage title="Enviar documentos" />;
 }

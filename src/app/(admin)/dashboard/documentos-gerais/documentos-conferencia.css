@@ -763,3 +763,274 @@
     flex-direction: column;
   }
 }
+
+/* Submissão de resumo — formulário + barra lateral */
+.submission-page-header {
+  margin-bottom: 24px;
+}
+
+.submission-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.submission-page-form {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.submission-page-form .conference-form-section {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.submission-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: calc(var(--admin-topbar-height) + 16px);
+}
+
+.submission-sidebar-card {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.submission-sidebar-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #561713;
+}
+
+.submission-sidebar-meta,
+.submission-sidebar-dates {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submission-sidebar-meta div,
+.submission-sidebar-dates div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.submission-sidebar-meta dt,
+.submission-sidebar-dates dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #646970;
+}
+
+.submission-sidebar-meta dd,
+.submission-sidebar-dates dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1d2327;
+}
+
+.submission-sidebar-theme {
+  text-transform: capitalize;
+}
+
+.submission-sidebar-period-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d2327;
+}
+
+.submission-sidebar-period-message {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #50575e;
+}
+
+.submission-sidebar-period--open {
+  border-left: 4px solid #00a651;
+}
+
+.submission-sidebar-period--pending {
+  border-left: 4px solid #996800;
+}
+
+.submission-sidebar-period--closed {
+  border-left: 4px solid #b32d2e;
+  background: #fffbfb;
+}
+
+.submission-sidebar-fees {
+  border-color: #f0b7b8;
+  background: #fffbfb;
+}
+
+.submission-sidebar-fee-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.submission-sidebar-fee-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: #50575e;
+}
+
+.submission-sidebar-fee-list strong {
+  color: #1d2327;
+  font-weight: 600;
+}
+
+.submission-sidebar-fee-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #646970;
+}
+
+.submission-sidebar-docs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submission-sidebar-doc {
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fafafa;
+}
+
+.submission-sidebar-doc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.submission-sidebar-doc-head strong {
+  font-size: 13px;
+  color: #1d2327;
+  line-height: 1.35;
+}
+
+.submission-sidebar-doc-status {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.submission-sidebar-doc-status.approved {
+  background: #edfaef;
+  color: #008a20;
+}
+
+.submission-sidebar-doc-status.revision {
+  background: #fcf9e8;
+  color: #996800;
+}
+
+.submission-sidebar-doc-status.sent {
+  background: #f0f0f1;
+  color: #50575e;
+}
+
+.submission-sidebar-doc-date {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #646970;
+}
+
+.submission-sidebar-doc-comment {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #50575e;
+}
+
+.submission-sidebar-doc-link,
+.submission-sidebar-all-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #561713;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.submission-sidebar-all-link {
+  display: inline-block;
+  margin-top: 12px;
+}
+
+.submission-sidebar-empty {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #646970;
+}
+
+.submission-sidebar-doc-skeleton {
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.submission-sidebar-doc-skeleton span {
+  display: block;
+  height: 12px;
+  background: #dcdcde;
+  border-radius: 3px;
+}
+
+.submission-sidebar-doc-skeleton span:first-child {
+  width: 75%;
+}
+
+.submission-sidebar-doc-skeleton span:last-child {
+  width: 45%;
+}
+
+@media (max-width: 1024px) {
+  .submission-page-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-sidebar {
+    position: static;
+  }
+}

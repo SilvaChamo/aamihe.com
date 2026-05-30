@@ -9,6 +9,7 @@ import {
   CONFERENCIA_PARTNER_LOGOS,
   CONFERENCIA_PARTNER_TITLES,
 } from '@/data/conferencia-content';
+import { getTimelineDisplayDate, interpolateSubmissionDeadline } from '@/lib/conference-schedule';
 import ConferenceParticipantRegisterForm from '@/components/Site/ConferenceParticipantRegisterForm';
 import styles from './ConferenciaPageContent.module.css';
 
@@ -137,7 +138,7 @@ export default function ConferenciaPageContent() {
             {t.timeline.map((item) => (
               <article key={item.title} className={styles.timelineCard}>
                 <h3>{item.title}</h3>
-                <p>{item.date}</p>
+                <p>{getTimelineDisplayDate(item, locale)}</p>
               </article>
             ))}
           </div>
@@ -234,7 +235,9 @@ export default function ConferenciaPageContent() {
                 <br />
                 {t.submissionHeroTitleLine2}
               </h2>
-              <p className={styles.submissionHeroIntro}>{t.submissionHeroIntro}</p>
+              <p className={styles.submissionHeroIntro}>
+                {interpolateSubmissionDeadline(t.submissionHeroIntro, locale)}
+              </p>
               <a href="#registo-conferencia" className={styles.submissionCtaBtn}>
                 {t.submissionCtaBtn}
                 <span className={styles.submissionCtaIcon} aria-hidden="true">

@@ -1,5 +1,18 @@
 export const CONFERENCIA_YEAR = '2025';
 
+/** Prazos e taxas — fonte única (página conferência + painel subscritor). */
+export const CONFERENCE_SCHEDULE = {
+  submission: {
+    startIso: '2025-01-01',
+    endIso: '2025-06-30',
+  },
+  lateSubmissionFee: {
+    pt: '75 USD',
+    fr: '75 USD',
+    en: 'USD 75',
+  },
+} as const;
+
 export const CONFERENCIA_COPY = {
   pt: {
     bannerTitle: 'CONFERÊNCIA',
@@ -43,7 +56,7 @@ export const CONFERENCIA_COPY = {
     planTitlePrefix: 'Plano de ',
     planTitleBold: 'Subscrição',
     timeline: [
-      { title: 'Submissão de resumos', date: 'Até 30 de junho de 2025' },
+      { key: 'submission', title: 'Submissão de resumos', date: 'Até 30 de junho de 2025' },
       { title: 'Notificação de aceitação', date: 'Até 8 de julho de 2025' },
       { title: 'Início das inscrições', date: '09 de julho de 2025' },
       { title: 'Inscrição tardia', date: 'Até 12 de outubro de 2025' },
@@ -71,7 +84,7 @@ export const CONFERENCIA_COPY = {
     submissionHeroTitleLine1: 'Partilhe o seu resumo.',
     submissionHeroTitleLine2: 'Apresente o seu tema na conferência.',
     submissionHeroIntro:
-      'Submeta o resumo de apresentação do seu tema em PDF para avaliação e aprovação pela comissão científica da conferência AAMIHE. A submissão de resumo deve obedecer à data até 30 de junho de 2025.',
+      'Submeta o resumo de apresentação do seu tema em PDF para avaliação e aprovação pela comissão científica da conferência AAMIHE. A submissão de resumo deve obedecer à data {deadline}.',
     submissionCtaBtn: 'Entrar para submeter o seu resumo',
     registerForm: {
       title: 'Registo para submissão',
@@ -90,7 +103,7 @@ export const CONFERENCIA_COPY = {
     },
     dashboardSubmissionTitle: 'Submissão de resumo',
     dashboardSubmissionIntro:
-      'Envie o resumo de apresentação do seu tema em PDF. A comissão científica irá avaliar e aprovar a sua proposta. A submissão de resumo deve obedecer à data até 30 de junho de 2025.',
+      'Envie o resumo de apresentação do seu tema em PDF. A comissão científica irá avaliar e aprovar a sua proposta. A submissão de resumo deve obedecer à data {deadline}.',
     submissionIntro:
       'Preencha o formulário abaixo e submeta o seu resumo em formato PDF para uma avaliação prévia.',
     submissionNote: 'Nota: a submissão de resumo deve obedecer à data até 30 de junho de 2025.',
@@ -157,7 +170,7 @@ export const CONFERENCIA_COPY = {
     planTitlePrefix: 'Plan de ',
     planTitleBold: 'Inscription',
     timeline: [
-      { title: 'Soumission des résumés', date: "Jusqu'au 30 juin 2025" },
+      { key: 'submission', title: 'Soumission des résumés', date: "Jusqu'au 30 juin 2025" },
       { title: "Notification d'acceptation", date: "Jusqu'au 8 juillet 2025" },
       { title: 'Ouverture des inscriptions', date: '09 juillet 2025' },
       { title: 'Inscription tardive', date: "Jusqu'au 12 octobre 2025" },
@@ -272,7 +285,7 @@ export const CONFERENCIA_COPY = {
     planTitlePrefix: 'Registration ',
     planTitleBold: 'Plan',
     timeline: [
-      { title: 'Abstract submission', date: 'Until 30 June 2025' },
+      { key: 'submission', title: 'Abstract submission', date: 'Until 30 June 2025' },
       { title: 'Acceptance notification', date: 'Until 8 July 2025' },
       { title: 'Registration opens', date: '9 July 2025' },
       { title: 'Late registration', date: 'Until 12 October 2025' },

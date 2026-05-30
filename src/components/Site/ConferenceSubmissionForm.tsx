@@ -163,24 +163,43 @@ export default function ConferenceSubmissionForm({
           <textarea name="message" rows={4} />
         </label>
 
-        <label className="conference-form-upload">
+        <label>
           {labels.file} * <span className="conference-form-hint">(máx. {CONFERENCE_MAX_FILES})</span>
-          <div className="conference-form-upload-box">
-            <Upload size={20} />
-            <input
-              ref={fileInputRef}
-              type="file"
-              name="files"
-              accept={CONFERENCE_FILE_ACCEPT}
-              multiple
-              onChange={handleFilesChange}
-            />
-            <span>
-              {selectedFiles.length > 0
-                ? `${selectedFiles.length} ficheiro(s) seleccionado(s)`
-                : labels.filePlaceholder}
-            </span>
-          </div>
+          {authenticated ? (
+            <div className="subscriber-doc-upload-box">
+              <Upload size={18} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="files"
+                accept={CONFERENCE_FILE_ACCEPT}
+                multiple
+                onChange={handleFilesChange}
+              />
+              <span>
+                {selectedFiles.length > 0
+                  ? selectedFiles.map((file) => file.name).join(', ')
+                  : labels.filePlaceholder}
+              </span>
+            </div>
+          ) : (
+            <div className="conference-form-upload-box">
+              <Upload size={20} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="files"
+                accept={CONFERENCE_FILE_ACCEPT}
+                multiple
+                onChange={handleFilesChange}
+              />
+              <span>
+                {selectedFiles.length > 0
+                  ? `${selectedFiles.length} ficheiro(s) seleccionado(s)`
+                  : labels.filePlaceholder}
+              </span>
+            </div>
+          )}
         </label>
 
         {selectedFiles.length > 0 ? (
@@ -205,8 +224,9 @@ export default function ConferenceSubmissionForm({
         ) : null}
 
         <p className="conference-form-formats">
-          Formatos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx, .csv), PowerPoint (.ppt, .pptx),
-          OpenDocument (.odt, .ods, .odp), TXT, RTF — até 15 MB cada.
+          {authenticated
+            ? 'Formatos: PDF, Word e PowerPoint até 10 MB cada.'
+            : 'Formatos: PDF, Word (.doc, .docx), Excel (.xls, .xlsx, .csv), PowerPoint (.ppt, .pptx), OpenDocument (.odt, .ods, .odp), TXT, RTF — até 15 MB cada.'}
         </p>
 
         <label className="conference-form-checkbox">
