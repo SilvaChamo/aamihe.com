@@ -12,7 +12,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.105Z",
-      "updated_at": "2026-05-29T22:50:42.429Z"
+      "updated_at": "2026-05-30T12:09:12.466Z"
     },
     {
       "id": "media_1780057906111_b5c1f9",
@@ -25,7 +25,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.110Z",
-      "updated_at": "2026-05-29T23:37:45.628Z"
+      "updated_at": "2026-05-30T09:15:08.647Z"
     },
     {
       "id": "media_1780057906112_65bc99",
@@ -38,7 +38,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.112Z",
-      "updated_at": "2026-05-29T23:40:49.690Z"
+      "updated_at": "2026-05-30T11:37:28.191Z"
     },
     {
       "id": "media_1780057906114_069fe8",
@@ -51,7 +51,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.114Z",
-      "updated_at": "2026-05-29T23:09:18.112Z"
+      "updated_at": "2026-05-30T09:26:10.569Z"
     },
     {
       "id": "media_1780057906115_289a3c",
@@ -64,7 +64,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.115Z",
-      "updated_at": "2026-05-29T14:15:23.084Z"
+      "updated_at": "2026-05-30T11:59:03.025Z"
     },
     {
       "id": "media_1780057906115_6c7787",
@@ -77,7 +77,7 @@
       "source": "news",
       "published": true,
       "created_at": "2026-05-29T12:31:46.115Z",
-      "updated_at": "2026-05-29T23:44:09.292Z"
+      "updated_at": "2026-05-30T11:09:20.341Z"
     }
   ]
 }

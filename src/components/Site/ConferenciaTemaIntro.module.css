@@ -3,25 +3,45 @@
   z-index: 2;
   margin-top: -44px;
   margin-bottom: 0;
-  padding: 0 0 20px;
+  padding: 0 0 30px;
   background: transparent;
   box-sizing: border-box;
 }
 
 .introCard {
   width: 100%;
-  padding: clamp(30px, 4.5vw, 42px) clamp(24px, 4vw, 32px);
-  border-radius: 10px;
+  padding: clamp(30px, 4.5vw, 42px) clamp(24px, 4vw, 32px) 0;
+  --intro-card-radius: 10px;
+  --intro-card-line-inset: calc(var(--intro-card-radius) + 10px);
+  border-radius: var(--intro-card-radius);
   overflow: hidden;
   box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
-  background: #fff;
   position: relative;
+  border: 1px solid rgba(204, 168, 118, 0.42);
+  background:
+    radial-gradient(ellipse 90% 70% at 50% -15%, rgba(204, 168, 118, 0.22) 0%, transparent 68%),
+    linear-gradient(165deg, #ffffff 0%, #faf6f1 55%, #f5efe6 100%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 12px 36px rgba(86, 23, 19, 0.07);
+}
+
+.introCard::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: var(--intro-card-line-inset);
+  right: var(--intro-card-line-inset);
+  height: 5px;
+  background: #7c3f3a;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .introContent {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   max-width: 860px;
   margin: 0 auto;
@@ -48,6 +68,31 @@
   line-height: 1;
   color: #a63d33;
   background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(204, 168, 118, 0.14),
+    0 6px 20px rgba(86, 23, 19, 0.12);
+  animation: themeNumberGlow 3.2s ease-in-out infinite;
+}
+
+@keyframes themeNumberGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(204, 168, 118, 0.14),
+      0 6px 20px rgba(86, 23, 19, 0.12);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 7px rgba(204, 168, 118, 0.22),
+      0 8px 28px rgba(86, 23, 19, 0.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeNumber {
+    animation: none;
+  }
 }
 
 .eyebrow {
@@ -60,16 +105,34 @@
   font-weight: 700;
   line-height: 1.45;
   color: #2a0e0b;
-  text-transform: lowercase;
+  text-transform: none;
+}
+
+.title::first-letter {
+  text-transform: uppercase;
+}
+
+.subthemesTitle {
+  position: relative;
+  z-index: 2;
+  margin: 25px 0 0;
+  padding: 25px 0 25px;
+  border-top: 1px solid rgba(204, 168, 118, 0.35);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary, #561713);
 }
 
 @media (max-width: 640px) {
   .section {
-    padding-bottom: 24px;
+    padding-bottom: 30px;
   }
 
   .introCard {
-    padding: 26px 20px 30px;
+    padding: 26px 20px 0;
   }
 
   .themeNumberWrap {

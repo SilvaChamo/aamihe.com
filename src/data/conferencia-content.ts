@@ -23,6 +23,10 @@ export const CONFERENCIA_COPY = {
     themeTitle:
       'parcerias colaborativas pan-africanas para o desenvolvimento sustentável das instituições de ensino superior',
     subthemesTitle: 'Sub-temas',
+    subthemesShowAll: 'Ver todos os sub-temas',
+    subthemesModalTitle:
+      'Outros sub-temas da conferência a realizar-se de 13 a 15 de outubro de 2025',
+    subthemesModalClose: 'Fechar',
     subthemes: [
       'O Metodismo Africano e o pensamento wesleyano sobre o ensino superior',
       'Promoção da colaboração e parcerias intra-africanas',
@@ -36,8 +40,8 @@ export const CONFERENCIA_COPY = {
       'Inserção das instituições metodistas africanas de ensino superior na Agenda 2063',
       'Os desafios da Educação Teológica em África',
     ],
-    planEyebrow: 'Plano de',
-    planTitle: 'Subscrição',
+    planTitlePrefix: 'Plano de ',
+    planTitleBold: 'Subscrição',
     timeline: [
       { title: 'Submissão de resumos', date: 'Até 30 de junho de 2025' },
       { title: 'Notificação de aceitação', date: 'Até 8 de julho de 2025' },
@@ -47,12 +51,16 @@ export const CONFERENCIA_COPY = {
     ],
     feesEyebrow: 'Taxa de',
     feesTitle: 'INSCRIÇÃO',
+    feesIntro:
+      'Garanta a sua participação na conferência. Consulte os valores por categoria e registe-se dentro do prazo indicado.',
     feeStandardLabel: 'DOCENTES',
     feeStandardValue: '$100 USD',
     feeLateLabel: 'Inscrição tardia',
     feeLateValue: '$150 USD',
     registerBtn: 'REGISTE-SE',
-    registerNote: 'Para inscrição, contacte geral@aamihe.com',
+    registerNote: 'Para inscrição, contacte geral@aamihe.com ou clique no botão abaixo.',
+    feesImageAlt:
+      'Profissional num escritório a submeter inscrição no computador',
     partners: {
       organization: 'ORGANIZAÇÃO',
       partnership: 'PARCERIA',
@@ -104,6 +112,10 @@ export const CONFERENCIA_COPY = {
     themeTitle:
       "partenariats collaboratifs panafricains pour le développement durable des institutions d'enseignement supérieur",
     subthemesTitle: 'Sous-thèmes',
+    subthemesShowAll: 'Voir tous les sous-thèmes',
+    subthemesModalTitle:
+      'Autres sous-thèmes de la conférence se déroulant du 13 au 15 octobre 2025',
+    subthemesModalClose: 'Fermer',
     subthemes: [
       "Le méthodisme africain et la pensée wesleyenne sur l'enseignement supérieur",
       'Promotion de la collaboration et des partenariats intra-africains',
@@ -117,8 +129,8 @@ export const CONFERENCIA_COPY = {
       "Insertion des institutions méthodistes africaines d'enseignement supérieur dans l'Agenda 2063",
       "Les défis de l'éducation théologique en Afrique",
     ],
-    planEyebrow: 'Plan de',
-    planTitle: 'Inscription',
+    planTitlePrefix: 'Plan de ',
+    planTitleBold: 'Inscription',
     timeline: [
       { title: 'Soumission des résumés', date: "Jusqu'au 30 juin 2025" },
       { title: "Notification d'acceptation", date: "Jusqu'au 8 juillet 2025" },
@@ -128,12 +140,17 @@ export const CONFERENCIA_COPY = {
     ],
     feesEyebrow: 'Frais',
     feesTitle: "D'INSCRIPTION",
+    feesIntro:
+      "Assurez votre participation à la conférence. Consultez les tarifs par catégorie et inscrivez-vous dans les délais indiqués.",
     feeStandardLabel: 'ENSEIGNANTS',
     feeStandardValue: '100 USD',
     feeLateLabel: 'Inscription tardive',
     feeLateValue: '150 USD',
     registerBtn: "S'INSCRIRE",
-    registerNote: "Pour l'inscription, contactez geral@aamihe.com",
+    registerNote:
+      "Pour l'inscription, contactez geral@aamihe.com ou cliquez sur le bouton ci-dessous.",
+    feesImageAlt:
+      "Professionnel au bureau soumettant une inscription sur ordinateur",
     partners: {
       organization: 'ORGANISATION',
       partnership: 'PARTENARIAT',
@@ -185,6 +202,10 @@ export const CONFERENCIA_COPY = {
     themeTitle:
       'pan-african collaborative partnerships for the sustainable development of higher education institutions',
     subthemesTitle: 'Sub-themes',
+    subthemesShowAll: 'View all sub-themes',
+    subthemesModalTitle:
+      'Other sub-themes of the conference taking place from 13 to 15 October 2025',
+    subthemesModalClose: 'Close',
     subthemes: [
       'African Methodism and Wesleyan thought on higher education',
       'Promoting collaboration and intra-African partnerships',
@@ -198,8 +219,8 @@ export const CONFERENCIA_COPY = {
       'Integrating African Methodist higher education institutions into Agenda 2063',
       'The challenges of Theological Education in Africa',
     ],
-    planEyebrow: 'Registration',
-    planTitle: 'Plan',
+    planTitlePrefix: 'Registration ',
+    planTitleBold: 'Plan',
     timeline: [
       { title: 'Abstract submission', date: 'Until 30 June 2025' },
       { title: 'Acceptance notification', date: 'Until 8 July 2025' },
@@ -209,12 +230,15 @@ export const CONFERENCIA_COPY = {
     ],
     feesEyebrow: 'Registration',
     feesTitle: 'FEES',
+    feesIntro:
+      'Secure your place at the conference. See the fees by category and register within the stated deadline.',
     feeStandardLabel: 'FACULTY',
     feeStandardValue: '$100 USD',
     feeLateLabel: 'Late registration',
     feeLateValue: '$150 USD',
     registerBtn: 'REGISTER',
-    registerNote: 'For registration, contact geral@aamihe.com',
+    registerNote: 'For registration, contact geral@aamihe.com or click the button below.',
+    feesImageAlt: 'Professional in an office submitting registration on a computer',
     partners: {
       organization: 'ORGANISATION',
       partnership: 'PARTNERSHIP',

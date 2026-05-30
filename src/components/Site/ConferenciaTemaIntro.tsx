@@ -25,6 +25,7 @@ export default function ConferenciaTemaIntro() {
               {t.themeTitle}
             </h2>
           </div>
+          <h3 className={styles.subthemesTitle}>{t.subthemesTitle}</h3>
         </div>
       </div>
     </section>

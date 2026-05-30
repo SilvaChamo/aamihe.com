@@ -139,9 +139,16 @@ export function buildSiteSearchIndex(locale: Locale, news: NewsItem[]): SiteSear
   });
 
   conf.timeline.forEach((item, index) => {
-    pushChunk(chunks, `conf-timeline-${index}`, '/conferencia', item.title, [item.date, conf.planTitle], {
-      image: sectionImageFor(`conf-timeline-${index}`),
-    });
+    pushChunk(
+      chunks,
+      `conf-timeline-${index}`,
+      '/conferencia',
+      item.title,
+      [item.date, conf.planTitlePrefix, conf.planTitleBold],
+      {
+        image: sectionImageFor(`conf-timeline-${index}`),
+      },
+    );
   });
 
   pushChunk(
@@ -149,7 +156,15 @@ export function buildSiteSearchIndex(locale: Locale, news: NewsItem[]): SiteSear
     'conf-fees',
     '/conferencia',
     conf.feesTitle,
-    [conf.feeStandardLabel, conf.feeStandardValue, conf.feeLateLabel, conf.feeLateValue, conf.registerNote],
+    [
+      conf.feesEyebrow,
+      conf.feesIntro,
+      conf.feeStandardLabel,
+      conf.feeStandardValue,
+      conf.feeLateLabel,
+      conf.feeLateValue,
+      conf.registerNote,
+    ],
     { image: sectionImageFor('conf-fees') },
   );
 

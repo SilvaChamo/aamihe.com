@@ -25,7 +25,7 @@
 
 .subthemesSection {
   padding: 0 0 40px;
-  margin-top: -8px;
+  margin-top: 0;
   background: #f4f4f4;
 }
 
@@ -42,9 +42,9 @@
   min-height: 100%;
   padding: 16px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid rgba(204, 168, 118, 0.18);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(165deg, #561713 0%, #3a100d 100%);
+  border: 1px solid rgba(204, 168, 118, 0.28);
+  box-shadow: 0 4px 14px rgba(56, 17, 13, 0.2);
 }
 
 .subthemeIndex {
@@ -55,8 +55,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(86, 23, 19, 0.08);
-  color: var(--primary, #561713);
+  border: 1px solid rgba(204, 168, 118, 0.55);
+  background: rgba(204, 168, 118, 0.22);
+  color: #cca876;
   font-size: 12px;
   font-weight: 700;
 }
@@ -65,7 +66,152 @@
   margin: 4px 0 0;
   font-size: 14px;
   line-height: 1.55;
-  color: var(--text, #2d2d2d);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.subthemesActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.subthemesShowAllBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border: 1px solid #2d8a45;
+  border-radius: 8px;
+  background: #2d8a45;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.subthemesShowAllBtn:hover {
+  background: #246b37;
+  border-color: #246b37;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.subthemesModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.subthemesModal {
+  width: 100%;
+  max-width: 640px;
+  max-height: min(85vh, 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+}
+
+.subthemesModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(204, 168, 118, 0.28);
+  background: #f5efe6;
+}
+
+.subthemesModalTitle {
+  margin: 0;
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--primary, #561713);
+}
+
+.subthemesModalClose {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(86, 23, 19, 0.08);
+  color: var(--primary, #561713);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.subthemesModalClose:hover {
+  background: var(--primary, #561713);
+  color: #fff;
+}
+
+.subthemesModalTableWrap {
+  overflow-y: auto;
+}
+
+.subthemesModalTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.subthemesModalRow:nth-child(odd) {
+  background: #fff;
+}
+
+.subthemesModalRow:nth-child(even) {
+  background: rgba(248, 244, 240, 0.75);
+}
+
+.subthemesModalRow td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(204, 168, 118, 0.22);
+  vertical-align: top;
+}
+
+.subthemesModalRow:nth-child(odd) td {
+  border-bottom-color: rgba(204, 168, 118, 0.2);
+}
+
+.subthemesModalRow:nth-child(even) td {
+  border-bottom-color: rgba(124, 63, 58, 0.1);
+}
+
+.subthemesModalRow:last-child td {
+  border-bottom: none;
+}
+
+.subthemesModalNum {
+  width: 1%;
+  white-space: nowrap;
+  padding: 11px 12px;
+  text-align: center;
+  vertical-align: top;
+  border-right: 1px solid rgba(204, 168, 118, 0.35);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--primary, #561713);
+}
+
+.subthemesModalText {
+  padding: 11px 16px 11px 14px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #3d3331;
 }
 
 .planSection {
@@ -78,19 +224,16 @@
   margin-bottom: 28px;
 }
 
-.planEyebrow {
-  color: #8a6b66;
-}
-
-.feesEyebrow {
-  color: #cca876;
-}
-
 .planTitle {
   margin: 0;
   font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 700;
   color: var(--primary, #561713);
   text-transform: uppercase;
+}
+
+.planTitle strong {
+  font-weight: 800;
 }
 
 .planLine {
@@ -129,26 +272,152 @@
 }
 
 .feesSection {
-  padding: 48px 0;
-  background: linear-gradient(165deg, #561713 0%, #3a100d 100%);
+  position: relative;
+  padding: 75px 0;
   color: #fff;
-  text-align: center;
+  background-image: url('/images/conferencia-inscricao-escritorio.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-.feesHeader .feesEyebrow {
-  margin-bottom: 6px;
+.feesSection::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(26, 8, 6, 0.52) 0%,
+    rgba(26, 8, 6, 0.68) 45%,
+    rgba(20, 6, 5, 0.85) 100%
+  );
+  pointer-events: none;
 }
 
-.feesHeader h2 {
-  margin: 0 0 24px;
+.feesSection :global(.container) {
+  position: relative;
+  z-index: 1;
+}
+
+.feesLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(28px, 5vw, 48px);
+}
+
+.feesVisual {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 420px;
+  align-self: stretch;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.feesImage {
+  object-fit: cover;
+  object-position: center center;
+}
+
+.feesContentCol {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.feesContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: 0;
+  border-radius: 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+.feesHeader {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 22px;
+  text-align: left;
+}
+
+.feesHeaderRule {
+  flex-shrink: 0;
+  width: 3px;
+  align-self: stretch;
+  min-height: 100%;
+  background: #cca876;
+  border-radius: 2px;
+}
+
+.feesHeaderText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+}
+
+.feesEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cca876;
+}
+
+.feesEyebrowDash {
+  display: inline-block;
+  width: 1.4em;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.feesTitle {
+  margin: 0 0 12px;
   font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 800;
   letter-spacing: 0.06em;
+  line-height: 1.15;
+  color: #ffffff;
+  text-align: left;
+}
+
+.feesIntro {
+  margin: 0;
+  max-width: 36em;
+  font-size: 15px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: left;
 }
 
 .feesGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 220px));
-  justify-content: center;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: 100%;
   gap: 18px;
   margin-bottom: 24px;
 }
@@ -156,8 +425,13 @@
 .feeCard {
   padding: 20px 16px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(204, 168, 118, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(204, 168, 118, 0.55);
+}
+
+.feeCard strong {
+  font-size: 1.35rem;
+  color: #ffffff;
 }
 
 .feeLabel {
@@ -167,10 +441,6 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #cca876;
-}
-
-.feeCard strong {
-  font-size: 1.35rem;
 }
 
 .registerBtn {
@@ -192,12 +462,6 @@
   background: #fff;
   color: var(--primary, #561713);
   transform: translateY(-2px);
-}
-
-.registerNote {
-  margin: 14px 0 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.82);
 }
 
 .partnersSection {
@@ -330,6 +594,26 @@
 
   .timelineGrid {
     grid-template-columns: 1fr;
+  }
+
+  .feesLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .feesSection {
+    background-attachment: scroll;
+  }
+
+  .feesVisual {
+    min-height: 360px;
+  }
+
+  .feesContentCol {
+    width: 100%;
+  }
+
+  .feesContent {
+    width: 100%;
   }
 
   .feesGrid {
