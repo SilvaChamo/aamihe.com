@@ -18,11 +18,14 @@ import {
   Users,
   ChartColumnIncreasing,
   UserCircle,
+  Bell,
 } from 'lucide-react';
 import { clearAdminSecret } from '@/lib/admin-auth';
 import { useAdminBase } from '@/lib/admin-base';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import { useNotificationUnread } from '@/hooks/useNotificationUnread';
 import './AdminShell.css';
+import './admin-buttons.css';
 
 interface SubmenuEntry {
   label: string;
@@ -35,6 +38,7 @@ interface MenuItem {
   icon: React.ElementType;
   label: string;
   submenu?: SubmenuEntry[];
+  badge?: number;
 }
 
 function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string | null {
@@ -54,6 +58,7 @@ interface SidebarItemProps {
   submenu?: SubmenuEntry[];
   isOpen?: boolean;
   onToggle?: () => void;
+  badge?: number;
 }
 
 const SidebarItem = ({
@@ -66,6 +71,7 @@ const SidebarItem = ({
   submenu,
   isOpen = false,
   onToggle,
+  badge = 0,
 }: SidebarItemProps) => {
   const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
@@ -78,7 +84,14 @@ const SidebarItem = ({
   const linkContent = (
     <>
       <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
-      <span className="sidebar-label">{label}</span>
+      <span className="sidebar-label-row">
+        <span className="sidebar-label">{label}</span>
+        {badge > 0 ? (
+          <span className="sidebar-notify-badge" aria-label={`${badge} notificações por ler`}>
+            {badge > 99 ? '99+' : badge}
+          </span>
+        ) : null}
+      </span>
     </>
   );
 
@@ -149,6 +162,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const base = useAdminBase();
   const { isSubscriber, loading: sessionLoading } = useSessionUser();
+  const unreadNotifications = useNotificationUnread();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
@@ -156,6 +170,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     '/dashboard',
     '/dashboard/minha-conta',
     '/dashboard/meus-documentos',
+    '/dashboard/notificacoes',
     '/dashboard/definicoes-conta',
     '/dashboard/submissao-resumo',
   ];
@@ -196,6 +211,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
         { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Documentos' },
+        { href: '/dashboard/notificacoes', icon: Bell, label: 'Notificações', badge: unreadNotifications },
         { href: '/dashboard/definicoes-conta', icon: Settings, label: 'Definições' },
       ]
     : [
@@ -296,7 +312,27 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </Link>
         </div>
         <div className="admin-brand-right">
-          <span className="admin-brand-tagline">Painel de administração</span>
+          {showSubscriberNav ? (
+            <Link
+              href="/dashboard/notificacoes"
+              className="admin-brand-action admin-brand-notify"
+              aria-label={
+                unreadNotifications > 0
+                  ? `Notificações (${unreadNotifications} por ler)`
+                  : 'Notificações'
+              }
+            >
+              <span className="admin-brand-notify-bell">
+                <Bell className="admin-brand-action-icon" />
+                {unreadNotifications > 0 ? (
+                  <span className="admin-brand-notify-dot" aria-hidden />
+                ) : null}
+              </span>
+              Notificações
+            </Link>
+          ) : (
+            <span className="admin-brand-tagline">Painel de administração</span>
+          )}
           <button type="button" onClick={handleLogout} className="admin-brand-action">
             <LogOut className="admin-brand-action-icon" />
             Sair
@@ -326,6 +362,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   onClick={item.onClick}
                   icon={item.icon}
                   label={item.label}
+                  badge={item.badge}
                   submenu={item.submenu}
                   active={isActive}
                   activeSubHref={activeSubHref}

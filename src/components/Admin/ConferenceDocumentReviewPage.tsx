@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
+import { CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import {
   getAdminStatusLabel,
   getDocumentReviewStatus,
   getStatusBadgeClass,
-} from '@/lib/document-review';
+} from '@/lib/document-review-status';
 import { getFileTypeLabel, isPdfPreviewable } from '@/lib/conference-document-files';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
@@ -27,6 +27,7 @@ export default function ConferenceDocumentReviewPage({
   const [document, setDocument] = useState<SiteDocumentRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
+  const [approvalMessage, setApprovalMessage] = useState('');
   const [busy, setBusy] = useState<'approve' | 'revision' | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -75,7 +76,11 @@ export default function ConferenceDocumentReviewPage({
       const res = await adminFetch(`/api/admin/documents/${id}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, comment: comment.trim() }),
+        body: JSON.stringify({
+          action,
+          message: action === 'approve' ? approvalMessage.trim() : undefined,
+          comment: action === 'request_revision' ? comment.trim() : undefined,
+        }),
       });
       const data = await res.json();
 
@@ -86,10 +91,11 @@ export default function ConferenceDocumentReviewPage({
 
       setDocument(data.document);
       setComment('');
+      setApprovalMessage('');
       setSuccess(
         action === 'approve'
-          ? 'Documento aprovado. O subscritor foi notificado por e-mail.'
-          : 'Documento devolvido para edição. O subscritor foi notificado por e-mail.',
+          ? 'Documento aprovado. O subscritor foi notificado por e-mail e no painel.'
+          : 'Documento devolvido. O subscritor recebeu a mensagem com os motivos.',
       );
     } catch {
       setError('Erro de ligação. Tente novamente.');
@@ -127,10 +133,6 @@ export default function ConferenceDocumentReviewPage({
     <div className="docs-admin-page">
       <div className="docs-admin-header">
         <div>
-          <Link href={listPath} className="docs-review-back">
-            <ArrowLeft size={16} />
-            Submissões da Conferência
-          </Link>
           <h1 className="docs-admin-title">{document.title_pt}</h1>
           <p className="docs-admin-intro">
             {[document.author, document.email, document.year].filter(Boolean).join(' · ')}
@@ -207,9 +209,20 @@ export default function ConferenceDocumentReviewPage({
             <section className="docs-review-section">
               <h2>Decisão</h2>
 
+              <div className="docs-review-revision">
+                <label htmlFor="approval-message">Mensagem de aprovação (opcional)</label>
+                <textarea
+                  id="approval-message"
+                  rows={3}
+                  value={approvalMessage}
+                  onChange={(e) => setApprovalMessage(e.target.value)}
+                  placeholder="Confirme a aprovação e adicione observações para o subscritor…"
+                />
+              </div>
+
               <button
                 type="button"
-                className="docs-review-approve"
+                className="aamihe-btn aamihe-btn--primary docs-review-approve"
                 disabled={busy !== null}
                 onClick={() => submitReview('approve')}
               >
@@ -218,17 +231,17 @@ export default function ConferenceDocumentReviewPage({
               </button>
 
               <div className="docs-review-revision">
-                <label htmlFor="review-comment">Solicitar edição</label>
+                <label htmlFor="review-comment">Devolver com comentário</label>
                 <textarea
                   id="review-comment"
                   rows={5}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Descreva o que o subscritor deve corrigir ou melhorar…"
+                  placeholder="Explique o que o subscritor deve corrigir ou melhorar…"
                 />
                 <button
                   type="button"
-                  className="docs-review-return"
+                  className="aamihe-btn aamihe-btn--secondary docs-review-return"
                   disabled={busy !== null}
                   onClick={() => submitReview('request_revision')}
                 >

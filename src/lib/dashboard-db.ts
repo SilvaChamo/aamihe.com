@@ -2,11 +2,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import type { SiteMediaRecord } from '@/lib/site-media';
+import type { SubscriberNotification } from '@/lib/subscriber-notifications';
 import { BLOB_ACCESS } from '@/lib/blob-access';
 
 export type DashboardDb = {
   documents: SiteDocumentRecord[];
   media: SiteMediaRecord[];
+  notifications?: SubscriberNotification[];
 };
 
 const LOCAL_PATH = path.join(process.cwd(), 'aamihe_dashboard.json');
@@ -16,7 +18,37 @@ function hasBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
-const EMPTY_DB: DashboardDb = { documents: [], media: [] };
+const EMPTY_DB: DashboardDb = { documents: [], media: [], notifications: [] };
+const DASHBOARD_DB_CACHE_MS = 5000;
+
+let dashboardDbCache: { data: DashboardDb; at: number } | null = null;
+
+function cloneDashboardDb(db: DashboardDb): DashboardDb {
+  return {
+    documents: db.documents,
+    media: db.media,
+    notifications: db.notifications,
+  };
+}
+
+async function loadDashboardDb(): Promise<DashboardDb> {
+  if (hasBlobStorage()) {
+    const fromBlob = await readDashboardFromBlob();
+    if (fromBlob) return fromBlob;
+  }
+
+  try {
+    const raw = await readFile(LOCAL_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as Partial<DashboardDb>;
+    return {
+      documents: parsed.documents ?? [],
+      media: parsed.media ?? [],
+      notifications: parsed.notifications ?? [],
+    };
+  } catch {
+    return { ...EMPTY_DB };
+  }
+}
 
 async function readDashboardFromBlob(): Promise<DashboardDb | null> {
   try {
@@ -27,6 +59,7 @@ async function readDashboardFromBlob(): Promise<DashboardDb | null> {
     return {
       documents: parsed.documents ?? [],
       media: parsed.media ?? [],
+      notifications: parsed.notifications ?? [],
     };
   } catch {
     return null;
@@ -44,24 +77,20 @@ async function writeDashboardToBlob(db: DashboardDb): Promise<void> {
 }
 
 export async function getDashboardDb(): Promise<DashboardDb> {
-  if (hasBlobStorage()) {
-    const fromBlob = await readDashboardFromBlob();
-    if (fromBlob) return fromBlob;
+  if (
+    dashboardDbCache &&
+    Date.now() - dashboardDbCache.at < DASHBOARD_DB_CACHE_MS
+  ) {
+    return cloneDashboardDb(dashboardDbCache.data);
   }
 
-  try {
-    const raw = await readFile(LOCAL_PATH, 'utf8');
-    const parsed = JSON.parse(raw) as Partial<DashboardDb>;
-    return {
-      documents: parsed.documents ?? [],
-      media: parsed.media ?? [],
-    };
-  } catch {
-    return { ...EMPTY_DB };
-  }
+  const data = await loadDashboardDb();
+  dashboardDbCache = { data, at: Date.now() };
+  return cloneDashboardDb(data);
 }
 
 export async function saveDashboardDb(db: DashboardDb): Promise<void> {
+  dashboardDbCache = null;
   const json = JSON.stringify(db, null, 2);
 
   if (hasBlobStorage()) {

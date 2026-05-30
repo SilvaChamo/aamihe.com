@@ -1,37 +1,11 @@
+import 'server-only';
+
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { notifySiteEmail } from '@/lib/notify-email';
-
-export type DocumentReviewStatus = 'submitted' | 'approved' | 'revision_requested';
-
-export function getDocumentReviewStatus(doc: SiteDocumentRecord): DocumentReviewStatus {
-  if (doc.review_status) return doc.review_status;
-  if (doc.published) return 'approved';
-  return 'submitted';
-}
-
-export function getSubscriberStatusLabel(doc: SiteDocumentRecord): string {
-  const status = getDocumentReviewStatus(doc);
-  if (status === 'approved') return 'Aprovado';
-  if (status === 'revision_requested') return 'Por editar';
-  return 'Enviado';
-}
-
-export function getAdminStatusLabel(doc: SiteDocumentRecord): string {
-  const status = getDocumentReviewStatus(doc);
-  if (status === 'approved') return 'Aprovado';
-  if (status === 'revision_requested') return 'Devolvido';
-  return 'Pendente';
-}
-
-export function getStatusBadgeClass(
-  doc: SiteDocumentRecord,
-  view: 'subscriber' | 'admin',
-): string {
-  const status = getDocumentReviewStatus(doc);
-  if (status === 'approved') return 'published';
-  if (status === 'revision_requested') return view === 'admin' ? 'revision' : 'revision';
-  return view === 'admin' ? 'pending' : 'sent';
-}
+import {
+  createDocumentApprovedNotification,
+  createDocumentRevisionNotification,
+} from '@/lib/subscriber-notifications';
 
 export async function notifyDocumentRevisionRequested(
   doc: SiteDocumentRecord,
@@ -40,8 +14,11 @@ export async function notifyDocumentRevisionRequested(
   const email = String(doc.email || '').trim();
   if (!email) return;
 
+  await createDocumentRevisionNotification(doc, comment);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
   const dashboardUrl = `${siteUrl}/dashboard/meus-documentos`;
+  const notificationsUrl = `${siteUrl}/dashboard/notificacoes`;
   const editUrl = `${siteUrl}/dashboard/meus-documentos/editar/${doc.id}`;
   const title = doc.title_pt || 'Documento';
 
@@ -54,7 +31,7 @@ export async function notifyDocumentRevisionRequested(
     comment,
     '',
     `Editar documento: ${editUrl}`,
-    `Ver todos os documentos: ${dashboardUrl}`,
+    `Ver notificações: ${notificationsUrl}`,
     '',
     'Com os melhores cumprimentos,',
     'AAMIHE',
@@ -70,19 +47,29 @@ export async function notifyDocumentRevisionRequested(
       '<p><strong>Comentário da comissão:</strong></p>',
       `<blockquote style="border-left:3px solid #561713;padding-left:12px;color:#50575e">${comment.replace(/\n/g, '<br />')}</blockquote>`,
       `<p><a href="${editUrl}">Editar documento</a></p>`,
+      `<p><a href="${notificationsUrl}">Ver notificações</a></p>`,
       `<p><a href="${dashboardUrl}">Ver todos os documentos</a></p>`,
       '<p>Com os melhores cumprimentos,<br />AAMIHE</p>',
     ].join('\n'),
   });
 }
 
-export async function notifyDocumentApproved(doc: SiteDocumentRecord): Promise<void> {
+export async function notifyDocumentApproved(
+  doc: SiteDocumentRecord,
+  adminMessage?: string,
+): Promise<void> {
   const email = String(doc.email || '').trim();
   if (!email) return;
 
+  await createDocumentApprovedNotification(doc, adminMessage);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
   const dashboardUrl = `${siteUrl}/dashboard/meus-documentos`;
+  const notificationsUrl = `${siteUrl}/dashboard/notificacoes`;
   const title = doc.title_pt || 'Documento';
+  const bodyMessage =
+    adminMessage?.trim() ||
+    `O seu documento «${title}» foi aprovado pela comissão científica.`;
 
   await notifySiteEmail({
     to: email,
@@ -90,16 +77,18 @@ export async function notifyDocumentApproved(doc: SiteDocumentRecord): Promise<v
     text: [
       'Olá,',
       '',
-      `O seu documento «${title}» foi aprovado pela comissão científica.`,
+      bodyMessage,
       '',
-      `Consultar: ${dashboardUrl}`,
+      `Ver notificações: ${notificationsUrl}`,
+      `Consultar documentos: ${dashboardUrl}`,
       '',
       'Com os melhores cumprimentos,',
       'AAMIHE',
     ].join('\n'),
     html: [
       '<p>Olá,</p>',
-      `<p>O seu documento <strong>«${title}»</strong> foi aprovado pela comissão científica.</p>`,
+      `<p>${bodyMessage.replace(/\n/g, '<br />')}</p>`,
+      `<p><a href="${notificationsUrl}">Ver notificações</a></p>`,
       `<p><a href="${dashboardUrl}">Ver no seu painel</a></p>`,
       '<p>Com os melhores cumprimentos,<br />AAMIHE</p>',
     ].join('\n'),

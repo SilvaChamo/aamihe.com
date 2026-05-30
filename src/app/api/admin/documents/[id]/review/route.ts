@@ -19,6 +19,8 @@ export async function POST(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
     const action = String(body.action || '');
+    const approvalMessage = String(body.message || '').trim();
+    const revisionComment = String(body.comment || '').trim();
 
     if (action !== 'approve' && action !== 'request_revision') {
       return NextResponse.json({ success: false, error: 'Acção inválida.' }, { status: 400 });
@@ -35,22 +37,23 @@ export async function POST(request: Request, context: RouteContext) {
     const now = new Date().toISOString();
 
     if (action === 'approve') {
+      const message = approvalMessage;
       current.review_status = 'approved';
       current.published = true;
       current.reviewed_at = now;
-      current.review_comment = undefined;
-      current.review_comment_at = undefined;
+      current.review_comment = message || undefined;
+      current.review_comment_at = message ? now : undefined;
       current.updated_at = now;
 
       db.documents[index] = current;
       await saveDashboardDb(db);
       await syncDocumentsToSupabase();
-      await notifyDocumentApproved(current);
+      await notifyDocumentApproved(current, message);
 
       return NextResponse.json({ success: true, document: current });
     }
 
-    const comment = String(body.comment || '').trim();
+    const comment = revisionComment;
     if (!comment) {
       return NextResponse.json(
         { success: false, error: 'Escreva o comentário para o subscritor.' },

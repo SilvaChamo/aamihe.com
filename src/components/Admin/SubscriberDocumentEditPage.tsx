@@ -11,7 +11,7 @@ import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
   getSubscriberStatusLabel,
-} from '@/lib/document-review';
+} from '@/lib/document-review-status';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 

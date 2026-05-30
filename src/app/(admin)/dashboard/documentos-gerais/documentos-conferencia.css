@@ -28,18 +28,25 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 36px;
+  padding: 8px 16px;
   background: #00a651;
   color: white;
-  padding: 10px 16px;
+  border: 1px solid #00a651;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
 
 .docs-admin-add:hover {
-  background: #008f45;
+  background: var(--primary, #561713);
+  border-color: var(--primary, #561713);
+  color: #fff;
 }
 
 .docs-admin-header-btn {
@@ -185,14 +192,22 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
+  min-height: 32px;
+  padding: 6px 12px;
   border: 1px solid #ccd0d4;
-  border-radius: 4px;
+  border-radius: 6px;
   background: white;
   font-size: 12px;
   color: #1d2327;
   cursor: pointer;
   text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.docs-admin-action:hover {
+  background: var(--primary, #561713);
+  border-color: var(--primary, #561713);
+  color: #fff;
 }
 
 .docs-admin-action.danger {
@@ -205,7 +220,7 @@
   font-size: 11px;
   font-weight: 700;
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 
 .docs-admin-badge.pending {
@@ -229,13 +244,15 @@
 }
 
 .docs-admin-action--primary {
-  background: #561713;
+  background: #00a651;
   color: #fff;
-  border-color: #561713;
+  border-color: #00a651;
 }
 
 .docs-admin-action--primary:hover {
-  background: #3d100d;
+  background: var(--primary, #561713);
+  border-color: var(--primary, #561713);
+  color: #fff;
 }
 
 /* Subscritor — cartões compactos */
@@ -519,30 +536,13 @@
 }
 
 .docs-review-approve {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  background: #00a651;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
   margin-bottom: 16px;
 }
 
-.docs-review-approve:hover {
-  background: #008f45;
-}
-
-.docs-review-approve:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.docs-review-return {
+  width: 100%;
+  margin-top: 10px;
 }
 
 .docs-review-revision label {
@@ -562,33 +562,7 @@
   resize: vertical;
   min-height: 100px;
   box-sizing: border-box;
-}
-
-.docs-review-return {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border: 1px solid #ccd0d4;
-  border-radius: 6px;
-  background: #fff;
-  color: #561713;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.docs-review-return:hover {
-  background: #f6f7f7;
-}
-
-.docs-review-return:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  margin-bottom: 8px;
 }
 
 .docs-review-error {
@@ -695,6 +669,93 @@
 .docs-admin-empty-state p {
   margin: 0;
   max-width: 420px;
+}
+
+.subscriber-notifications-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subscriber-notification {
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: #fafafa;
+}
+
+.subscriber-notification.unread {
+  border-left: 4px solid #00a651;
+  background: #fff;
+}
+
+.subscriber-notification.document_revision.unread {
+  border-left-color: #996800;
+}
+
+.subscriber-notifications-header {
+  align-items: flex-start;
+}
+
+.subscriber-notification-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.subscriber-notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.subscriber-notification-title-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 4px;
+}
+
+.subscriber-notification-title-line strong {
+  font-size: 14px;
+  color: #1d2327;
+}
+
+.subscriber-notification-title-line time {
+  font-size: 11px;
+  color: #646970;
+  white-space: nowrap;
+}
+
+.subscriber-notification-message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #50575e;
+  white-space: pre-wrap;
+}
+
+.subscriber-notification-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+@media (max-width: 768px) {
+  .subscriber-notification-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subscriber-notification-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 768px) {

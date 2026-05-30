@@ -1,0 +1,79 @@
+/* Botões unificados — painéis admin/subscritor */
+.aamihe-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  box-sizing: border-box;
+}
+
+.aamihe-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.aamihe-btn--primary {
+  background: #00a651;
+  border-color: #00a651;
+  color: #fff;
+}
+
+.aamihe-btn--primary:hover:not(:disabled) {
+  background: var(--primary, #561713);
+  border-color: var(--primary, #561713);
+  color: #fff;
+}
+
+.aamihe-btn--secondary {
+  background: #fff;
+  border-color: #ccd0d4;
+  color: #1d2327;
+}
+
+.aamihe-btn--secondary:hover:not(:disabled) {
+  background: var(--primary, #561713);
+  border-color: var(--primary, #561713);
+  color: #fff;
+}
+
+.aamihe-btn--ghost {
+  background: transparent;
+  border-color: #ccd0d4;
+  color: #50575e;
+}
+
+.aamihe-btn--ghost:hover:not(:disabled) {
+  background: #f6f7f7;
+  border-color: var(--primary, #561713);
+  color: var(--primary, #561713);
+}
+
+.aamihe-btn--danger {
+  background: #fff;
+  border-color: #f0b7b8;
+  color: #b32d2e;
+}
+
+.aamihe-btn--danger:hover:not(:disabled) {
+  background: #fcf0f1;
+  border-color: #b32d2e;
+}
+
+.aamihe-btn--sm {
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 12px;
+  gap: 4px;
+  border-radius: 4px;
+}

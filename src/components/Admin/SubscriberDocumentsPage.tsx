@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Eye, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
@@ -10,8 +10,12 @@ import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
   getSubscriberStatusLabel,
-} from '@/lib/document-review';
+} from '@/lib/document-review-status';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
+import {
+  PanelDocumentsGridSkeleton,
+  PanelPageHeaderSkeleton,
+} from '@/components/Admin/PanelSkeleton';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
 function formatDate(value: string) {
@@ -26,9 +30,10 @@ export default function SubscriberDocumentsPage() {
   const [documents, setDocuments] = useState<SiteDocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   const loadDocuments = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedOnce.current) setLoading(true);
     try {
       const res = await adminFetch('/api/admin/documents/mine', { cache: 'no-store' });
       const data = await res.json();
@@ -41,6 +46,7 @@ export default function SubscriberDocumentsPage() {
       setDocuments([]);
     } finally {
       setLoading(false);
+      hasLoadedOnce.current = true;
     }
   }, []);
 
@@ -69,22 +75,26 @@ export default function SubscriberDocumentsPage() {
 
   return (
     <div className="docs-admin-page">
-      <div className="docs-admin-header">
-        <div>
-          <h1 className="docs-admin-title">Documentos</h1>
-          <p className="docs-admin-intro">
-            Consulte e gira as submissões que enviou para a conferência.
-          </p>
+      {loading ? (
+        <PanelPageHeaderSkeleton />
+      ) : (
+        <div className="docs-admin-header">
+          <div>
+            <h1 className="docs-admin-title">Documentos</h1>
+            <p className="docs-admin-intro">
+              Consulte e gira as submissões que enviou para a conferência.
+            </p>
+          </div>
+          <Link href="/dashboard/meus-documentos/novo" className="docs-admin-add">
+            <Plus size={16} />
+            Enviar documento
+          </Link>
         </div>
-        <Link href="/dashboard/meus-documentos/novo" className="docs-admin-add">
-          <Plus size={16} />
-          Enviar documento
-        </Link>
-      </div>
+      )}
 
       <div className="docs-admin-container">
         {loading ? (
-          <p className="docs-admin-empty">A carregar...</p>
+          <PanelDocumentsGridSkeleton count={6} />
         ) : documents.length === 0 ? (
           <div className="docs-admin-empty-state">
             <FileText size={40} />

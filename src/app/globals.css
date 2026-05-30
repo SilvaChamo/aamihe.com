@@ -20,7 +20,7 @@
   --site-header-height: 116px;
   --conference-banner-min-height: clamp(420px, 52vh, 560px);
   --conference-banner-min-height-mobile: clamp(380px, 58vh, 480px);
-  --admin-topbar-height: 36px;
+  --admin-topbar-height: 42px;
   --admin-sidebar-width: 224px;
 }
 

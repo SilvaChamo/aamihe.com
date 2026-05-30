@@ -7,7 +7,11 @@ import { adminFetch } from '@/lib/admin-auth';
 import {
   getAdminStatusLabel,
   getStatusBadgeClass,
-} from '@/lib/document-review';
+} from '@/lib/document-review-status';
+import {
+  PanelAdminCardsSkeleton,
+  PanelPageHeaderSkeleton,
+} from '@/components/Admin/PanelSkeleton';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
@@ -51,18 +55,22 @@ export default function ConferenceSubmissionsList({ viewPath }: ConferenceSubmis
 
   return (
     <div className="docs-admin-page">
-      <div className="docs-admin-header">
-        <div>
-          <h1 className="docs-admin-title">Submissões da Conferência</h1>
-          <p className="docs-admin-intro">
-            Documentos recebidos pelo formulário público. Abra cada documento para aprovar ou devolver com comentário.
-          </p>
+      {loading ? (
+        <PanelPageHeaderSkeleton withAction={false} />
+      ) : (
+        <div className="docs-admin-header">
+          <div>
+            <h1 className="docs-admin-title">Submissões da Conferência</h1>
+            <p className="docs-admin-intro">
+              Documentos recebidos pelo formulário público. Abra cada documento para aprovar ou devolver com comentário.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="docs-admin-container">
         {loading ? (
-          <p className="docs-admin-empty">A carregar...</p>
+          <PanelAdminCardsSkeleton count={6} />
         ) : documents.length === 0 ? (
           <div className="docs-admin-empty-state">
             <FileText size={40} />
