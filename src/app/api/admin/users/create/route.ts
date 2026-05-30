@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveSessionUser } from '@/lib/admin-session';
 import { createUser, USER_ROLES, type UserRole } from '@/lib/users';
+import { isSubscriberRole } from '@/lib/user-types';
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await resolveSessionUser(req);
+    if (!session) {
+      return NextResponse.json({ error: 'Acesso não autorizado.' }, { status: 401 });
+    }
+    if (session.type === 'user' && isSubscriberRole(session.user.role)) {
+      return NextResponse.json(
+        { error: 'Subscritores não podem criar contas no sistema.' },
+        { status: 403 },
+      );
+    }
+
     const body = await req.json();
     const {
       username,

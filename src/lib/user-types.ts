@@ -44,3 +44,24 @@ export type UserProfile = {
 export function isSubscriberRole(role: string) {
   return role === 'Subscritor';
 }
+
+export function resolveUserDisplayName(user: {
+  firstName?: string;
+  lastName?: string;
+  alcunha?: string;
+  displayNameType?: string;
+  username: string;
+}): string {
+  if (user.displayNameType === 'alcunha' && user.alcunha) return user.alcunha;
+  if (user.displayNameType === 'first_name' && user.firstName) return user.firstName;
+  if (user.displayNameType === 'last_name' && user.lastName) return user.lastName;
+  const full = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+  return full || user.alcunha || user.username;
+}
+
+export function displayNameTypeLabel(type: string): string {
+  if (type === 'first_name') return 'Nome próprio';
+  if (type === 'last_name') return 'Apelido';
+  if (type === 'alcunha') return 'Alcunha';
+  return 'Nome e apelido';
+}

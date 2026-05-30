@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Mail, Globe, Edit2, Loader2 } from 'lucide-react';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import { displayNameTypeLabel, resolveUserDisplayName } from '@/lib/user-types';
 import { getGravatarUrl } from '@/lib/gravatar';
 import './admin-wp.css';
 
@@ -11,9 +12,9 @@ function displayName(user: {
   lastName?: string;
   username: string;
   alcunha?: string;
+  displayNameType?: string;
 }) {
-  const full = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-  return full || user.alcunha || user.username;
+  return resolveUserDisplayName(user);
 }
 
 export default function SubscriberAccountPage() {
@@ -89,6 +90,10 @@ export default function SubscriberAccountPage() {
             <tr>
               <th>Alcunha</th>
               <td>{user.alcunha || '—'}</td>
+            </tr>
+            <tr>
+              <th>Nome público</th>
+              <td>{displayNameTypeLabel(user.displayNameType)}</td>
             </tr>
             <tr>
               <th>Telefone</th>

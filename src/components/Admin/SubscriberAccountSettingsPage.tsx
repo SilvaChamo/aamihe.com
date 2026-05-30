@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Camera, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import { compressAvatarImage } from '@/lib/compress-image';
@@ -14,6 +15,8 @@ type FormState = {
   username: string;
   firstName: string;
   lastName: string;
+  alcunha: string;
+  displayNameType: string;
   email: string;
   telefone: string;
   profissao: string;
@@ -26,6 +29,8 @@ function profileToForm(user: UserProfile): FormState {
     username: user.username || '',
     firstName: user.firstName || '',
     lastName: user.lastName || '',
+    alcunha: user.alcunha || '',
+    displayNameType: user.displayNameType || 'full_name',
     email: user.email || '',
     telefone: user.telefone || '',
     profissao: user.profissao || '',
@@ -35,6 +40,7 @@ function profileToForm(user: UserProfile): FormState {
 }
 
 export default function SubscriberAccountSettingsPage() {
+  const router = useRouter();
   const { user, loading: sessionLoading } = useSessionUser();
   const [form, setForm] = useState<FormState | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -124,6 +130,8 @@ export default function SubscriberAccountSettingsPage() {
         body: JSON.stringify({
           firstName: form.firstName,
           lastName: form.lastName,
+          alcunha: form.alcunha,
+          displayNameType: form.displayNameType,
           email: form.email,
           telefone: form.telefone,
           profissao: form.profissao,
@@ -139,16 +147,7 @@ export default function SubscriberAccountSettingsPage() {
         setError(data.error || 'Não foi possível guardar as alterações.');
         return;
       }
-      if (data.user) {
-        setForm(profileToForm(data.user));
-        setAvatarPreview(data.user.avatar);
-        setAvatarFile(null);
-        setRemoveAvatar(false);
-      }
-      setSuccess('Alterações guardadas com sucesso.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      router.push('/dashboard/minha-conta');
     } catch {
       setError('Erro de ligação. Tente novamente.');
     } finally {
@@ -257,6 +256,35 @@ export default function SubscriberAccountSettingsPage() {
                   value={form.lastName}
                   onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                 />
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Alcunha</th>
+              <td>
+                <input
+                  type="text"
+                  className="wp-input"
+                  value={form.alcunha}
+                  onChange={(e) => setForm({ ...form, alcunha: e.target.value })}
+                />
+                <p className="description">Opcional. Se preenchida, pode ser usada como nome público.</p>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Exibir o nome publicamente como</th>
+              <td>
+                <select
+                  className="wp-select"
+                  value={form.displayNameType}
+                  onChange={(e) => setForm({ ...form, displayNameType: e.target.value })}
+                >
+                  <option value="first_name">{form.firstName || 'Nome próprio'}</option>
+                  <option value="last_name">{form.lastName || 'Apelido'}</option>
+                  <option value="full_name">
+                    {`${form.firstName} ${form.lastName}`.trim() || 'Nome e apelido'}
+                  </option>
+                  <option value="alcunha">{form.alcunha || 'Alcunha'}</option>
+                </select>
               </td>
             </tr>
             <tr>

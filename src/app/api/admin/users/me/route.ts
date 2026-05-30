@@ -37,6 +37,8 @@ export async function PATCH(req: NextRequest) {
       bio,
       website,
       avatarUrl,
+      alcunha,
+      displayNameType,
       currentPassword,
       newPassword,
     } = body;
@@ -63,6 +65,8 @@ export async function PATCH(req: NextRequest) {
       profissao: profissao !== undefined ? String(profissao) : undefined,
       bio: bio !== undefined ? String(bio) : undefined,
       website: website !== undefined ? String(website) : undefined,
+      alcunha: alcunha !== undefined ? String(alcunha) : undefined,
+      displayNameType: displayNameType !== undefined ? String(displayNameType) : undefined,
       avatarUrl: avatarUrl !== undefined ? String(avatarUrl) : undefined,
       password: newPassword ? String(newPassword) : undefined,
     });
