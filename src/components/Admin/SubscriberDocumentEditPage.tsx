@@ -12,6 +12,8 @@ type OwnDocument = {
   title_pt: string;
   message?: string;
   file_url: string;
+  review_comment?: string;
+  review_status?: string;
 };
 
 export default function SubscriberDocumentEditPage({ id }: { id: string }) {
@@ -110,6 +112,13 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
       </div>
 
       <div className="docs-admin-container">
+        {document.review_comment ? (
+          <div className="docs-subscriber-feedback docs-subscriber-feedback--edit">
+            <strong>Resposta da comissão</strong>
+            <p>{document.review_comment}</p>
+          </div>
+        ) : null}
+
         <div className="docs-admin-card-preview docs-admin-card-preview--edit">
           <iframe src={`${document.file_url}#toolbar=0&navpanes=0`} title={document.title_pt} />
         </div>

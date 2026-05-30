@@ -189,6 +189,375 @@
   color: #2271b1;
 }
 
+.docs-admin-badge.revision {
+  background: #fff8e5;
+  color: #996800;
+}
+
+.docs-admin-action--primary {
+  background: #561713;
+  color: #fff;
+  border-color: #561713;
+}
+
+.docs-admin-action--primary:hover {
+  background: #3d100d;
+}
+
+/* Subscritor — cartões compactos */
+.docs-subscriber-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.docs-subscriber-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docs-subscriber-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dcdcde;
+  background: #ececec;
+  min-height: 108px;
+}
+
+.docs-subscriber-card-base {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 108px;
+}
+
+.docs-subscriber-card-base h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d2327;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.docs-subscriber-card-date {
+  margin: 0;
+  font-size: 11px;
+  color: #646970;
+}
+
+.docs-subscriber-card-base .docs-admin-badge {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.docs-subscriber-card-hover {
+  position: absolute;
+  inset: 0;
+  background: rgba(29, 35, 39, 0.92);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px;
+  pointer-events: none;
+}
+
+.docs-subscriber-card:hover .docs-subscriber-card-hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.docs-subscriber-card-hover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.docs-subscriber-card-hover-info strong {
+  font-size: 13px;
+}
+
+.docs-subscriber-card-hover-info span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+}
+
+.docs-subscriber-card-hover-info p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.docs-subscriber-card-actions-minimal {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.docs-subscriber-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.docs-subscriber-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.docs-subscriber-icon-btn--danger:hover {
+  background: rgba(179, 45, 46, 0.55);
+}
+
+.docs-subscriber-feedback {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff8e5;
+  border: 1px solid #f0d78a;
+  font-size: 12px;
+  color: #50575e;
+}
+
+.docs-subscriber-feedback strong {
+  display: block;
+  color: #996800;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.docs-subscriber-feedback p {
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.docs-subscriber-feedback a {
+  color: #561713;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.docs-subscriber-feedback--edit {
+  margin-bottom: 20px;
+}
+
+/* Admin — leitura e revisão */
+.docs-review-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #561713;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.docs-review-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.docs-review-reader {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 72vh;
+}
+
+.docs-review-reader iframe {
+  width: 100%;
+  height: 72vh;
+  border: 0;
+}
+
+.docs-review-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.docs-review-section {
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.docs-review-section h2 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d2327;
+}
+
+.docs-review-meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.docs-review-meta dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: #646970;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.docs-review-meta dd {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #1d2327;
+  line-height: 1.45;
+}
+
+.docs-review-feedback {
+  background: #fff8e5;
+  border-color: #f0d78a;
+}
+
+.docs-review-feedback time {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #996800;
+}
+
+.docs-review-approve {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: #00a651;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 16px;
+}
+
+.docs-review-approve:hover {
+  background: #008f45;
+}
+
+.docs-review-approve:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.docs-review-revision label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+  margin-bottom: 8px;
+}
+
+.docs-review-revision textarea {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 100px;
+  box-sizing: border-box;
+}
+
+.docs-review-return {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+  background: #fff;
+  color: #561713;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.docs-review-return:hover {
+  background: #f6f7f7;
+}
+
+.docs-review-return:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.docs-review-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fcf0f1;
+  color: #b32d2e;
+  font-size: 13px;
+}
+
+.docs-review-success {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #edfaef;
+  color: #008a20;
+  font-size: 13px;
+}
+
+.docs-review-approved-note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #008a20;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .docs-review-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .docs-review-reader iframe {
+    height: 55vh;
+  }
+}
+
 .subscriber-doc-edit-form {
   display: flex;
   flex-direction: column;

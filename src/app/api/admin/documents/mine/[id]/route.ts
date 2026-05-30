@@ -93,6 +93,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
+    current.review_status = 'submitted';
+    current.review_comment = undefined;
+    current.review_comment_at = undefined;
+    current.resubmitted_at = new Date().toISOString();
+    current.published = false;
+
     db.documents[index] = current;
     await saveDashboardDb(db);
     await syncDocumentsToSupabase();

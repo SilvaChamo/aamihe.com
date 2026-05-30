@@ -1,5 +1,6 @@
 export type SiteDocumentLanguage = 'pt' | 'en' | 'fr';
 export type SiteDocumentCategory = 'geral' | 'conferencia';
+export type DocumentReviewStatus = 'submitted' | 'approved' | 'revision_requested';
 
 export type SiteDocumentRecord = {
   id: string;
@@ -18,6 +19,11 @@ export type SiteDocumentRecord = {
   message?: string;
   year?: string;
   source?: 'form' | 'manual';
+  review_status?: DocumentReviewStatus;
+  review_comment?: string;
+  review_comment_at?: string;
+  reviewed_at?: string;
+  resubmitted_at?: string;
   created_at: string;
   updated_at: string;
 };

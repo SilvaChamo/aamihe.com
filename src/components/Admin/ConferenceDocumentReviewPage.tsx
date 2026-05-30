@@ -1,0 +1,243 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, CheckCircle2, Loader2, RotateCcw } from 'lucide-react';
+import { adminFetch } from '@/lib/admin-auth';
+import {
+  getAdminStatusLabel,
+  getDocumentReviewStatus,
+  getStatusBadgeClass,
+} from '@/lib/document-review';
+import type { SiteDocumentRecord } from '@/lib/site-documents';
+import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+
+type ConferenceDocumentReviewPageProps = {
+  id: string;
+  listPath: string;
+};
+
+export default function ConferenceDocumentReviewPage({
+  id,
+  listPath,
+}: ConferenceDocumentReviewPageProps) {
+  const router = useRouter();
+  const [document, setDocument] = useState<SiteDocumentRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState<'approve' | 'revision' | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await adminFetch(`/api/admin/documents/${id}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!cancelled) {
+          if (res.ok && data.success) {
+            setDocument(data.document);
+          } else {
+            setDocument(null);
+          }
+        }
+      } catch {
+        if (!cancelled) setDocument(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  async function submitReview(action: 'approve' | 'request_revision') {
+    setError('');
+    setSuccess('');
+
+    if (action === 'request_revision' && !comment.trim()) {
+      setError('Escreva o comentário para o subscritor.');
+      return;
+    }
+
+    if (action === 'approve' && !confirm('Confirmar aprovação deste documento?')) {
+      return;
+    }
+
+    setBusy(action === 'request_revision' ? 'revision' : 'approve');
+    try {
+      const res = await adminFetch(`/api/admin/documents/${id}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, comment: comment.trim() }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Não foi possível concluir a revisão.');
+        return;
+      }
+
+      setDocument(data.document);
+      setComment('');
+      setSuccess(
+        action === 'approve'
+          ? 'Documento aprovado. O subscritor foi notificado por e-mail.'
+          : 'Documento devolvido para edição. O subscritor foi notificado por e-mail.',
+      );
+    } catch {
+      setError('Erro de ligação. Tente novamente.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="docs-admin-page">
+        <div className="docs-admin-empty">
+          <Loader2 className="wp-spin" size={28} aria-hidden />
+          <p>A carregar documento…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!document) {
+    return (
+      <div className="docs-admin-page">
+        <p className="docs-admin-empty">Documento não encontrado.</p>
+        <Link href={listPath} className="docs-admin-add">
+          Voltar à lista
+        </Link>
+      </div>
+    );
+  }
+
+  const status = getDocumentReviewStatus(document);
+  const badgeClass = getStatusBadgeClass(document, 'admin');
+
+  return (
+    <div className="docs-admin-page">
+      <div className="docs-admin-header">
+        <div>
+          <Link href={listPath} className="docs-review-back">
+            <ArrowLeft size={16} />
+            Submissões da Conferência
+          </Link>
+          <h1 className="docs-admin-title">{document.title_pt}</h1>
+          <p className="docs-admin-intro">
+            {[document.author, document.email, document.year].filter(Boolean).join(' · ')}
+          </p>
+        </div>
+        <span className={`docs-admin-badge ${badgeClass}`}>{getAdminStatusLabel(document)}</span>
+      </div>
+
+      <div className="docs-review-layout">
+        <div className="docs-review-reader">
+          <iframe
+            src={`${document.file_url}#toolbar=1&navpanes=0`}
+            title={document.title_pt}
+          />
+        </div>
+
+        <aside className="docs-review-panel">
+          <section className="docs-review-section">
+            <h2>Detalhes</h2>
+            <dl className="docs-review-meta">
+              <div>
+                <dt>Enviado em</dt>
+                <dd>
+                  {new Date(document.created_at).toLocaleDateString('pt-PT', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </dd>
+              </div>
+              {document.message ? (
+                <div>
+                  <dt>Mensagem do subscritor</dt>
+                  <dd>{document.message}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+
+          {document.review_comment ? (
+            <section className="docs-review-section docs-review-feedback">
+              <h2>Comentário enviado</h2>
+              <p>{document.review_comment}</p>
+              {document.review_comment_at ? (
+                <time dateTime={document.review_comment_at}>
+                  {new Date(document.review_comment_at).toLocaleDateString('pt-PT', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </time>
+              ) : null}
+            </section>
+          ) : null}
+
+          {error ? <p className="docs-review-error">{error}</p> : null}
+          {success ? <p className="docs-review-success">{success}</p> : null}
+
+          {status !== 'approved' ? (
+            <section className="docs-review-section">
+              <h2>Decisão</h2>
+
+              <button
+                type="button"
+                className="docs-review-approve"
+                disabled={busy !== null}
+                onClick={() => submitReview('approve')}
+              >
+                <CheckCircle2 size={18} />
+                {busy === 'approve' ? 'A aprovar…' : 'Confirmar aprovação'}
+              </button>
+
+              <div className="docs-review-revision">
+                <label htmlFor="review-comment">Solicitar edição</label>
+                <textarea
+                  id="review-comment"
+                  rows={5}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Descreva o que o subscritor deve corrigir ou melhorar…"
+                />
+                <button
+                  type="button"
+                  className="docs-review-return"
+                  disabled={busy !== null}
+                  onClick={() => submitReview('request_revision')}
+                >
+                  <RotateCcw size={16} />
+                  {busy === 'revision' ? 'A enviar…' : 'Devolver ao subscritor'}
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="docs-review-section">
+              <p className="docs-review-approved-note">Documento aprovado e publicado.</p>
+              <button
+                type="button"
+                className="docs-admin-action"
+                onClick={() => router.push(listPath)}
+              >
+                Voltar à lista
+              </button>
+            </section>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}

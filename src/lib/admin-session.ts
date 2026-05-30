@@ -65,6 +65,20 @@ export async function requireAdminAuth(request: Request) {
   return null;
 }
 
+export async function requireAdminRole(request: Request) {
+  const session = await resolveSessionUser(request);
+  if (!session) {
+    return { error: 'Acesso não autorizado.', status: 401 } as const;
+  }
+  if (session.type === 'admin') {
+    return session;
+  }
+  if (session.type === 'user' && session.user.isAdmin) {
+    return session;
+  }
+  return { error: 'Acesso não autorizado.', status: 403 } as const;
+}
+
 export async function requireSessionUser(request: Request) {
   const session = await resolveSessionUser(request);
   if (!session || session.type !== 'user') {

@@ -4,26 +4,24 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Eye, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
+import {
+  getDocumentReviewStatus,
+  getStatusBadgeClass,
+  getSubscriberStatusLabel,
+} from '@/lib/document-review';
+import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
 
-type OwnDocument = {
-  id: string;
-  title_pt: string;
-  file_url: string;
-  published: boolean;
-  created_at: string;
-  author?: string;
-  email?: string;
-};
-
-function fileTypeLabel(url: string) {
-  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
-  if (ext === 'pdf') return 'PDF';
-  return ext?.toUpperCase() || 'DOC';
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('pt-PT', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function SubscriberDocumentsPage() {
-  const [documents, setDocuments] = useState<OwnDocument[]>([]);
+  const [documents, setDocuments] = useState<SiteDocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -95,56 +93,70 @@ export default function SubscriberDocumentsPage() {
             </p>
           </div>
         ) : (
-          <div className="docs-admin-grid">
-            {documents.map((doc) => (
-              <article key={doc.id} className="docs-admin-card docs-admin-card--with-preview">
-                <div className="docs-admin-card-preview">
-                  <iframe
-                    src={`${doc.file_url}#toolbar=0&navpanes=0&view=FitH`}
-                    title={`Pré-visualização — ${doc.title_pt}`}
-                    loading="lazy"
-                  />
+          <div className="docs-subscriber-grid">
+            {documents.map((doc) => {
+              const status = getDocumentReviewStatus(doc);
+              const badgeClass = getStatusBadgeClass(doc, 'subscriber');
+
+              return (
+                <div key={doc.id} className="docs-subscriber-wrap">
+                  <article className="docs-subscriber-card">
+                    <div className="docs-subscriber-card-base">
+                      <h3>{doc.title_pt}</h3>
+                      <p className="docs-subscriber-card-date">{formatDate(doc.created_at)}</p>
+                      <span className={`docs-admin-badge ${badgeClass}`}>
+                        {getSubscriberStatusLabel(doc)}
+                      </span>
+                    </div>
+
+                    <div className="docs-subscriber-card-hover">
+                      <div className="docs-subscriber-card-hover-info">
+                        <strong>{doc.title_pt}</strong>
+                        <span>{formatDate(doc.created_at)}</span>
+                        {doc.message ? <p>{doc.message}</p> : null}
+                      </div>
+                      <div className="docs-subscriber-card-actions-minimal">
+                        <a
+                          href={doc.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="docs-subscriber-icon-btn"
+                          title="Ver PDF"
+                        >
+                          <Eye size={14} />
+                        </a>
+                        <Link
+                          href={`/dashboard/meus-documentos/editar/${doc.id}`}
+                          className="docs-subscriber-icon-btn"
+                          title="Editar"
+                        >
+                          <Pencil size={14} />
+                        </Link>
+                        <button
+                          type="button"
+                          className="docs-subscriber-icon-btn docs-subscriber-icon-btn--danger"
+                          title="Eliminar"
+                          disabled={deletingId === doc.id}
+                          onClick={() => handleDelete(doc.id, doc.title_pt)}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+
+                  {status === 'revision_requested' && doc.review_comment ? (
+                    <div className="docs-subscriber-feedback">
+                      <strong>Resposta da comissão</strong>
+                      <p>{doc.review_comment}</p>
+                      <Link href={`/dashboard/meus-documentos/editar/${doc.id}`}>
+                        Editar e reenviar
+                      </Link>
+                    </div>
+                  ) : null}
                 </div>
-                <h3>{doc.title_pt}</h3>
-                <p className="docs-admin-card-meta">
-                  {new Date(doc.created_at).toLocaleDateString('pt-PT', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </p>
-                <span className={`docs-admin-badge ${doc.published ? 'published' : 'sent'}`}>
-                  {doc.published ? 'Publicado' : 'Enviado'}
-                </span>
-                <div className="docs-admin-card-actions">
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="docs-admin-action"
-                  >
-                    <Eye size={14} />
-                    Ver ({fileTypeLabel(doc.file_url)})
-                  </a>
-                  <Link
-                    href={`/dashboard/meus-documentos/editar/${doc.id}`}
-                    className="docs-admin-action"
-                  >
-                    <Pencil size={14} />
-                    Editar
-                  </Link>
-                  <button
-                    type="button"
-                    className="docs-admin-action danger"
-                    disabled={deletingId === doc.id}
-                    onClick={() => handleDelete(doc.id, doc.title_pt)}
-                  >
-                    <Trash2 size={14} />
-                    {deletingId === doc.id ? 'A eliminar…' : 'Eliminar'}
-                  </button>
-                </div>
-              </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

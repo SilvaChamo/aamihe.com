@@ -91,6 +91,7 @@ export async function POST(request: Request) {
       email,
       user_id: sessionUser?.id,
       message: message || undefined,
+      review_status: 'submitted' as const,
       year: String(new Date().getFullYear()),
       source: 'form' as const,
       created_at: now,
