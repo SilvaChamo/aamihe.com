@@ -176,10 +176,10 @@
 .newsletter-submit-btn {
   width: 100%;
   padding: 10px 20px;
-  background-color: #cca876;
+  background-color: var(--site-action);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--site-btn-radius);
   cursor: pointer;
   font-weight: 700;
   text-transform: uppercase;
@@ -188,7 +188,7 @@
 }
 
 .newsletter-submit-btn:hover {
-  background-color: #92754c;
+  background-color: var(--site-action-hover);
 }
 
 .gdpr-wrap {
@@ -260,6 +260,25 @@
   height: 16px;
 }
 
+.footer-support {
+  padding: 16px 0 0;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.footer-support a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer-support a:hover {
+  text-decoration: underline;
+}
+
 .footer-bottom {
   background-color: #2b3035;
   padding: 10px 0; /* Reduced from 20px */
@@ -268,6 +287,10 @@
   color: rgba(255, 255, 255, 0.5);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   margin-top: 20px;
+}
+
+.footer-support + .footer-bottom {
+  margin-top: 14px;
 }
 
 @media (max-width: 768px) {

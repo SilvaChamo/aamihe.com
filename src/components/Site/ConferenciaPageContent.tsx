@@ -6,10 +6,10 @@ import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   CONFERENCIA_COPY,
-  CONFERENCIA_PARTNERS,
+  CONFERENCIA_PARTNER_LOGOS,
+  CONFERENCIA_PARTNER_TITLES,
 } from '@/data/conferencia-content';
-import ConferenceSubmissionForm from '@/components/Site/ConferenceSubmissionForm';
-import SiteDocumentsList from '@/components/Site/SiteDocumentsList';
+import ConferenceParticipantRegisterForm from '@/components/Site/ConferenceParticipantRegisterForm';
 import styles from './ConferenciaPageContent.module.css';
 
 const SUBTHEMES_PREVIEW_COUNT = 3;
@@ -17,7 +17,6 @@ const SUBTHEMES_PREVIEW_COUNT = 3;
 export default function ConferenciaPageContent() {
   const { locale } = useLanguage();
   const t = CONFERENCIA_COPY[locale];
-  const [refreshKey, setRefreshKey] = useState(0);
   const [subthemesModalOpen, setSubthemesModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -47,10 +46,6 @@ export default function ConferenciaPageContent() {
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [subthemesModalOpen]);
-
-  const handleSubmitted = useCallback(() => {
-    setRefreshKey((k) => k + 1);
-  }, []);
 
   const closeSubthemesModal = useCallback(() => {
     setSubthemesModalOpen(false);
@@ -195,54 +190,64 @@ export default function ConferenciaPageContent() {
         </div>
       </section>
 
-      <section className={styles.partnersSection}>
+      <section className={styles.partnersSection} aria-label={t.partners.organization}>
         <div className="container">
-          <div className={styles.partnersGrid}>
-            {CONFERENCIA_PARTNERS.map((partner) => (
-              <article key={partner.key} className={styles.partnerCard}>
-                <h3>{t.partners[partner.key]}</h3>
-                <div className={styles.partnerLogoWrap}>
+          <div className={styles.partnersLayout}>
+            <div className={styles.partnersTitlesRow}>
+              {CONFERENCIA_PARTNER_TITLES.map((title) => (
+                <p
+                  key={title.key}
+                  className={`site-eyebrow ${styles.partnerLabel} ${
+                    title.span === 2 ? styles.partnerTitleSpan2 : ''
+                  }`}
+                >
+                  <span className="site-eyebrow-dash" aria-hidden="true" />
+                  {t.partners[title.key]}
+                  <span className="site-eyebrow-dash" aria-hidden="true" />
+                </p>
+              ))}
+            </div>
+            <div className={styles.partnersLogosRow}>
+              {CONFERENCIA_PARTNER_LOGOS.map((logo) => (
+                <div key={logo.alt} className={styles.partnerLogoWrap}>
                   <Image
-                    src={partner.image}
-                    alt={t.partners[partner.key]}
-                    width={partner.width}
-                    height={partner.height}
+                    src={logo.image}
+                    alt={logo.alt}
+                    width={logo.width}
+                    height={logo.height}
                     className={styles.partnerLogo}
                   />
                 </div>
-              </article>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className={styles.submissionSection} id="submissao">
         <div className="container">
-          <div className={styles.sectionDivider}>
-            <span>{t.submissionTitle}</span>
-          </div>
-          <p className={styles.submissionIntro}>{t.submissionIntro}</p>
-          <p className={styles.submissionNote}>{t.submissionNote}</p>
+          <div className={styles.submissionLayout}>
+            <div className={styles.submissionHeroCol}>
+              <span className={styles.submissionHeroAccent} aria-hidden="true" />
+              <h2 className={styles.submissionHeroTitle}>
+                {t.submissionHeroTitleLine1}
+                <br />
+                {t.submissionHeroTitleLine2}
+              </h2>
+              <p className={styles.submissionHeroIntro}>{t.submissionHeroIntro}</p>
+              <a href="#registo-conferencia" className={styles.submissionCtaBtn}>
+                {t.submissionCtaBtn}
+                <span className={styles.submissionCtaIcon} aria-hidden="true">
+                  ›
+                </span>
+              </a>
+            </div>
 
-          <div className={styles.formPanel}>
-            <ConferenceSubmissionForm labels={t.form} onSubmitted={handleSubmitted} />
-          </div>
-
-          <h3 className={styles.publishedTitle}>{t.publishedTitle}</h3>
-          <SiteDocumentsList key={refreshKey} category="conferencia" />
-        </div>
-      </section>
-
-      <section className={styles.contactSection}>
-        <div className="container">
-          <div className={styles.contactCard}>
-            <span className={styles.contactName}>{t.contactName}</span>
-            <a href={`mailto:${t.contactEmail}`} className={styles.contactEmail}>
-              {t.contactEmail}
-            </a>
-            <a href="mailto:geral@aamihe.com" className={styles.contactGeneral}>
-              geral@aamihe.com
-            </a>
+            <div id="registo-conferencia" className={styles.submissionFormCol}>
+              <div className={styles.formPanel}>
+                <ConferenceParticipantRegisterForm labels={t.registerForm} />
+              </div>
+            </div>
           </div>
         </div>
       </section>

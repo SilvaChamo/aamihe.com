@@ -1,0 +1,28 @@
+---
+description: SSH ao servidor de produção (porta 2234, não 22)
+alwaysApply: true
+---
+
+# Servidor — SSH
+
+- **IP:** `37.27.17.25`
+- **Porta SSH:** `2234` (nunca usar a porta 22 por defeito)
+- **Utilizador:** `root`
+
+Comando:
+
+```bash
+ssh root@37.27.17.25 -p 2234
+```
+
+Scripts do projeto (usar sempre estes, nunca porta 22):
+
+```bash
+cd scripts/server
+./remote.sh              # sessão SSH
+./push-to-server.sh        # enviar scripts para o servidor
+```
+
+Se `Operation timed out` na porta 22, repetir com `-p 2234` ou `./remote.sh`.
+
+DirectAdmin (painel): `https://host.visualdesignmoz.com:2026` (Evolution).

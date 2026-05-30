@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createUser } from '@/lib/users';
+import { validateSpamFields } from '@/lib/form-spam-guard';
 import { verifyTurnstile } from '@/lib/turnstile';
 
 export async function POST(request: Request) {
@@ -12,8 +13,27 @@ export async function POST(request: Request) {
     const turnstileToken = String(body.turnstileToken || '');
     const honeypot = String(body.honeypot || '').trim();
 
-    if (honeypot) {
-      return NextResponse.json({ success: false, error: 'Verificação anti-robô falhou.' }, { status: 400 });
+    const spam = validateSpamFields({
+      honeypot,
+      formLoadedAt: Number(body.formLoadedAt || 0),
+      mathA: Number(body.mathA),
+      mathB: Number(body.mathB),
+      mathAnswer: Number(body.mathAnswer),
+      turnstileToken,
+    });
+
+    if (!spam.ok) {
+      return NextResponse.json({ success: false, error: spam.error }, { status: 400 });
+    }
+
+    if (process.env.TURNSTILE_SECRET_KEY && turnstileToken) {
+      const turnstileOk = await verifyTurnstile(turnstileToken);
+      if (!turnstileOk) {
+        return NextResponse.json(
+          { success: false, error: 'Verificação de segurança falhou. Tente novamente.' },
+          { status: 400 },
+        );
+      }
     }
 
     if (!username || !email || !password) {
@@ -33,14 +53,6 @@ export async function POST(request: Request) {
     if (password.length < 6) {
       return NextResponse.json(
         { success: false, error: 'A senha deve ter pelo menos 6 caracteres.' },
-        { status: 400 },
-      );
-    }
-
-    const turnstileOk = await verifyTurnstile(turnstileToken);
-    if (!turnstileOk) {
-      return NextResponse.json(
-        { success: false, error: 'Confirme que é humano antes de continuar.' },
         { status: 400 },
       );
     }

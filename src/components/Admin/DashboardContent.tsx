@@ -11,6 +11,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
+import { adminFetch } from '@/lib/admin-auth';
 import { useLanguage } from '@/context/LanguageContext';
 import './DashboardContent.css';
 
@@ -63,6 +64,7 @@ export default function DashboardContent() {
       gallery: 'Galeria',
       submissions: 'Submissões',
       form: 'Formulário',
+      submitAbstract: 'Submeter resumo',
     },
     fr: {
       welcomeTitle: "Bienvenue dans le panneau d'administration",
@@ -86,6 +88,7 @@ export default function DashboardContent() {
       gallery: 'Galerie',
       submissions: 'Soumissions',
       form: 'Formulaire',
+      submitAbstract: 'Soumettre un résumé',
     },
     en: {
       welcomeTitle: 'Welcome to the admin dashboard',
@@ -109,6 +112,7 @@ export default function DashboardContent() {
       gallery: 'Gallery',
       submissions: 'Submissions',
       form: 'Form',
+      submitAbstract: 'Submit abstract',
     },
   } as const;
   const t = copy[locale];
@@ -117,14 +121,11 @@ export default function DashboardContent() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/admin/users/me', { cache: 'no-store' });
+        const res = await adminFetch('/api/admin/users/me', { cache: 'no-store' });
         const data = await res.json();
         if (!res.ok || cancelled) return;
-        const role = String(data?.user?.role || '').toLowerCase();
-        const isSuper =
-          role.includes('super') ||
-          role.includes('superadmin') ||
-          role.includes('super admin');
+        const role = String(data?.user?.role || '');
+        const isSuper = role === 'Administrador' || Boolean(data?.isAdminSecret);
         if (!cancelled) setIsSuperAdmin(isSuper);
       } catch {
         if (!cancelled) setIsSuperAdmin(false);
@@ -199,10 +200,10 @@ export default function DashboardContent() {
                 {t.introTitle}
               </h3>
               <Link 
-                href={isSuperAdmin ? `${base}/noticias/nova` : `${base}/documentos-gerais`}
+                href={isSuperAdmin ? `${base}/noticias/nova` : `${base}/submissao-resumo`}
                 className="dashboard-button"
               >
-                {isSuperAdmin ? t.addNews : t.manageDocs}
+                {isSuperAdmin ? t.addNews : t.submitAbstract}
               </Link>
             </div>
             
@@ -246,6 +247,11 @@ export default function DashboardContent() {
                 <li>
                   <Link href={`${base}/utilizadores/subscritores`} className="dashboard-list-item">
                     <Activity /> {t.subscribers}
+                  </Link>
+                </li>
+                <li>
+                  <Link href={`${base}/submissao-resumo`} className="dashboard-list-item">
+                    <FileUp /> {t.submitAbstract}
                   </Link>
                 </li>
                 <li>

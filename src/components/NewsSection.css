@@ -160,9 +160,9 @@
 .btn-view-all {
   display: inline-block;
   padding: 0.9rem 2.5rem;
-  background-color: #561713; /* Bordô institucional */
+  background-color: var(--site-action);
   color: #ffffff;
-  border-radius: 4px; /* Removido arredondamento exagerado */
+  border-radius: var(--site-btn-radius);
   font-weight: 700;
   transition: all 0.3s ease;
   border: none;
@@ -170,8 +170,8 @@
 }
 
 .btn-view-all:hover {
-  background-color: #cca876; /* Ouro institucional no hover */
-  color: #561713;
+  background-color: var(--site-action-hover);
+  color: #ffffff;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 

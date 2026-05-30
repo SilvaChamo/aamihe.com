@@ -17,9 +17,11 @@ import {
   LogOut,
   Users,
   ChartColumnIncreasing,
+  UserCircle,
 } from 'lucide-react';
 import { clearAdminSecret } from '@/lib/admin-auth';
 import { useAdminBase } from '@/lib/admin-base';
+import { useSessionUser } from '@/hooks/useSessionUser';
 import './AdminShell.css';
 
 interface SubmenuEntry {
@@ -125,8 +127,29 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const base = useAdminBase();
+  const { isSubscriber, loading: sessionLoading } = useSessionUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
+  const subscriberPaths = [
+    '/dashboard',
+    '/dashboard/minha-conta',
+    '/dashboard/meus-documentos',
+    '/dashboard/definicoes-conta',
+    '/dashboard/submissao-resumo',
+  ];
+
+  const showSubscriberNav = base === '/dashboard' && isSubscriber;
+
+  React.useEffect(() => {
+    if (sessionLoading || !showSubscriberNav) return;
+    const allowed = subscriberPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+    if (!allowed) {
+      router.replace('/dashboard');
+    }
+  }, [pathname, router, sessionLoading, showSubscriberNav]);
 
   const handleToggleSubmenu = (label: string) => {
     setOpenSubmenu((prev) => (prev === label ? null : label));
@@ -147,12 +170,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     }
   }, [pathname, openSubmenu, base]);
 
-  const menuItems = [
-    {
-      href: base === '/dashboard' ? '/dashboard' : '/admin/dashboard',
-      icon: LayoutDashboard,
-      label: 'Dashboard',
-    },
+  const menuItems = showSubscriberNav
+    ? [
+        { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
+        { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Documentos' },
+        { href: '/dashboard/definicoes-conta', icon: Settings, label: 'Definições' },
+      ]
+    : [
+        {
+          href: base === '/dashboard' ? '/dashboard' : '/admin/dashboard',
+          icon: LayoutDashboard,
+          label: 'Dashboard',
+        },
     {
       href: `${base}/noticias`,
       icon: Newspaper,
@@ -179,11 +209,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { label: 'Vídeos', href: `${base}/media/videos` },
       ],
     },
-    {
-      href: `${base}/documentos-gerais`,
-      icon: FileUp,
-      label: 'Documentos',
-    },
+    ...(base === '/dashboard'
+      ? [
+          {
+            href: `${base}/submissao-resumo`,
+            icon: FileUp,
+            label: 'Submissão de resumo',
+          },
+        ]
+      : [
+          {
+            href: `${base}/documentos-gerais`,
+            icon: FileUp,
+            label: 'Documentos',
+          },
+        ]),
     {
       href: `${base}/utilizadores`,
       icon: Users,

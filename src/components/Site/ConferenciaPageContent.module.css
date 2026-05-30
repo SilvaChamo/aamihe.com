@@ -80,9 +80,9 @@
   align-items: center;
   justify-content: center;
   padding: 12px 28px;
-  border: 1px solid #2d8a45;
-  border-radius: 8px;
-  background: #2d8a45;
+  border: 1px solid var(--site-action);
+  border-radius: var(--site-btn-radius);
+  background: var(--site-action);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -93,8 +93,8 @@
 }
 
 .subthemesShowAllBtn:hover {
-  background: #246b37;
-  border-color: #246b37;
+  background: var(--site-action-hover);
+  border-color: var(--site-action-hover);
   color: #fff;
   transform: translateY(-2px);
 }
@@ -448,8 +448,8 @@
   align-items: center;
   justify-content: center;
   padding: 12px 28px;
-  border-radius: 4px;
-  background: #cca876;
+  border-radius: var(--site-btn-radius);
+  background: var(--site-action);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -459,131 +459,173 @@
 }
 
 .registerBtn:hover {
-  background: #fff;
-  color: var(--primary, #561713);
+  background: var(--site-action-hover);
+  color: #fff;
   transform: translateY(-2px);
 }
 
 .partnersSection {
-  padding: 48px 0;
-  background: #fff;
+  position: relative;
+  padding: 40px 0 44px;
+  background: #4a4d52;
 }
 
-.partnersGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+.partnersSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(204, 168, 118, 0.82);
+  pointer-events: none;
 }
 
-.partnerCard {
+.partnersLayout {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  min-height: 100%;
-  padding: 20px 16px;
-  border-radius: 10px;
-  background: #faf8f6;
-  border: 1px solid rgba(204, 168, 118, 0.18);
-  text-align: center;
+  gap: 14px;
 }
 
-.partnerCard h3 {
+.partnersTitlesRow,
+.partnersLogosRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(8px, 1.2vw, 14px);
+  align-items: center;
+}
+
+.partnersTitlesRow {
+  margin-bottom: 2px;
+}
+
+.partnerLabel {
   margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--primary, #561713);
+  padding: 7px 0;
+  color: #fff;
+  justify-self: center;
+}
+
+.partnerTitleSpan2 {
+  grid-column: span 2;
 }
 
 .partnerLogoWrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
+  width: 100%;
+  height: 88px;
+  padding: 20px;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
 }
 
 .partnerLogo {
-  width: auto;
-  height: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
-  max-height: 72px;
+  max-height: 100%;
   object-fit: contain;
 }
 
 .submissionSection {
-  padding: 48px 0;
+  padding: 48px 0 0;
   background: #f4f4f4;
 }
 
-.submissionIntro,
-.submissionNote {
-  max-width: 760px;
-  margin: 0 auto 12px;
-  text-align: center;
-  font-size: 15px;
+.submissionLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(24px, 3.5vw, 48px);
+  align-items: start;
+  margin-bottom: 40px;
+}
+
+.submissionHeroCol {
+  min-width: 0;
+}
+
+.submissionFormCol {
+  min-width: 0;
+}
+
+.submissionHeroAccent {
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin-bottom: 22px;
+  border-radius: 2px;
+  background: #e85d1e;
+}
+
+.submissionHeroTitle {
+  margin: 0 0 18px;
+  font-size: clamp(1.85rem, 3.6vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--primary, #561713);
+}
+
+.submissionHeroIntro {
+  margin: 0 0 16px;
+  max-width: 42em;
+  font-size: clamp(0.95rem, 1.6vw, 1.08rem);
   line-height: 1.65;
   color: var(--text, #2d2d2d);
 }
 
-.formPanel {
-  max-width: 760px;
-  margin: 28px auto 0;
-  padding: 28px 24px;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.publishedTitle {
-  margin: 36px 0 16px;
-  text-align: center;
-  font-size: 1.2rem;
-  color: var(--primary, #561713);
-}
-
-.contactSection {
-  padding: 0 0 48px;
-  background: #f4f4f4;
-}
-
-.contactCard {
-  display: flex;
-  flex-direction: column;
+.submissionCtaBtn {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 28px 20px;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 14px 26px;
+  border-radius: var(--site-btn-radius);
+  background: var(--site-action);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.submissionCtaBtn:hover {
+  background: var(--site-action-hover);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.submissionCtaIcon {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.submissionNote {
+  max-width: 42em;
+  margin: 0 0 20px;
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #646970;
+}
+
+.formPanel {
+  margin: 0;
+  padding: 40px;
   border-radius: 10px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  text-align: center;
-}
-
-.contactName {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--primary, #561713);
-}
-
-.contactEmail,
-.contactGeneral {
-  font-size: 15px;
-  color: #646970;
-  text-decoration: none;
-}
-
-.contactEmail:hover,
-.contactGeneral:hover {
-  color: var(--primary, #561713);
 }
 
 @media (max-width: 1024px) {
   .timelineGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .partnersGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -620,7 +662,25 @@
     grid-template-columns: 1fr;
   }
 
-  .partnersGrid {
+  .partnersTitlesRow,
+  .partnersLogosRow {
+    gap: 6px;
+  }
+
+  .partnerLogoWrap {
+    height: 72px;
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .submissionLayout {
     grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .submissionCtaBtn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 }

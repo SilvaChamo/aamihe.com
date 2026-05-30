@@ -81,19 +81,20 @@
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  background: #561713; /* Cor do banner */
+  background: var(--site-action);
   color: #fff;
-  padding: 0.5rem 2rem; /* Reduzido o padding vertical de 0.85rem para 0.5rem */
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 0.5rem 2rem;
+  border-radius: var(--site-btn-radius);
+  font-weight: 700;
   text-decoration: none;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .about-btn-readmore:hover {
-  background: #cca876; /* Muda para dourado no hover */
+  background: var(--site-action-hover);
   color: #fff;
+  transform: translateY(-2px);
 }
 
 .about-btn-readmore svg {

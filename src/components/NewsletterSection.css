@@ -109,10 +109,10 @@
 .newsletter-section .newsletter-submit {
   flex: 0 0 auto;
   padding: 0.9rem 2rem;
-  background-color: #561713;
+  background-color: var(--site-action);
   color: #ffffff;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--site-btn-radius);
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
@@ -122,8 +122,8 @@
 }
 
 .newsletter-section .newsletter-submit:hover {
-  background-color: #cca876;
-  color: #561713;
+  background-color: var(--site-action-hover);
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {

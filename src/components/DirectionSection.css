@@ -206,11 +206,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: #561713;
+  background-color: var(--site-action);
   color: #ffffff;
   padding: 0.8rem 2.5rem;
-  border-radius: 4px;
-  /* Igual ao Sobre Nós */
+  border-radius: var(--site-btn-radius);
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
@@ -221,7 +220,7 @@
 }
 
 .btn-direction-readmore:hover {
-  background-color: #cca876;
+  background-color: var(--site-action-hover);
   /* Igual ao hover do Sobre Nós */
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);

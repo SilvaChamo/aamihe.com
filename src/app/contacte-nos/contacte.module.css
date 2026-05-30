@@ -253,10 +253,10 @@
   display: inline-block;
   width: auto;
   align-self: flex-start;
-  padding: 14px 20px;
-  border: 1px solid #fff;
-  border-radius: 5px;
-  background: #cca876;
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--site-btn-radius);
+  background: var(--site-action);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
@@ -264,11 +264,11 @@
   text-transform: uppercase;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 :global(.contact-submit:hover:not(:disabled)) {
-  background: #92754c;
+  background: var(--site-action-hover);
 }
 
 :global(.contact-submit:disabled) {

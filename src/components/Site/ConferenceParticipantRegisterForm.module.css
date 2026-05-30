@@ -1,0 +1,121 @@
+.wrap {
+  width: 100%;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #2d2d2d);
+}
+
+.passwordRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form input {
+  width: 100%;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  background: #f8f5f1;
+  box-sizing: border-box;
+}
+
+.passwordField {
+  position: relative;
+  display: block;
+}
+
+.passwordField input {
+  padding-right: 40px;
+}
+
+.togglePassword {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #646970;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+}
+
+.submit {
+  justify-self: start;
+  margin-top: 4px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--site-btn-radius);
+  background: var(--site-action);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--site-action-hover);
+  transform: translateY(-1px);
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: #b32d2e;
+}
+
+.mathCaptcha {
+  margin-top: 2px;
+}
+
+.loginHint {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: #646970;
+}
+
+.loginLink {
+  color: var(--primary, #561713);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .passwordRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -173,7 +173,7 @@ export function buildSiteSearchIndex(locale: Locale, news: NewsItem[]): SiteSear
     'conf-submission',
     '/conferencia#submissao',
     conf.submissionTitle,
-    [conf.submissionIntro, conf.submissionNote, collectStrings(conf.form).join(' ')],
+    [conf.submissionHeroIntro, conf.submissionIntro, collectStrings(conf.form).join(' ')],
     { image: sectionImageFor('conf-submission') },
   );
 

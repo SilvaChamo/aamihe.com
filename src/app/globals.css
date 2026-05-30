@@ -4,6 +4,9 @@
   --banner-overlay: rgba(0, 0, 0, 0.65);
   --accent: #cca876;
   --accent-hover: #92754c;
+  --site-action: #e85d1e;
+  --site-action-hover: #cf5018;
+  --site-btn-radius: 9999px;
   --dark: #3f444a;
   --light: #f4f4f4;
   --white: #ffffff;
@@ -76,19 +79,21 @@ ul {
 
 /* Utilities */
 .btn {
-  display: inline-block;
-  background-color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--site-action);
   color: var(--white);
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: var(--site-btn-radius);
+  font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-  background-color: var(--accent-hover);
+  background-color: var(--site-action-hover);
 }
 
 .section {

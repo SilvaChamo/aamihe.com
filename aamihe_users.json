@@ -18,6 +18,25 @@
       "cargo": "",
       "avatar_url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/avatars/1779953748885-ws8o70.png",
       "created_at": "2026-05-27T21:25:09.331Z"
+    },
+    {
+      "id": "user_1780148692328_24684843",
+      "username": "Dulce Matavele",
+      "email": "duduchamatavele@gmail.com",
+      "passwordHash": "7130432aff33e682ac17184897b15cfe0fccdf49addd1ecceebc6c21974945837026f7649b99ef4a7162be7cb490d074b3b73f46096d976189a59e82b742d067",
+      "passwordSalt": "57ddae29805f037e4b0afd69b439f61c",
+      "role": "Subscritor",
+      "firstName": "",
+      "lastName": "",
+      "alcunha": "",
+      "displayNameType": "full_name",
+      "website": "",
+      "bio": "",
+      "telefone": "",
+      "profissao": "",
+      "cargo": "",
+      "avatar_url": "",
+      "created_at": "2026-05-30T13:44:52.383Z"
     }
   ]
 }

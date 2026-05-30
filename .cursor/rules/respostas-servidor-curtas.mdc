@@ -1,0 +1,12 @@
+---
+description: Respostas curtas em tarefas de servidor (SSH, Apache, Redis, MariaDB)
+alwaysApply: true
+---
+
+# Servidor — respostas curtas
+
+- Um passo de cada vez: um comando (ou bloco mínimo), depois esperar o output do utilizador.
+- Sem tabelas longas, notas laterais nem repetir o que já está confirmado.
+- Não usar placeholders (`SEU-DOMINIO`); usar o domínio real do projeto quando for preciso.
+- Só o necessário para o item em curso (Gzip, Redis ou MariaDB).
+- SSH: porta **2234** — `scripts/server/remote.sh` (nunca `ssh` na porta 22).

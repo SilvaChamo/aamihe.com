@@ -1,18 +1,16 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { scryptSync, timingSafeEqual, randomBytes } from 'node:crypto';
+import {
+  USER_ROLES,
+  type UserRole,
+  type UserListItem,
+  type UserProfile,
+} from '@/lib/user-types';
+
+export { USER_ROLES, type UserRole, type UserListItem, type UserProfile, isSubscriberRole } from '@/lib/user-types';
 
 const USERS_PATH = path.join(process.cwd(), 'aamihe_users.json');
-
-export const USER_ROLES = [
-  'Administrador',
-  'Editor',
-  'Actor',
-  'Subscritor',
-  'Contribuidor',
-] as const;
-
-export type UserRole = (typeof USER_ROLES)[number];
 
 export type StoredUser = {
   id: string;
@@ -36,39 +34,6 @@ export type StoredUser = {
 
 type UsersDb = {
   users: StoredUser[];
-};
-
-export type UserListItem = {
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  alcunha: string;
-  displayNameType: string;
-  articles: number;
-  avatar: string | null;
-  isAdmin: boolean;
-};
-
-export type UserProfile = {
-  id: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  alcunha: string;
-  displayNameType: string;
-  role: UserRole;
-  bio: string;
-  website: string;
-  avatar: string | null;
-  isAdmin: boolean;
-  telefone: string;
-  profissao: string;
-  cargo: string;
 };
 
 async function readUsersDb(): Promise<UsersDb> {
@@ -186,6 +151,13 @@ export async function findUserByLogin(login: string) {
   return db.users.find(
     (user) => user.username.toLowerCase() === value || user.email.toLowerCase() === value,
   );
+}
+
+export async function verifyUserPassword(userId: string, password: string) {
+  const db = await readUsersDb();
+  const user = db.users.find((entry) => entry.id === userId);
+  if (!user) return false;
+  return verifyPassword(password, user);
 }
 
 export type CreateUserInput = {

@@ -83,7 +83,14 @@ const translations = {
   }
 };
 
-export default function Footer() {
+export type FooterSupportContact = {
+  prefix: string;
+  name: string;
+  emailIntro: string;
+  email: string;
+};
+
+export default function Footer({ supportContact }: { supportContact?: FooterSupportContact }) {
   const { locale } = useLanguage();
   const t = translations[locale];
   const [newsletterKey, setNewsletterKey] = useState(0);
@@ -210,7 +217,21 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        
+
+        {supportContact ? (
+          <div className="footer-support">
+            <div className="container">
+              <p>
+                {supportContact.prefix}{' '}
+                {supportContact.name} {supportContact.emailIntro}{' '}
+                <a href={`mailto:${supportContact.email}`}>{supportContact.email}</a>
+                {' | '}
+                <a href="mailto:geral@aamihe.com">geral@aamihe.com</a>
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div className="footer-bottom">
           <div className="container">
             <p>&copy; {new Date().getFullYear()} AAMIHE. {t.rights}</p>
