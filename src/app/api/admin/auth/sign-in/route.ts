@@ -7,11 +7,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const login = String(body.login || body.username || body.email || '').trim();
     const password = String(body.password || '');
-    const honeypot = String(body.honeypot || '').trim();
-
-    if (honeypot) {
-      return NextResponse.json({ success: false, error: 'Verificação falhou.' }, { status: 400 });
-    }
 
     if (!login || !password) {
       return NextResponse.json(

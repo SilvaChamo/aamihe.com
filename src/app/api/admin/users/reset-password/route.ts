@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { validateSpamFields } from '@/lib/form-spam-guard';
+import { verifyMathCaptcha } from '@/lib/math-captcha';
 import { findUserByLogin } from '@/lib/users';
 import { requestPasswordResetEmail } from '@/lib/supabase-auth-email';
 
@@ -16,17 +16,16 @@ export async function POST(req: NextRequest) {
     const isStaffRequest = !('error' in staffAuth);
 
     if (!isStaffRequest) {
-      const spam = validateSpamFields({
-        honeypot: String(body.honeypot || '').trim(),
-        formLoadedAt: Number(body.formLoadedAt || 0),
-        mathA: Number(body.mathA),
-        mathB: Number(body.mathB),
-        mathAnswer: Number(body.mathAnswer),
-        turnstileToken: String(body.turnstileToken || ''),
-      });
+      const formLoadedAt = Number(body.formLoadedAt || 0);
+      if (formLoadedAt > 0 && Date.now() - formLoadedAt < 800) {
+        return NextResponse.json(
+          { error: 'Aguarde um momento e tente novamente.' },
+          { status: 400 },
+        );
+      }
 
-      if (!spam.ok) {
-        return NextResponse.json({ error: spam.error }, { status: 400 });
+      if (!verifyMathCaptcha(body.mathA, body.mathB, body.mathAnswer)) {
+        return NextResponse.json({ error: 'Resposta de segurança incorrecta.' }, { status: 400 });
       }
     }
 

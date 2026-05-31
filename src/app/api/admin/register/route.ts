@@ -11,10 +11,8 @@ export async function POST(request: Request) {
     const password = String(body.password || '');
     const confirmPassword = String(body.confirmPassword || '');
     const turnstileToken = String(body.turnstileToken || '');
-    const honeypot = String(body.honeypot || '').trim();
-
     const spam = validateSpamFields({
-      honeypot,
+      honeypot: '',
       formLoadedAt: Number(body.formLoadedAt || 0),
       mathA: Number(body.mathA),
       mathB: Number(body.mathB),

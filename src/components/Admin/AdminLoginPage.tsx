@@ -79,7 +79,6 @@ function AdminLoginPageInner({
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [honeypot, setHoneypot] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -102,7 +101,6 @@ function AdminLoginPageInner({
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setError('');
-    setHoneypot('');
     if (nextMode !== 'login') {
       setSuccess('');
     }
@@ -133,7 +131,6 @@ function AdminLoginPageInner({
         body: JSON.stringify({
           login: username.trim(),
           password,
-          honeypot,
         }),
       });
 
@@ -179,7 +176,6 @@ function AdminLoginPageInner({
           email: email.trim(),
           password,
           confirmPassword,
-          honeypot,
           formLoadedAt: registerLoadedAt,
           mathA: registerChallenge.a,
           mathB: registerChallenge.b,
@@ -251,7 +247,6 @@ function AdminLoginPageInner({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: resetEmail.trim(),
-          honeypot,
           formLoadedAt: resetLoadedAt,
           mathA: resetChallenge.a,
           mathB: resetChallenge.b,
@@ -314,17 +309,6 @@ function AdminLoginPageInner({
                   <form className="admin-login-form" onSubmit={handleLogin}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
                     {success ? <div className="admin-login-success">{success}</div> : null}
-
-                    <input
-                      type="text"
-                      name="company_url"
-                      className="admin-login-honeypot"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={honeypot}
-                      onChange={(e) => setHoneypot(e.target.value)}
-                      aria-hidden="true"
-                    />
 
                     <input
                       type="text"
@@ -473,17 +457,6 @@ function AdminLoginPageInner({
 
                     <input
                       type="text"
-                      name="company_url"
-                      className="admin-login-honeypot"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={honeypot}
-                      onChange={(e) => setHoneypot(e.target.value)}
-                      aria-hidden="true"
-                    />
-
-                    <input
-                      type="text"
                       name="username"
                       className="input"
                       placeholder="Nome de utilizador"
@@ -578,17 +551,6 @@ function AdminLoginPageInner({
                   <form className="admin-login-form" onSubmit={handleResetPassword}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
                     {success ? <div className="admin-login-success">{success}</div> : null}
-
-                    <input
-                      type="text"
-                      name="company_url"
-                      className="admin-login-honeypot"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={honeypot}
-                      onChange={(e) => setHoneypot(e.target.value)}
-                      aria-hidden="true"
-                    />
 
                     <input
                       type="email"
