@@ -1,76 +1,50 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
-import { getUserById, listUserIds } from '@/lib/users';
 import type { UserProfile } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
-
-function getSessionSecret() {
-  return process.env.AAMIHE_ADMIN_SECRET || 'aamihe-session';
-}
-
-function signUserSession(userId: string) {
-  return createHmac('sha256', getSessionSecret()).update(`user:${userId}`).digest('hex');
-}
-
-export function createUserSessionToken(userId: string) {
-  return `${userId}.${signUserSession(userId)}`;
-}
-
-export function isUserSessionToken(token: string, userId: string) {
-  const expected = signUserSession(userId);
-  const a = Buffer.from(token);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
+import { ensureProfileFromAuthUser, getUserById } from '@/lib/users';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '@/utils/supabase/server';
 
 export function extractBearerToken(request: Request) {
   const header = request.headers.get('authorization') || '';
   return header.replace(/^Bearer\s+/i, '').trim();
 }
 
-export type SessionUser = { type: 'admin' } | { type: 'user'; user: UserProfile };
+export type SessionUser = { type: 'user'; user: UserProfile };
 
-async function resolveUserFromToken(token: string): Promise<UserProfile | null> {
-  const dot = token.indexOf('.');
-  if (dot > 0) {
-    const userId = token.slice(0, dot);
-    const signature = token.slice(dot + 1);
-    if (userId && signature && isUserSessionToken(signature, userId)) {
-      return (await getUserById(userId)) ?? null;
-    }
-  }
+async function resolveUserFromAccessToken(token: string): Promise<UserProfile | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
 
-  const userIds = await listUserIds();
-  for (const userId of userIds) {
-    if (isUserSessionToken(token, userId)) {
-      return (await getUserById(userId)) ?? null;
-    }
-  }
+  const { data, error } = await admin.auth.getUser(token);
+  if (error || !data.user) return null;
 
-  return null;
+  await ensureProfileFromAuthUser(data.user);
+  return getUserById(data.user.id);
 }
 
 export async function resolveSessionUser(request: Request): Promise<SessionUser | null> {
-  const token = extractBearerToken(request);
-  if (!token) return null;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const adminSecret = process.env.AAMIHE_ADMIN_SECRET || '';
-  if (adminSecret && token === adminSecret) {
-    return { type: 'admin' };
+  if (user) {
+    await ensureProfileFromAuthUser(user);
+    const profile = await getUserById(user.id);
+    return profile ? { type: 'user', user: profile } : null;
   }
 
-  const user = await resolveUserFromToken(token);
-  return user ? { type: 'user', user } : null;
+  const bearer = extractBearerToken(request);
+  if (!bearer) return null;
+
+  const fromToken = await resolveUserFromAccessToken(bearer);
+  return fromToken ? { type: 'user', user: fromToken } : null;
 }
 
 export function isStaffSession(session: SessionUser | null): session is SessionUser {
   if (!session) return false;
-  if (session.type === 'admin') return true;
-  if (session.type === 'user') {
-    if (session.user.isAdmin) return true;
-    if (!isSubscriberRole(session.user.role)) return true;
-  }
-  return false;
+  if (session.user.isAdmin) return true;
+  return !isSubscriberRole(session.user.role);
 }
 
 export async function requireStaffSession(request: Request) {
@@ -97,10 +71,7 @@ export async function requireAdminRole(request: Request) {
   if (!session) {
     return { error: 'Acesso não autorizado.', status: 401 } as const;
   }
-  if (session.type === 'admin') {
-    return session;
-  }
-  if (session.type === 'user' && session.user.isAdmin) {
+  if (session.user.isAdmin) {
     return session;
   }
   return { error: 'Acesso não autorizado.', status: 403 } as const;
@@ -108,7 +79,7 @@ export async function requireAdminRole(request: Request) {
 
 export async function requireSessionUser(request: Request) {
   const session = await resolveSessionUser(request);
-  if (!session || session.type !== 'user') {
+  if (!session) {
     return { error: 'Acesso não autorizado.', status: 401 };
   }
   return session;

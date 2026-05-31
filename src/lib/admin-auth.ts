@@ -1,18 +1,9 @@
+'use client';
+
 import type { UserProfile } from '@/lib/user-types';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
-const STORAGE_KEY = 'aamihe_admin_secret';
-const USERNAME_KEY = 'aamihe_admin_username';
-const PROFILE_KEY = 'aamihe_admin_profile';
-
-export function getAdminSecret(): string {
-  if (typeof window === 'undefined') return '';
-  return window.sessionStorage.getItem(STORAGE_KEY) || '';
-}
-
-export function getLoggedUsername(): string {
-  if (typeof window === 'undefined') return '';
-  return window.sessionStorage.getItem(USERNAME_KEY) || '';
-}
+const PROFILE_KEY = 'aamihe_session_profile';
 
 export function getSessionProfile(): UserProfile | null {
   if (typeof window === 'undefined') return null;
@@ -34,31 +25,79 @@ export function setSessionProfile(profile: UserProfile | null) {
   }
 }
 
-export function setAdminSecret(secret: string, username?: string, profile?: UserProfile | null) {
-  window.sessionStorage.setItem(STORAGE_KEY, secret);
-  if (username?.trim()) {
-    window.sessionStorage.setItem(USERNAME_KEY, username.trim());
-  } else {
-    window.sessionStorage.removeItem(USERNAME_KEY);
-  }
+export async function clearAdminSecret() {
+  const supabase = getSupabaseBrowserClient();
+  await supabase.auth.signOut();
+  setSessionProfile(null);
+}
+
+/** @deprecated use Supabase session */
+export function getAdminSecret(): string {
+  return '';
+}
+
+/** @deprecated use Supabase session */
+export function getLoggedUsername(): string {
+  return getSessionProfile()?.username || '';
+}
+
+/** @deprecated use Supabase session */
+export function setAdminSecret(_secret: string, _username?: string, profile?: UserProfile | null) {
   setSessionProfile(profile ?? null);
 }
 
-export function clearAdminSecret() {
-  window.sessionStorage.removeItem(STORAGE_KEY);
-  window.sessionStorage.removeItem(USERNAME_KEY);
-  window.sessionStorage.removeItem(PROFILE_KEY);
-}
-
 export async function adminFetch(input: string, init: RequestInit = {}) {
-  const secret = getAdminSecret();
+  const supabase = getSupabaseBrowserClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const headers = new Headers(init.headers);
-  if (secret) headers.set('Authorization', `Bearer ${secret}`);
-  const username = getLoggedUsername();
+  if (session?.access_token) {
+    headers.set('Authorization', `Bearer ${session.access_token}`);
+  }
+
+  const username = getSessionProfile()?.username;
   if (username) headers.set('X-Logged-Username', username);
 
   return fetch(input, {
     ...init,
     headers,
+    credentials: 'same-origin',
   });
+}
+
+export async function signInWithGoogle() {
+  const supabase = getSupabaseBrowserClient();
+  const redirectTo = `${window.location.origin}/auth/callback`;
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+      queryParams: { access_type: 'offline', prompt: 'select_account' },
+    },
+  });
+  if (error) throw error;
+}
+
+export async function signInWithPassword(email: string, password: string) {
+  const supabase = getSupabaseBrowserClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function requestPasswordReset(email: string) {
+  const supabase = getSupabaseBrowserClient();
+  const origin = window.location.origin;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/confirm?next=/admin/login?action=new-password`,
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string) {
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdminBase } from '@/lib/admin-base';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
+import { adminFetch } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
 import './admin-wp.css';
 
@@ -91,7 +92,7 @@ export default function UsersListPage() {
   const handleResetPassword = async (user: UserItem) => {
     if (!confirm(`Enviar email de reposição de senha para "${user.email}"?`)) return;
     try {
-      const res = await fetch('/api/admin/users/reset-password', {
+      const res = await adminFetch('/api/admin/users/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email }),

@@ -1,0 +1,42 @@
+{
+  "users": [
+    {
+      "id": "user_1779917109331_f7ac8aae",
+      "username": "silva.chamo",
+      "email": "silva.chamo@gmail.com",
+      "passwordHash": "f7743288dbc9657630976cef873ec1a20e85e8e900176e91156080936d0e44363e0196592550fe26562ddc6fc2bcdecbb9320a7e076b1f71facf13d672cedd00",
+      "passwordSalt": "7d502e314dfc64722df6feb71e1525f4",
+      "role": "Administrador",
+      "firstName": "Silva",
+      "lastName": "Chamo",
+      "alcunha": "",
+      "displayNameType": "full_name",
+      "website": "",
+      "bio": "",
+      "telefone": "",
+      "profissao": "",
+      "cargo": "",
+      "avatar_url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/avatars/1779953748885-ws8o70.png",
+      "created_at": "2026-05-27T21:25:09.331Z"
+    },
+    {
+      "id": "user_1780148692328_24684843",
+      "username": "Dulce Matavele",
+      "email": "duduchamatavele@gmail.com",
+      "passwordHash": "5ead145ccdfbd2f148e1dcd1f8a29fc04ac830bc54a2a7712d655aed68b698389514cf4c6773585f3a3216c5f476ed84c0fe53edaf977cf8d23d6cb4f7f08dbf",
+      "passwordSalt": "958995af4d24b6467a66a5988881bf33",
+      "role": "Subscritor",
+      "firstName": "Dulce",
+      "lastName": "Matavele",
+      "alcunha": "Universidade catolica",
+      "displayNameType": "full_name",
+      "website": "https://aamihe.com",
+      "bio": "Prontos",
+      "telefone": "87 3002491",
+      "profissao": "Medica",
+      "cargo": "",
+      "avatar_url": "https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/avatars/1780158435416-god7fq.png",
+      "created_at": "2026-05-30T13:44:52.383Z"
+    }
+  ]
+}

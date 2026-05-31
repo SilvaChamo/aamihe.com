@@ -4,12 +4,17 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { setAdminSecret } from '@/lib/admin-auth';
+import {
+  requestPasswordReset,
+  setSessionProfile,
+  signInWithGoogle,
+  updatePassword,
+} from '@/lib/admin-auth';
 import AdminLoginMathChallenge, { createLoginMathChallenge } from '@/components/Admin/AdminLoginMathChallenge';
 import { verifyMathCaptcha } from '@/lib/math-captcha';
 import './AdminLoginPage.css';
 
-type AuthMode = 'login' | 'register' | 'reset';
+type AuthMode = 'login' | 'register' | 'reset' | 'new-password';
 
 interface AdminLoginPageProps {
   redirectTo?: string;
@@ -25,6 +30,10 @@ export default function AdminLoginPage({
   const router = useRouter();
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,6 +46,7 @@ export default function AdminLoginPage({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [registerChallenge, setRegisterChallenge] = useState(createLoginMathChallenge);
   const [registerMathAnswer, setRegisterMathAnswer] = useState('');
   const [registerLoadedAt, setRegisterLoadedAt] = useState(() => Date.now());
@@ -72,13 +82,12 @@ export default function AdminLoginPage({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/admin/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username.trim(),
+          login: username.trim(),
           password,
-          remember: rememberMe,
           honeypot,
         }),
       });
@@ -90,13 +99,24 @@ export default function AdminLoginPage({
         return;
       }
 
-      setAdminSecret(result.token, result.username, result.user ?? null);
+      setSessionProfile(result.user ?? null);
       onSuccess?.();
-      router.push(redirectTo);
+      window.location.assign(redirectTo);
     } catch {
       setError('Erro de ligação. Tente novamente.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError('');
+    setLoadingGoogle(true);
+    try {
+      await signInWithGoogle();
+    } catch {
+      setError('Não foi possível iniciar sessão com Google.');
+      setLoadingGoogle(false);
     }
   }
 
@@ -138,6 +158,37 @@ export default function AdminLoginPage({
       setMode('login');
     } catch {
       setError('Erro de ligação. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirmNewPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (newPassword.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      setLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError('As senhas não coincidem.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await updatePassword(newPassword);
+      setSuccess('Senha atualizada com sucesso. Já pode iniciar sessão.');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setMode('login');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Não foi possível atualizar a senha.');
     } finally {
       setLoading(false);
     }
@@ -195,26 +246,26 @@ export default function AdminLoginPage({
     <div className="admin-login-page">
       <div className="admin-login-left">
         <img
-          src="/images/login-bg.jpg"
+          src="/images/login-bg.png"
           alt=""
           className="admin-login-bg"
           decoding="async"
           fetchPriority="high"
         />
-        <div className="admin-login-logo-panel">
-          <Link href="/" className="admin-login-logo" aria-label="AAMIHE">
-            AAMIHE
-          </Link>
-        </div>
       </div>
 
       <div className="admin-login-panel">
         <div className="admin-login-panel-inner">
           <div className="admin-login-card">
             <div className="admin-login-form-box">
+              <div className="admin-login-form-logo">
+                <Link href="/" className="admin-login-logo" aria-label="AAMIHE">
+                  <img src="/Logo-Small.png.webp" alt="" width={220} height={72} decoding="async" />
+                </Link>
+              </div>
+
               {mode === 'login' ? (
                 <>
-                  <h1 className="admin-login-heading">Faça login</h1>
                   <form className="admin-login-form" onSubmit={handleLogin}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
                     {success ? <div className="admin-login-success">{success}</div> : null}
@@ -276,6 +327,16 @@ export default function AdminLoginPage({
                       {loading ? 'A iniciar sessão...' : 'Iniciar sessão'}
                     </button>
 
+                    <button
+                      type="button"
+                      className="button-primary admin-login-google-btn"
+                      disabled={loadingGoogle || loading}
+                      onClick={handleGoogleLogin}
+                      style={{ background: '#fff', color: '#333', border: '1px solid #bdbdbd' }}
+                    >
+                      {loadingGoogle ? 'A redirecionar…' : 'Continuar com Google'}
+                    </button>
+
                     <div className="admin-login-form-links">
                       <button type="button" className="link-button" onClick={() => switchMode('register')}>
                         Registar
@@ -286,9 +347,72 @@ export default function AdminLoginPage({
                     </div>
                   </form>
                 </>
+              ) : mode === 'new-password' ? (
+                <>
+                  <p className="admin-login-intro">
+                    Defina a nova senha para a sua conta AAMIHE.
+                  </p>
+                  <form className="admin-login-form" onSubmit={handleConfirmNewPassword}>
+                    {error ? <div className="admin-login-error">{error}</div> : null}
+                    {success ? <div className="admin-login-success">{success}</div> : null}
+
+                    <div className="wp-pwd">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        name="new_password"
+                        className="input password-input"
+                        placeholder="Nova senha"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        className="wp-hide-pw"
+                        aria-label={showNewPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        onClick={() => setShowNewPassword((prev) => !prev)}
+                      >
+                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+
+                    <div className="wp-pwd">
+                      <input
+                        type={showConfirmNewPassword ? 'text' : 'password'}
+                        name="confirm_new_password"
+                        className="input password-input"
+                        placeholder="Confirmar nova senha"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        autoComplete="new-password"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        className="wp-hide-pw"
+                        aria-label={showConfirmNewPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                        onClick={() => setShowConfirmNewPassword((prev) => !prev)}
+                      >
+                        {showConfirmNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+
+                    <button type="submit" className="button-primary" disabled={loading}>
+                      {loading ? 'A guardar...' : 'Guardar nova senha'}
+                    </button>
+
+                    <div className="admin-login-form-links admin-login-form-links--center">
+                      <button type="button" className="link-button" onClick={() => switchMode('login')}>
+                        Voltar ao login
+                      </button>
+                    </div>
+                  </form>
+                </>
               ) : mode === 'register' ? (
                 <>
-                  <h1 className="admin-login-heading">Registe-se</h1>
                   <form className="admin-login-form" onSubmit={handleRegister}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
 
@@ -393,7 +517,6 @@ export default function AdminLoginPage({
                 </>
               ) : (
                 <>
-                  <h1 className="admin-login-heading">Recuperação de senha</h1>
                   <p className="admin-login-intro">
                     Indique o email da sua conta. Enviaremos um link para repor a senha.
                   </p>

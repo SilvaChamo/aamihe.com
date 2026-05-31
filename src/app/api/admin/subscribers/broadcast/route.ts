@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
 import { getEmailSendQuota, RECOMMENDED_DAILY_EMAIL_LIMIT } from '@/lib/email-send-quota';
 import { listSenderAccounts } from '@/lib/sender-accounts';
+import { getEmailProviderStatus } from '@/lib/notify-email';
 import { broadcastToSubscribers, collectSubscriberEmails } from '@/lib/subscriber-broadcast';
 
 export async function GET(request: NextRequest) {
@@ -14,12 +15,16 @@ export async function GET(request: NextRequest) {
     const emails = await collectSubscriberEmails();
     const quota = await getEmailSendQuota();
     const senders = await listSenderAccounts();
+    const emailProvider = getEmailProviderStatus();
     return NextResponse.json({
       success: true,
       count: emails.length,
       quota,
       senders,
       recommendedDailyLimit: RECOMMENDED_DAILY_EMAIL_LIMIT,
+      emailConfigured: emailProvider.configured,
+      emailFrom: emailProvider.from,
+      emailHint: emailProvider.hint,
     });
   } catch (error) {
     console.error(error);

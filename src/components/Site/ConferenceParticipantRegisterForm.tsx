@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
-import { setAdminSecret } from '@/lib/admin-auth';
+import { setSessionProfile } from '@/lib/admin-auth';
 import { useLanguage } from '@/context/LanguageContext';
 import { commonUiCopy } from '@/i18n/messages';
 import styles from './ConferenceParticipantRegisterForm.module.css';
@@ -82,13 +82,12 @@ export default function ConferenceParticipantRegisterForm({
         return;
       }
 
-      const loginRes = await fetch('/api/admin/login', {
+      const loginRes = await fetch('/api/admin/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username.trim(),
+          login: email.trim(),
           password,
-          remember: true,
           honeypot: '',
         }),
       });
@@ -96,11 +95,11 @@ export default function ConferenceParticipantRegisterForm({
       const loginResult = await loginRes.json();
 
       if (!loginRes.ok || !loginResult.success) {
-        router.push('/dashboard');
+        router.push('/admin/login');
         return;
       }
 
-      setAdminSecret(loginResult.token, loginResult.username, loginResult.user ?? null);
+      setSessionProfile(loginResult.user ?? null);
       router.push('/dashboard');
     } catch {
       setError(labels.error);

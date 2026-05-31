@@ -10,19 +10,24 @@
     "build": "next build",
     "start": "next start",
     "import-noticias": "node scripts/import-news-to-supabase.mjs",
+    "migrate-users": "node scripts/migrate-aamihe-users-to-supabase.mjs",
+    "test-email": "node scripts/test-email.mjs",
     "server:ssh": "bash scripts/server/remote.sh",
     "server:push": "bash scripts/server/push-to-server.sh"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.106.2",
     "@vercel/blob": "^2.4.0",
     "lucide-react": "^1.16.0",
     "next": "16.1.6",
+    "nodemailer": "^8.0.10",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "typescript": "^5"

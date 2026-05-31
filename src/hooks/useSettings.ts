@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getAdminSecret } from '@/lib/admin-auth';
+import { adminFetch } from '@/lib/admin-auth';
 
 export type SettingsState = Record<string, unknown>;
 
@@ -17,10 +17,7 @@ export function useSettings<T extends SettingsState>(defaults: T) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    const token = getAdminSecret();
-    fetch('/api/admin/settings', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    adminFetch('/api/admin/settings')
       .then((r) => r.json())
       .then((data) => {
         if (data.settings && Object.keys(data.settings).length > 0) {
@@ -41,13 +38,9 @@ export function useSettings<T extends SettingsState>(defaults: T) {
       if (patch) setSettings((prev) => ({ ...prev, ...patch }));
 
       try {
-        const token = getAdminSecret();
-        const res = await fetch('/api/admin/settings', {
+        const res = await adminFetch('/api/admin/settings', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(toSave),
         });
         const data = await res.json();
@@ -62,7 +55,7 @@ export function useSettings<T extends SettingsState>(defaults: T) {
         setSaving(false);
       }
     },
-    [settings]
+    [settings],
   );
 
   return { settings, setSettings, loading, saving, savedAt, error, save };

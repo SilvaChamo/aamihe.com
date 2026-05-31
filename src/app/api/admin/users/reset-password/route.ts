@@ -1,25 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireStaffSession } from '@/lib/admin-session';
 import { validateSpamFields } from '@/lib/form-spam-guard';
 import { findUserByLogin } from '@/lib/users';
+import { requestPasswordResetEmail } from '@/lib/supabase-auth-email';
 
-/** Pedido de reposição de senha — envio de link por email (a implementar). */
+const GENERIC_MESSAGE =
+  'Se existir uma conta com este email, receberá em breve um link para repor a senha.';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const email = String(body.email || body.login || '').trim().toLowerCase();
-    const honeypot = String(body.honeypot || '').trim();
 
-    const spam = validateSpamFields({
-      honeypot,
-      formLoadedAt: Number(body.formLoadedAt || 0),
-      mathA: Number(body.mathA),
-      mathB: Number(body.mathB),
-      mathAnswer: Number(body.mathAnswer),
-      turnstileToken: String(body.turnstileToken || ''),
-    });
+    const staffAuth = await requireStaffSession(req);
+    const isStaffRequest = !('error' in staffAuth);
 
-    if (!spam.ok) {
-      return NextResponse.json({ error: spam.error }, { status: 400 });
+    if (!isStaffRequest) {
+      const spam = validateSpamFields({
+        honeypot: String(body.honeypot || '').trim(),
+        formLoadedAt: Number(body.formLoadedAt || 0),
+        mathA: Number(body.mathA),
+        mathB: Number(body.mathB),
+        mathAnswer: Number(body.mathAnswer),
+        turnstileToken: String(body.turnstileToken || ''),
+      });
+
+      if (!spam.ok) {
+        return NextResponse.json({ error: spam.error }, { status: 400 });
+      }
     }
 
     if (!email) {
@@ -28,19 +36,13 @@ export async function POST(req: NextRequest) {
 
     const user = await findUserByLogin(email);
     if (!user) {
-      return NextResponse.json({
-        success: true,
-        message:
-          'Se existir uma conta com este email, receberá em breve um link para repor a senha.',
-      });
+      return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
     }
 
-    return NextResponse.json({
-      success: true,
-      message:
-        'Se existir uma conta com este email, receberá em breve um link para repor a senha.',
-    });
+    await requestPasswordResetEmail(user.email);
+    return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
   } catch (err: unknown) {
+    console.error('[reset-password]', err);
     const message = err instanceof Error ? err.message : 'Erro ao processar pedido';
     return NextResponse.json({ error: message }, { status: 500 });
   }

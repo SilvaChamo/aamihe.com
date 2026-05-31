@@ -28,7 +28,7 @@ type SiteBackupPayload = {
 
 const BACKUP_BUCKET = 'aamihe-backups';
 const BACKUP_PREFIX = 'full-site';
-const USERS_FILE = path.join(process.cwd(), 'aamihe_users.json');
+const PROFILES_TABLE = 'aamihe_user_profiles';
 
 function authHeaders(contentType = 'application/json') {
   return { 'Content-Type': contentType };
@@ -98,14 +98,15 @@ async function buildBackupPayload(): Promise<SiteBackupPayload> {
     throw new Error('Supabase não configurado.');
   }
 
-  const [{ data: contentRows }, { data: mediaRows }, dashboardDb, usersRaw] = await Promise.all([
-    admin.from('site_content').select('*'),
-    admin.from('site_media').select('*'),
-    getDashboardDb(),
-    readFile(USERS_FILE, 'utf8').catch(() => '{"users":[]}'),
-  ]);
+  const [{ data: contentRows }, { data: mediaRows }, { data: profileRows }, dashboardDb] =
+    await Promise.all([
+      admin.from('site_content').select('*'),
+      admin.from('site_media').select('*'),
+      admin.from(PROFILES_TABLE).select('*'),
+      getDashboardDb(),
+    ]);
 
-  const usersDb = JSON.parse(usersRaw) as Record<string, unknown>;
+  const usersDb = { users: profileRows ?? [] };
   const [mediaStorage, avatarStorage] = await Promise.all([
     readStorageBucket(MEDIA_BUCKET),
     readStorageBucket('avatars'),
@@ -196,7 +197,10 @@ async function restoreBackupPayload(payload: SiteBackupPayload) {
   }
 
   await saveDashboardDb(payload.dashboardDb);
-  await writeFile(USERS_FILE, JSON.stringify(payload.usersDb, null, 2), 'utf8');
+  if (Array.isArray(payload.usersDb?.users) && payload.usersDb.users.length > 0) {
+    const { error } = await admin.from(PROFILES_TABLE).upsert(payload.usersDb.users, { onConflict: 'id' });
+    if (error) throw new Error(`Erro ao restaurar perfis: ${error.message}`);
+  }
   await restoreStorage(payload.storage ?? []);
 }
 

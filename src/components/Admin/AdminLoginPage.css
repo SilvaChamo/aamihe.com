@@ -1,4 +1,5 @@
 .admin-login-page {
+  position: relative;
   min-height: 100vh;
   width: 100%;
   display: grid;
@@ -6,7 +7,7 @@
   font-family: 'Roboto Slab', Roboto, sans-serif;
 }
 
-/* Coluna esquerda — foto + painel branco com logo */
+/* Coluna esquerda — foto */
 .admin-login-left {
   position: relative;
   min-height: 100vh;
@@ -23,29 +24,19 @@
   object-fit: cover;
   object-position: center;
   transform: translateZ(0);
-  filter: contrast(1.04) saturate(1.03);
 }
 
-.admin-login-left::after {
+.admin-login-page::after {
   content: '';
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: rgba(72, 72, 76, 0.34);
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: 6px;
+  height: 80%;
+  transform: translateY(-50%);
+  background: #c6924a;
   pointer-events: none;
-}
-
-.admin-login-logo-panel {
-  position: relative;
-  z-index: 2;
-  margin-top: 50px;
-  margin-left: 0;
-  padding: 10px 20px 10px 16px;
-  background: #fff;
-  border-radius: 0 8px 8px 0;
-  width: fit-content;
-  max-width: calc(100% - 20px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 
 .admin-login-panel {
@@ -59,21 +50,25 @@
 
 .admin-login-panel-inner {
   width: 100%;
-  max-width: 440px;
+  max-width: 400px;
+}
+
+.admin-login-form-logo {
+  margin: 0 0 24px;
+  text-align: center;
 }
 
 .admin-login-logo {
+  display: inline-block;
+  line-height: 0;
+}
+
+.admin-login-logo img {
   display: block;
-  background-image: url('/Logo-Small.png.webp');
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: contain;
-  width: 220px;
-  height: 72px;
-  overflow: hidden;
-  text-indent: 100%;
-  white-space: nowrap;
-  margin: 0;
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
 }
 
 .admin-login-card {
@@ -97,7 +92,7 @@
 }
 
 .admin-login-intro {
-  margin: -8px 0 20px;
+  margin: 0 0 20px;
   font-size: 14px;
   line-height: 1.55;
   color: #555;
@@ -347,10 +342,12 @@
     min-height: 200px;
   }
 
-  .admin-login-logo-panel {
-    margin-top: 24px;
-    border-radius: 0 8px 8px 0;
-    padding: 8px 18px 8px 14px;
+  .admin-login-page::after {
+    display: none;
+  }
+
+  .admin-login-logo img {
+    width: 168px;
   }
 
   .admin-login-panel {

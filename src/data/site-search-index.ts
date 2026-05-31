@@ -217,7 +217,7 @@ export function buildSiteSearchIndex(locale: Locale, news: NewsItem[]): SiteSear
     'sobre-fazemos',
     '/sobre-nos#sobre-o-que-fazemos',
     fazemos.title,
-    [fazemos.eyebrow, fazemos.subtitle, fazemos.paragraph1, fazemos.paragraph2, fazemos.partnersTitle],
+    [fazemos.eyebrow, fazemos.text, fazemos.partnersTitle],
     { image: sectionImageFor('sobre-fazemos') },
   );
 

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useId, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import SobreMissaoVisaoCards from '@/components/Site/SobreMissaoVisaoCards';
 import styles from './SobreHistoriaIntro.module.css';
 
 export const sobreHistoriaCopy = {
@@ -119,6 +120,8 @@ export default function SobreHistoriaIntro() {
             </div>
           </div>
         </div>
+
+        <SobreMissaoVisaoCards className={styles.cardsAfterIntro} />
       </div>
     </section>
   );

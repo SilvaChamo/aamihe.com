@@ -44,13 +44,16 @@ export default function EmailSendPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [emailConfigured, setEmailConfigured] = useState(true);
+  const [emailHint, setEmailHint] = useState('');
 
   const marketingHref = `${base}/enviar-email`;
   const normalHref = `${base}/enviar-email/normal`;
 
   const overQuota = quota != null && count != null && count > quota.remainingToday;
   const noQuotaLeft = quota != null && quota.remainingToday <= 0;
-  const disabled = sending || loadingCount || count === 0 || overQuota || noQuotaLeft;
+  const disabled =
+    sending || loadingCount || count === 0 || overQuota || noQuotaLeft || !emailConfigured;
 
   const loadStats = useCallback(async () => {
     setLoadingCount(true);
@@ -65,10 +68,14 @@ export default function EmailSendPage() {
       const list: SenderAccount[] = Array.isArray(data.senders) ? data.senders : [];
       setSenders(list);
       setSenderId((prev) => prev || list[0]?.id || '');
+      setEmailConfigured(data.emailConfigured !== false);
+      setEmailHint(typeof data.emailHint === 'string' ? data.emailHint : '');
     } catch (err) {
       setCount(0);
       setQuota(null);
       setSenders([]);
+      setEmailConfigured(false);
+      setEmailHint('');
       setError(err instanceof Error ? err.message : 'Erro ao carregar destinatários');
     } finally {
       setLoadingCount(false);
@@ -183,6 +190,9 @@ export default function EmailSendPage() {
     <div className="news-form-container email-send-page" key={pathname}>
       <form onSubmit={handleSubmit} className="news-form-layout email-send-layout">
         <div className="news-form-main email-send-form-main">
+          {!loadingCount && !emailConfigured && emailHint ? (
+            <p className="wp-notice-error">{emailHint}</p>
+          ) : null}
           {error ? <p className="wp-notice-error">{error}</p> : null}
           {success ? <p className="wp-notice-success">{success}</p> : null}
           {overQuota && !noQuotaLeft ? (

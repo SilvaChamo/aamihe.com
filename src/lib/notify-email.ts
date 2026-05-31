@@ -1,9 +1,21 @@
+import { getSmtpConfigStatus, sendSmtpMail } from '@/lib/smtp-mail';
+
 const DEFAULT_TO = 'geral@aamihe.com';
 
 export const CONFERENCE_SUBMISSION_NOTIFY_EMAILS = [
   'geral@aamihe.com',
   // 'bernadogerson@gmail.com', // desactivado temporariamente (testes)
 ] as const;
+
+export class EmailSendError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode?: number,
+  ) {
+    super(message);
+    this.name = 'EmailSendError';
+  }
+}
 
 type NotifyEmailInput = {
   to?: string | string[];
@@ -13,39 +25,70 @@ type NotifyEmailInput = {
   html?: string;
 };
 
-export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
-  const to = Array.isArray(input.to)
-    ? input.to.filter(Boolean)
-    : [input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO];
-  const from = input.from || process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>';
-  const resendKey = process.env.RESEND_API_KEY;
+export type EmailProviderStatus = {
+  configured: boolean;
+  from: string;
+  mode?: string;
+  hint?: string;
+};
 
-  if (resendKey) {
-    try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from,
-          to,
-          subject: input.subject,
-          text: input.text,
-          html: input.html ?? input.text.replace(/\n/g, '<br />'),
-        }),
-      });
+export function getEmailProviderStatus(): EmailProviderStatus {
+  const from = process.env.SITE_EMAIL_FROM?.trim() || 'AAMIHE <noreply@aamihe.com>';
+  const smtp = getSmtpConfigStatus();
 
-      if (!res.ok) {
-        const body = await res.text();
-        console.error('[email] Resend error:', res.status, body);
-      }
-      return;
-    } catch (error) {
-      console.error('[email] Resend request failed:', error);
+  return {
+    configured: smtp.configured,
+    from,
+    mode: smtp.mode,
+    hint: smtp.hint,
+  };
+}
+
+function smtpErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const mailError = error as { message?: string; response?: string; responseCode?: number };
+    const parts = [mailError.message, mailError.response].filter(Boolean);
+    if (parts.length) {
+      return parts.join(' — ');
     }
   }
+  return error instanceof Error ? error.message : 'Falha ao enviar e-mail pelo SMTP do servidor.';
+}
 
-  console.info('[email]', { to, subject: input.subject, text: input.text });
+export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
+  const to = Array.isArray(input.to)
+    ? input.to.map((entry) => String(entry).trim()).filter(Boolean)
+    : [String(input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO).trim()].filter(Boolean);
+
+  if (!to.length) {
+    throw new EmailSendError('Nenhum destinatário indicado.');
+  }
+
+  const smtp = getSmtpConfigStatus();
+  if (!smtp.configured) {
+    throw new EmailSendError(
+      smtp.hint ||
+        'Envio de e-mail não configurado. Defina SMTP_HOST, SMTP_USER e SMTP_PASS (conta DirectAdmin).',
+    );
+  }
+
+  const from = input.from || process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>';
+
+  try {
+    const messageId = await sendSmtpMail({
+      from,
+      to,
+      subject: input.subject,
+      text: input.text,
+      html: input.html,
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[email] sent via SMTP', { to, subject: input.subject, messageId });
+    }
+  } catch (error) {
+    console.error('[email] SMTP error:', error);
+    const mailError = error as { responseCode?: number };
+    throw new EmailSendError(smtpErrorMessage(error), mailError.responseCode);
+  }
 }
