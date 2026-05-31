@@ -46,6 +46,15 @@ function GoogleIcon() {
 
 type AuthMode = 'login' | 'register' | 'reset' | 'new-password';
 
+function formatApiError(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === '{}') return fallback;
+    return trimmed;
+  }
+  return fallback;
+}
+
 interface AdminLoginPageProps {
   redirectTo?: string;
   onSuccess?: () => void;
@@ -137,7 +146,7 @@ function AdminLoginPageInner({
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        setError(result.error || 'Não foi possível iniciar sessão.');
+        setError(formatApiError(result.error, 'Não foi possível iniciar sessão.'));
         return;
       }
 
@@ -257,7 +266,12 @@ function AdminLoginPageInner({
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || 'Não foi possível processar o pedido.');
+        setError(
+          formatApiError(
+            result.error,
+            'Não foi possível enviar o email. Configure SMTP no Supabase (Authentication → SMTP).',
+          ),
+        );
         return;
       }
 

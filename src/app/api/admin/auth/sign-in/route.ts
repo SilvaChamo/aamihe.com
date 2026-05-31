@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { findUserByLogin, getUserById } from '@/lib/users';
 
 export async function POST(request: Request) {
@@ -27,10 +28,14 @@ export async function POST(request: Request) {
       email = profile.email;
     }
 
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const admin = getSupabaseAdmin();
+    if (!admin) {
+      return NextResponse.json({ success: false, error: 'Supabase não configurado.' }, { status: 500 });
+    }
 
-    if (error || !data.user) {
+    const { data, error } = await admin.auth.signInWithPassword({ email, password });
+
+    if (error || !data.session || !data.user) {
       return NextResponse.json(
         { success: false, error: 'Nome, email ou utilizador, ou senha incorrectos.' },
         { status: 401 },
@@ -39,7 +44,6 @@ export async function POST(request: Request) {
 
     const user = await getUserById(data.user.id);
     if (!user) {
-      await supabase.auth.signOut();
       return NextResponse.json(
         {
           success: false,
@@ -47,6 +51,20 @@ export async function POST(request: Request) {
             'Esta conta não está registada no AAMIHE. Registe-se ou utilize uma conta criada para este site.',
         },
         { status: 403 },
+      );
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+
+    if (sessionError) {
+      console.error('[sign-in] setSession:', sessionError.message);
+      return NextResponse.json(
+        { success: false, error: 'Sessão criada mas cookies não guardados. Tente novamente.' },
+        { status: 500 },
       );
     }
 

@@ -1,13 +1,21 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+/** Chave para sessão SSR — service role evita falhas quando a anon key local está desactualizada. */
+function resolveSupabaseAuthKey(): string {
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    ''
+  );
+}
+
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = resolveSupabaseAuthKey();
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  return createServerClient(url, key, {
       cookies: {
         getAll() {
           return cookieStore.getAll();
