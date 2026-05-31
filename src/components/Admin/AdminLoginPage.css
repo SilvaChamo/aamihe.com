@@ -123,6 +123,73 @@
   column-gap: 15px;
 }
 
+.admin-login-submit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.admin-login-submit-row .admin-login-submit-btn {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  min-height: 48px;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.admin-login-google-icon-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dadce0;
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.admin-login-google-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.admin-login-google-icon-btn:hover:not(:disabled) {
+  background: #f8f8f8;
+  border-color: #888;
+}
+
+.admin-login-google-icon-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-login-google-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #995b00;
+  border-radius: 50%;
+  animation: admin-login-spin 0.7s linear infinite;
+}
+
+@keyframes admin-login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .admin-login-action-row .admin-login-math-captcha {
   flex: 0 0 auto;
   min-width: 0;

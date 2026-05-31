@@ -1,6 +1,11 @@
 -- Perfis AAMIHE (login Supabase Auth — partilha o mesmo projecto que visualdesign)
 -- Executar no SQL Editor do Supabase
 
+-- Isolamento entre sites (mesmo Supabase que visualdesign):
+-- AAMIHE: só entra quem tem linha nesta tabela (o código não cria perfil no login Google).
+-- VisualDESIGN: no callback/login, recusar se existir linha aqui e o utilizador
+--   não tiver perfil na tabela `profiles` desse site (ou se user_metadata.site = 'aamihe').
+
 CREATE TABLE IF NOT EXISTS public.aamihe_user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username TEXT NOT NULL,

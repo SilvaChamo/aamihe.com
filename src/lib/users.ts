@@ -140,6 +140,15 @@ export async function getUserById(id: string) {
   return data ? rowToProfile(data as ProfileRow) : null;
 }
 
+/** Só utilizadores com perfil AAMIHE podem usar este site. */
+export async function requireAamiheProfile(userId: string) {
+  const profile = await getUserById(userId);
+  if (!profile) {
+    throw new Error('Esta conta não tem acesso ao AAMIHE. Registe-se ou contacte a administração.');
+  }
+  return profile;
+}
+
 export async function findUserByLogin(login: string) {
   const value = login.trim().toLowerCase();
   if (!value) return undefined;

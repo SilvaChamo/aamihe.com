@@ -17,9 +17,13 @@ function AdminLoginContent() {
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && initialMode !== 'new-password') {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session || initialMode === 'new-password') return;
+      const me = await fetch('/api/admin/users/me', { credentials: 'same-origin' });
+      if (me.ok) {
         router.replace(redirectTo);
+      } else {
+        await supabase.auth.signOut();
       }
     });
   }, [router, redirectTo, initialMode]);

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import { ensureProfileFromAuthUser, findUserByLogin, getUserById } from '@/lib/users';
+import { findUserByLogin, getUserById } from '@/lib/users';
 
 export async function POST(request: Request) {
   try {
@@ -42,12 +42,22 @@ export async function POST(request: Request) {
       );
     }
 
-    await ensureProfileFromAuthUser(data.user);
     const user = await getUserById(data.user.id);
+    if (!user) {
+      await supabase.auth.signOut();
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Esta conta não está registada no AAMIHE. Registe-se ou utilize uma conta criada para este site.',
+        },
+        { status: 403 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      username: user?.username || login,
+      username: user.username || login,
       user,
     });
   } catch (error: unknown) {

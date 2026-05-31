@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import { ensureProfileFromAuthUser, findUserByLogin } from '@/lib/users';
+import { findUserByLogin } from '@/lib/users';
 
 export const dynamic = 'force-dynamic';
+
+const NO_ACCESS_MSG =
+  'Esta conta não está registada no AAMIHE. Registe-se ou utilize email e senha de uma conta AAMIHE.';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -31,13 +34,16 @@ export async function GET(request: Request) {
     return NextResponse.redirect(loginUrl);
   }
 
-  await ensureProfileFromAuthUser(data.user);
-
   const profile = await findUserByLogin(data.user.email || '');
-  const isStaff =
-    profile &&
-    profile.role !== 'Subscritor';
+  if (!profile) {
+    await supabase.auth.signOut();
+    const loginUrl = new URL('/admin/login', requestUrl.origin);
+    loginUrl.searchParams.set('error', 'no_aamihe_access');
+    loginUrl.searchParams.set('error_description', NO_ACCESS_MSG);
+    return NextResponse.redirect(loginUrl);
+  }
 
+  const isStaff = profile.role !== 'Subscritor';
   const redirectPath = isStaff ? '/dashboard' : '/dashboard/minha-conta';
   return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
 }

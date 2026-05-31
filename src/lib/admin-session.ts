@@ -1,6 +1,6 @@
 import type { UserProfile } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
-import { ensureProfileFromAuthUser, getUserById } from '@/lib/users';
+import { getUserById } from '@/lib/users';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -18,8 +18,8 @@ async function resolveUserFromAccessToken(token: string): Promise<UserProfile | 
   const { data, error } = await admin.auth.getUser(token);
   if (error || !data.user) return null;
 
-  await ensureProfileFromAuthUser(data.user);
-  return getUserById(data.user.id);
+  const profile = await getUserById(data.user.id);
+  return profile;
 }
 
 export async function resolveSessionUser(request: Request): Promise<SessionUser | null> {
@@ -29,7 +29,6 @@ export async function resolveSessionUser(request: Request): Promise<SessionUser 
   } = await supabase.auth.getUser();
 
   if (user) {
-    await ensureProfileFromAuthUser(user);
     const profile = await getUserById(user.id);
     return profile ? { type: 'user', user: profile } : null;
   }
