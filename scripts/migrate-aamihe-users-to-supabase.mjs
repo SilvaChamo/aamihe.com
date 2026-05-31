@@ -74,6 +74,35 @@ for (const user of db.users || []) {
     continue;
   }
 
+  const { data: authList } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const existingAuth = authList?.users?.find((entry) => entry.email?.toLowerCase() === email);
+
+  if (existingAuth) {
+    const { error: profileError } = await admin.from('aamihe_user_profiles').insert({
+      id: existingAuth.id,
+      username: user.username,
+      email,
+      first_name: user.firstName || '',
+      last_name: user.lastName || '',
+      alcunha: user.alcunha || '',
+      display_name_type: user.displayNameType || 'full_name',
+      role: user.role || 'Subscritor',
+      bio: user.bio || '',
+      website: user.website || '',
+      avatar_url: user.avatar_url || '',
+      telefone: user.telefone || '',
+      profissao: user.profissao || '',
+      cargo: user.cargo || '',
+    });
+
+    if (profileError) {
+      console.error('  → erro perfil (auth já existia):', profileError.message);
+    } else {
+      console.log('  → perfil criado para utilizador auth existente.');
+    }
+    continue;
+  }
+
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password: TEMP_PASSWORD,
