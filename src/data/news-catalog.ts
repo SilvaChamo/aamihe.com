@@ -1,8 +1,5 @@
 import type { NewsItem } from '@/data/news';
-import wordpressNews from '@/data/wordpress-news.json';
+import { getNewsCatalog } from '@/data/noticias/merge-catalog-translations';
 
-/**
- * Catálogo canónico importado do WordPress (WXR) + fallback local.
- * Usado como fallback e para bootstrap do Supabase quando a base está vazia.
- */
-export const newsCatalog: NewsItem[] = wordpressNews as NewsItem[];
+/** Catálogo estático (WordPress). Usado só para bootstrap/import — não em runtime público. */
+export const newsCatalog: NewsItem[] = getNewsCatalog();

@@ -1,0 +1,11 @@
+---
+description: Proibir deploy/publicação online sem autorização explícita do utilizador
+alwaysApply: true
+---
+
+# Sem deploy sem permissão
+
+- **Nunca** executar deploy para produção (`vercel deploy --prod`, publicar no servidor, push que dispare deploy automático com efeito em produção) sem o utilizador pedir explicitamente na mensagem atual.
+- Após alterações, **build local** (`npm run build`) é permitido para validar.
+- Se o utilizador pedir commit, fazer commit (e push se pedido) — mas **deploy só quando autorizar**.
+- Quando houver dúvida, perguntar antes de publicar online.

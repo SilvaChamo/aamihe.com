@@ -4,14 +4,8 @@ import { loadSiteContentFromSupabase, saveSiteContentToSupabase } from '@/lib/su
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { newsCatalog } from '@/data/news-catalog';
 import { NEWS_CATEGORIES } from '@/data/news-categories';
-import { mergeNewsCatalog } from '@/lib/site-content-merge';
-import { migrateNewsCatalog } from '@/lib/news-i18n';
 import type { NewsItem } from '@/data/news';
 import type { NewsCategory } from '@/data/news-categories';
-
-function catalogWithTranslations(): NewsItem[] {
-  return migrateNewsCatalog(newsCatalog);
-}
 
 async function bootstrapIfEmpty(
   news: NewsItem[],
@@ -22,15 +16,14 @@ async function bootstrapIfEmpty(
     return { news, categories, bootstrapped: false };
   }
 
-  const catalog = catalogWithTranslations();
   const payload = {
-    news: catalog,
+    news: newsCatalog,
     categories: categories.length ? categories : NEWS_CATEGORIES,
     documents,
   };
 
   await saveSiteContentToSupabase(payload);
-  return { news: catalog, categories: payload.categories, bootstrapped: true };
+  return { news: payload.news, categories: payload.categories, bootstrapped: true };
 }
 
 export async function GET() {
@@ -46,10 +39,8 @@ export async function GET() {
     news = boot.news;
     categories = boot.categories;
 
-    if (news.length === 0) {
-      news = catalogWithTranslations();
-    } else {
-      news = mergeNewsCatalog(catalogWithTranslations(), news);
+    if (news.length === 0 && !isSupabaseConfigured()) {
+      news = newsCatalog;
     }
 
     return NextResponse.json({
@@ -69,16 +60,10 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const incomingNews = Array.isArray(body.news) ? (body.news as NewsItem[]) : [];
+    const news = Array.isArray(body.news) ? (body.news as NewsItem[]) : [];
     const categories = Array.isArray(body.categories) ? body.categories : NEWS_CATEGORIES;
     const db = await getDashboardDb();
     const documents = Array.isArray(body.documents) ? body.documents : db.documents;
-
-    const existing = await loadSiteContentFromSupabase();
-    const news =
-      incomingNews.length > 0
-        ? mergeNewsCatalog(existing?.news ?? [], incomingNews)
-        : existing?.news ?? catalogWithTranslations();
 
     if (Array.isArray(body.documents)) {
       db.documents = documents;
