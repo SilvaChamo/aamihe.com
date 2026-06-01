@@ -364,7 +364,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push('/dashboard/login');
   };
 
-  if (sessionLoading) {
+  if (sessionLoading && !user) {
     return (
       <AdminShellSkeleton
         variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}

@@ -21,7 +21,11 @@ export async function POST(request: Request) {
     const email = profile?.email?.trim().toLowerCase() || (login.includes('@') ? login.toLowerCase() : '');
     if (!email) {
       return NextResponse.json(
-        { success: false, error: 'Email, utilizador, alcunha ou senha incorrectos.' },
+        {
+          success: false,
+          error:
+            'Não encontrámos conta AAMIHE com esse email, utilizador ou alcunha. Registe-se ou use o email completo.',
+        },
         { status: 401 },
       );
     }
@@ -45,8 +49,17 @@ export async function POST(request: Request) {
     const { data, error } = await admin.auth.signInWithPassword({ email, password });
 
     if (error || !data.session || !data.user) {
+      const wrongPassword =
+        profile &&
+        (error?.message?.toLowerCase().includes('invalid login') ||
+          error?.message?.toLowerCase().includes('invalid credentials'));
       return NextResponse.json(
-        { success: false, error: 'Email, utilizador, alcunha ou senha incorrectos.' },
+        {
+          success: false,
+          error: wrongPassword
+            ? 'Senha incorrecta. Use a mesma senha definida para a sua conta AAMIHE ou «Repor senha».'
+            : 'Email, utilizador, alcunha ou senha incorrectos.',
+        },
         { status: 401 },
       );
     }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { adminFetch } from '@/lib/admin-auth';
 import {
+  isNotificationCacheFresh,
   readCachedUnreadCount,
   readNotificationCache,
   subscribeNotificationCache,
@@ -29,6 +30,11 @@ export function useNotificationUnread(enabled = true) {
       return;
     }
 
+    if (isNotificationCacheFresh()) {
+      setUnread(readCachedUnreadCount());
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
@@ -44,13 +50,11 @@ export function useNotificationUnread(enabled = true) {
         const data = await res.json();
         if (!cancelled && res.ok && data.success) {
           setUnread(data.unread ?? 0);
-          if (cache) {
-            writeNotificationCache({
-              ...cache,
-              unread: data.unread ?? 0,
-              fetchedAt: Date.now(),
-            });
-          }
+          writeNotificationCache({
+            notifications: cache?.notifications ?? [],
+            unread: data.unread ?? 0,
+            fetchedAt: Date.now(),
+          });
         }
       } catch {
         if (!cancelled && !cache) setUnread(0);

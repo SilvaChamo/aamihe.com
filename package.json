@@ -14,6 +14,7 @@
     "supabase-hetzner:migrate": "node scripts/migrate-aamihe-cloud-to-hetzner.mjs",
     "supabase-hetzner:migrate-storage": "node scripts/migrate-storage-cloud-to-hetzner.mjs",
     "test-email": "node scripts/test-email.mjs",
+    "set-user-password": "node scripts/set-aamihe-user-password.mjs",
     "server:ssh": "bash scripts/server/remote.sh",
     "server:push": "bash scripts/server/push-to-server.sh"
   },

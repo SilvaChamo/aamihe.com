@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { NewsItem } from '@/data/news';
 import { NEWS_CATEGORIES, NewsCategory, slugifyCategory } from '@/data/news-categories';
 
@@ -8,11 +15,17 @@ interface NewsContextType {
   news: NewsItem[];
   categories: NewsCategory[];
   loading: boolean;
+  ensureLoaded: () => Promise<void>;
   addNews: (item: Omit<NewsItem, 'id'>) => void;
   updateNews: (id: number, updates: Partial<NewsItem>) => void;
   deleteNews: (id: number) => void;
   getNewsById: (id: number) => NewsItem | undefined;
-  addCategory: (category: { name: string; description?: string; slug?: string; etiqueta?: string }) => string | null;
+  addCategory: (category: {
+    name: string;
+    description?: string;
+    slug?: string;
+    etiqueta?: string;
+  }) => string | null;
   updateCategory: (slug: string, updates: Partial<NewsCategory>) => string | null;
   deleteCategory: (slug: string) => string | null;
   getCategoryBySlug: (slug: string) => NewsCategory | undefined;
@@ -51,28 +64,28 @@ async function loadContentFromServer(): Promise<{ news: NewsItem[]; categories: 
 export function NewsProvider({ children }: { children: React.ReactNode }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>(NEWS_CATEGORIES);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const loadStarted = useRef(false);
+  const loadPromise = useRef<Promise<void> | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const ensureLoaded = useCallback(() => {
+    if (loadStarted.current) return loadPromise.current ?? Promise.resolve();
+    loadStarted.current = true;
+    setLoading(true);
 
-    (async () => {
+    loadPromise.current = (async () => {
       try {
         const data = await loadContentFromServer();
-        if (!cancelled) {
-          setNews(data.news);
-          setCategories(data.categories);
-        }
+        setNews(data.news);
+        setCategories(data.categories);
       } catch (err) {
         console.error('Erro ao carregar notícias', err);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return loadPromise.current;
   }, []);
 
   const saveNews = (updatedNews: NewsItem[]) => {
@@ -106,7 +119,12 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
 
   const getCategoryBySlug = (slug: string) => categories.find((c) => c.slug === slug);
 
-  const addCategory = (category: { name: string; description?: string; slug?: string; etiqueta?: string }) => {
+  const addCategory = (category: {
+    name: string;
+    description?: string;
+    slug?: string;
+    etiqueta?: string;
+  }) => {
     const name = category.name.trim();
     if (!name) return 'Indique o nome da categoria.';
 
@@ -124,7 +142,12 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
 
     saveCategories([
       ...categories,
-      { name, slug, description: category.description?.trim() || '', etiqueta: category.etiqueta?.trim() || '' },
+      {
+        name,
+        slug,
+        description: category.description?.trim() || '',
+        etiqueta: category.etiqueta?.trim() || '',
+      },
     ]);
     return null;
   };
@@ -192,6 +215,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         updateCategory,
         deleteCategory,
         getCategoryBySlug,
+        ensureLoaded,
       }}
     >
       {children}
@@ -204,5 +228,12 @@ export function useNews() {
   if (context === undefined) {
     throw new Error('useNews must be used within a NewsProvider');
   }
+
+  const { ensureLoaded } = context;
+
+  useEffect(() => {
+    void ensureLoaded();
+  }, [ensureLoaded]);
+
   return context;
 }

@@ -1,10 +1,18 @@
+/* Ocupa o ecrã inteiro dentro de .site-root (flex column) */
+.site-root > .admin-login-page--skeleton {
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 100vh;
+  align-self: stretch;
+}
+
+.admin-login-form--skeleton {
+  pointer-events: none;
+}
+
 .admin-login-skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    #ececec 0%,
-    #f5f5f5 45%,
-    #ececec 90%
-  );
+  display: block;
+  background: linear-gradient(90deg, #e8e8e8 0%, #f4f4f4 48%, #e8e8e8 100%);
   background-size: 200% 100%;
   animation: admin-login-skeleton-shimmer 1.35s ease-in-out infinite;
   border-radius: 5px;
@@ -26,75 +34,66 @@
   border-radius: 6px;
 }
 
-.admin-login-skeleton-field {
+.admin-login-skeleton-input {
   width: 100%;
-  height: 46px;
+  height: 48px;
+  box-sizing: border-box;
 }
 
-.admin-login-skeleton-field--short {
-  width: 42%;
-  height: 18px;
+.admin-login-skeleton-eye {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e0e0e0;
 }
 
-.admin-login-skeleton-submit-row {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-}
-
-.admin-login-skeleton-btn {
-  flex: 1;
-  height: 46px;
-  border-radius: 5px;
-}
-
-.admin-login-skeleton-google {
-  width: 46px;
-  height: 46px;
+.admin-login-skeleton-checkbox {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.admin-login-skeleton-check-label {
+  width: 108px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.admin-login-skeleton-submit-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  height: 48px;
   border-radius: 5px;
 }
 
-.admin-login-skeleton-links {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 4px;
+.admin-login-skeleton-google-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 5px;
 }
 
 .admin-login-skeleton-link {
   width: 72px;
-  height: 16px;
+  height: 14px;
 }
 
-.admin-login-skeleton-back {
+.admin-login-back .admin-login-skeleton-back-line {
+  display: inline-block;
   width: 140px;
-  height: 16px;
-  margin: 24px auto 0;
-}
-
-.admin-login-left--skeleton {
-  background-color: #8a6b45;
-  background-image: none;
-}
-
-.admin-login-left--skeleton::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.06) 45%,
-    transparent 70%
-  );
-  background-size: 200% 100%;
-  animation: admin-login-skeleton-shimmer 2s ease-in-out infinite;
+  height: 14px;
+  margin: 0 auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .admin-login-skeleton-shimmer,
-  .admin-login-left--skeleton::before {
+  .admin-login-skeleton-shimmer {
     animation: none;
     background: #ececec;
   }

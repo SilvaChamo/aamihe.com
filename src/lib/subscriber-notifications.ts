@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { getNotificationsList, saveNotificationsList } from '@/lib/dashboard-notifications-store';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { findUserByLogin } from '@/lib/users';
 
@@ -33,8 +33,7 @@ export async function createSubscriberNotification(input: {
   const userId = await resolveUserId(input.doc);
   if (!userId) return;
 
-  const db = await getDashboardDb();
-  const notifications = db.notifications ?? [];
+  const notifications = await getNotificationsList();
   const now = new Date().toISOString();
 
   notifications.unshift({
@@ -48,8 +47,7 @@ export async function createSubscriberNotification(input: {
     created_at: now,
   });
 
-  db.notifications = notifications.slice(0, 500);
-  await saveDashboardDb(db);
+  await saveNotificationsList(notifications);
 }
 
 export async function createDocumentApprovedNotification(

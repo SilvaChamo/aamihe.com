@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/admin-auth';
 import type { SubscriberNotification } from '@/lib/subscriber-notifications';
 import {
+  isNotificationCacheFresh,
+  NOTIFICATION_CACHE_TTL_MS,
   patchAllNotificationsRead,
   patchNotificationRead,
   readNotificationCache,
@@ -14,7 +16,8 @@ import {
 type UseSubscriberNotificationsResult = {
   notifications: SubscriberNotification[];
   unread: number;
-  loading: boolean;
+  ready: boolean;
+  refreshing: boolean;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
   marking: boolean;
@@ -22,11 +25,14 @@ type UseSubscriberNotificationsResult = {
 
 export function useSubscriberNotifications(): UseSubscriberNotificationsResult {
   const initialCache = readNotificationCache();
+  const cacheIsFresh = isNotificationCacheFresh();
+
   const [notifications, setNotifications] = useState<SubscriberNotification[]>(
     initialCache?.notifications ?? [],
   );
   const [unread, setUnread] = useState(initialCache?.unread ?? 0);
-  const [loading, setLoading] = useState(!initialCache);
+  const [ready, setReady] = useState(Boolean(initialCache));
+  const [refreshing, setRefreshing] = useState(false);
   const [marking, setMarking] = useState(false);
 
   const applyCache = useCallback(() => {
@@ -34,34 +40,44 @@ export function useSubscriberNotifications(): UseSubscriberNotificationsResult {
     if (!cache) return;
     setNotifications(cache.notifications);
     setUnread(cache.unread);
-    setLoading(false);
+    setReady(true);
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (background = false) => {
+    if (background) {
+      setRefreshing(true);
+    }
+
     try {
       const res = await adminFetch('/api/admin/notifications/mine', { cache: 'no-store' });
       const data = await res.json();
       if (res.ok && data.success) {
-        setNotifications(data.notifications);
+        const list = (data.notifications ?? []) as SubscriberNotification[];
+        setNotifications(list);
         setUnread(data.unread ?? 0);
         writeNotificationCache({
-          notifications: data.notifications,
+          notifications: list,
           unread: data.unread ?? 0,
           fetchedAt: Date.now(),
         });
       }
     } catch {
-      /* keep cached data */
+      /* mantém cache */
     } finally {
-      setLoading(false);
+      setReady(true);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     applyCache();
-    void refresh();
+    if (cacheIsFresh) {
+      void refresh(true);
+    } else {
+      void refresh(false);
+    }
     return subscribeNotificationCache(applyCache);
-  }, [applyCache, refresh]);
+  }, [applyCache, cacheIsFresh, refresh]);
 
   async function markRead(id: string) {
     setNotifications((prev) =>
@@ -77,7 +93,7 @@ export function useSubscriberNotifications(): UseSubscriberNotificationsResult {
         body: JSON.stringify({ id }),
       });
     } catch {
-      void refresh();
+      void refresh(true);
     }
   }
 
@@ -94,11 +110,13 @@ export function useSubscriberNotifications(): UseSubscriberNotificationsResult {
         body: JSON.stringify({ markAllRead: true }),
       });
     } catch {
-      void refresh();
+      void refresh(true);
     } finally {
       setMarking(false);
     }
   }
 
-  return { notifications, unread, loading, markRead, markAllRead, marking };
+  return { notifications, unread, ready, refreshing, markRead, markAllRead, marking };
 }
+
+export { NOTIFICATION_CACHE_TTL_MS };

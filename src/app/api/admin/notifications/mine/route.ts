@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { getNotificationsList, saveNotificationsList } from '@/lib/dashboard-notifications-store';
 import {
   countUnreadForUser,
   listNotificationsForUser,
@@ -13,22 +13,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: session.error }, { status: session.status });
     }
 
-    const db = await getDashboardDb();
-    const unread = countUnreadForUser(db.notifications ?? [], session.user.id);
+    const all = await getNotificationsList();
+    const unread = countUnreadForUser(all, session.user.id);
     const countOnly = new URL(request.url).searchParams.get('countOnly') === '1';
 
     if (countOnly) {
       return NextResponse.json(
         { success: true, unread },
-        { headers: { 'Cache-Control': 'private, no-store' } },
+        { headers: { 'Cache-Control': 'private, max-age=15' } },
       );
     }
 
-    const notifications = listNotificationsForUser(db.notifications ?? [], session.user.id);
+    const notifications = listNotificationsForUser(all, session.user.id);
 
     return NextResponse.json(
       { success: true, notifications, unread },
-      { headers: { 'Cache-Control': 'private, no-store' } },
+      { headers: { 'Cache-Control': 'private, max-age=15' } },
     );
   } catch (error) {
     console.error(error);
@@ -44,8 +44,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const db = await getDashboardDb();
-    const notifications = db.notifications ?? [];
+    const notifications = await getNotificationsList();
 
     if (body.markAllRead) {
       for (const item of notifications) {
@@ -65,8 +64,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: 'Pedido inválido.' }, { status: 400 });
     }
 
-    db.notifications = notifications;
-    await saveDashboardDb(db);
+    await saveNotificationsList(notifications);
 
     const unread = countUnreadForUser(notifications, session.user.id);
     return NextResponse.json({ success: true, unread });

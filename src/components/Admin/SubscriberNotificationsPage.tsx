@@ -3,10 +3,6 @@
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
-import {
-  PanelNotificationsListSkeleton,
-  PanelPageHeaderSkeleton,
-} from '@/components/Admin/PanelSkeleton';
 import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 function formatWhen(value: string) {
@@ -20,19 +16,18 @@ function formatWhen(value: string) {
 }
 
 export default function SubscriberNotificationsPage() {
-  const { notifications, loading, markRead, markAllRead, marking } = useSubscriberNotifications();
+  const { notifications, ready, refreshing, markRead, markAllRead, marking } =
+    useSubscriberNotifications();
   const hasUnread = notifications.some((item) => !item.read);
 
   return (
     <div className="docs-admin-page">
-      {loading ? (
-        <PanelPageHeaderSkeleton withAction />
-      ) : (
-        <div className="docs-admin-header subscriber-notifications-header">
+      <div className="docs-admin-header subscriber-notifications-header">
           <div>
             <h1 className="docs-admin-title">Notificações</h1>
             <p className="docs-admin-intro">
               Comunicações da comissão científica sobre os seus documentos enviados.
+              {refreshing ? ' · A actualizar…' : null}
             </p>
           </div>
           {hasUnread ? (
@@ -45,13 +40,10 @@ export default function SubscriberNotificationsPage() {
               {marking ? 'A actualizar…' : 'Marcar todas como lidas'}
             </button>
           ) : null}
-        </div>
-      )}
+      </div>
 
       <div className="docs-admin-container">
-        {loading ? (
-          <PanelNotificationsListSkeleton count={4} />
-        ) : notifications.length === 0 ? (
+        {!ready ? null : notifications.length === 0 ? (
           <div className="docs-admin-empty-state">
             <Bell size={40} />
             <h2>Sem notificações</h2>

@@ -4,6 +4,11 @@ import type { SiteDocumentRecord } from '@/lib/site-documents';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import type { SubscriberNotification } from '@/lib/subscriber-notifications';
 import { BLOB_ACCESS } from '@/lib/blob-access';
+import {
+  getNotificationsList,
+  invalidateNotificationsCache,
+  saveNotificationsList,
+} from '@/lib/dashboard-notifications-store';
 
 export type DashboardDb = {
   documents: SiteDocumentRecord[];
@@ -20,9 +25,10 @@ function hasBlobStorage(): boolean {
 }
 
 const EMPTY_DB: DashboardDb = { documents: [], media: [], notifications: [] };
-const DASHBOARD_DB_CACHE_MS = 5000;
+const DASHBOARD_DB_CACHE_MS = 30_000;
 
 let dashboardDbCache: { data: DashboardDb; at: number } | null = null;
+let dashboardDbInflight: Promise<DashboardDb> | null = null;
 
 function cloneDashboardDb(db: DashboardDb): DashboardDb {
   return {
@@ -77,21 +83,48 @@ async function writeDashboardToBlob(db: DashboardDb): Promise<void> {
   });
 }
 
+async function hydrateDashboardDb(data: DashboardDb): Promise<DashboardDb> {
+  const fromStore = await getNotificationsList();
+  if (fromStore.length > 0) {
+    data.notifications = fromStore;
+    return data;
+  }
+  if (data.notifications?.length) {
+    await saveNotificationsList(data.notifications);
+    return data;
+  }
+  data.notifications = [];
+  return data;
+}
+
 export async function getDashboardDb(): Promise<DashboardDb> {
-  if (
-    dashboardDbCache &&
-    Date.now() - dashboardDbCache.at < DASHBOARD_DB_CACHE_MS
-  ) {
+  if (dashboardDbCache && Date.now() - dashboardDbCache.at < DASHBOARD_DB_CACHE_MS) {
     return cloneDashboardDb(dashboardDbCache.data);
   }
 
-  const data = await loadDashboardDb();
-  dashboardDbCache = { data, at: Date.now() };
-  return cloneDashboardDb(data);
+  if (!dashboardDbInflight) {
+    dashboardDbInflight = loadDashboardDb()
+      .then(hydrateDashboardDb)
+      .then((data) => {
+        dashboardDbCache = { data, at: Date.now() };
+        return cloneDashboardDb(data);
+      })
+      .finally(() => {
+        dashboardDbInflight = null;
+      });
+  }
+
+  return dashboardDbInflight;
 }
 
 export async function saveDashboardDb(db: DashboardDb): Promise<void> {
   dashboardDbCache = null;
+  invalidateNotificationsCache();
+
+  if (db.notifications?.length) {
+    await saveNotificationsList(db.notifications);
+  }
+
   const json = JSON.stringify(db, null, 2);
 
   if (hasBlobStorage()) {
