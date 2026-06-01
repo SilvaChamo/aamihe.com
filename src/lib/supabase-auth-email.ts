@@ -1,6 +1,15 @@
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { getSmtpConfigStatus, sendSmtpMail } from '@/lib/smtp-mail';
 
+/** Na Vercel, mail.aamihe.com:587 no Hetzner costuma dar ETIMEDOUT — o email sai pelo GoTrue no VPS. */
+function useSiteSmtpForPasswordReset(): boolean {
+  const forced = process.env.PASSWORD_RESET_USE_SITE_SMTP?.trim().toLowerCase();
+  if (forced === 'true') return true;
+  if (forced === 'false') return false;
+  if (process.env.VERCEL) return false;
+  return getSmtpConfigStatus().configured;
+}
+
 function siteUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -18,12 +27,29 @@ function resetEmailErrorMessage(error: { message?: string; status?: number }): s
     return 'O servidor de email não respondeu a tempo. Verifique SMTP na Vercel (mail.aamihe.com) ou no Supabase Studio.';
   }
   if (/error sending recovery email/i.test(raw)) {
-    return 'Não foi possível enviar o email pelo Supabase. O site tenta enviar via SMTP da Vercel — confirme SMTP_HOST, SMTP_USER e SMTP_PASS no painel Vercel.';
+    return 'O Supabase no servidor não conseguiu enviar o email. No VPS execute configure-smtp-env.sh (Exim local, porta 25) ou configure SMTP no Studio → Authentication → Emails.';
+  }
+  const rateLimit = raw.match(/only request this after (\d+) seconds/i);
+  if (rateLimit) {
+    return `Aguarde ${rateLimit[1]} segundos e tente novamente (limite de segurança).`;
+  }
+  if (/etimedout|econnrefused|enotfound/i.test(raw)) {
+    return 'Servidor de email inacessível a partir da cloud. A reposição de senha deve usar o email enviado pelo Supabase no Hetzner (configure SMTP no VPS).';
   }
   if (!raw || raw === '{}') {
-    return 'Não foi possível enviar o email de recuperação. Configure SMTP na Vercel ou contacte a administração.';
+    return 'Não foi possível enviar o email de recuperação. Contacte a administração.';
   }
   return raw;
+}
+
+function wrapSmtpError(err: unknown): Error {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/etimedout|econnrefused/i.test(msg)) {
+    return new Error(
+      'Não foi possível ligar ao servidor de email (porta bloqueada para a Vercel). Em produção o email é enviado pelo Supabase no Hetzner — configure SMTP no VPS.',
+    );
+  }
+  return err instanceof Error ? err : new Error(msg);
 }
 
 async function sendRecoveryEmailViaSmtp(email: string, actionLink: string): Promise<void> {
@@ -59,18 +85,25 @@ async function sendRecoveryEmailViaSmtp(email: string, actionLink: string): Prom
   });
 }
 
-export async function requestPasswordResetEmail(email: string) {
-  const admin = getSupabaseAdmin();
-  if (!admin) {
-    throw new Error('Supabase não configurado.');
+async function sendViaGoTrue(
+  admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  email: string,
+  redirectTo: string,
+): Promise<void> {
+  const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) {
+    throw new Error(resetEmailErrorMessage(error));
   }
+}
 
-  const redirectTo = recoveryRedirectTo();
-  const normalized = email.trim().toLowerCase();
-
+async function sendViaSiteSmtp(
+  admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  email: string,
+  redirectTo: string,
+): Promise<void> {
   const { data, error } = await admin.auth.admin.generateLink({
     type: 'recovery',
-    email: normalized,
+    email,
     options: { redirectTo },
   });
 
@@ -87,14 +120,25 @@ export async function requestPasswordResetEmail(email: string) {
   }
 
   try {
-    await sendRecoveryEmailViaSmtp(normalized, actionLink);
-  } catch (smtpErr) {
-    const smtpMsg = smtpErr instanceof Error ? smtpErr.message : String(smtpErr);
-    const { error: fallbackError } = await admin.auth.resetPasswordForEmail(normalized, { redirectTo });
-    if (fallbackError) {
-      throw new Error(
-        `${smtpMsg} O Supabase também falhou: ${resetEmailErrorMessage(fallbackError)}`,
-      );
-    }
+    await sendRecoveryEmailViaSmtp(email, actionLink);
+  } catch (err) {
+    throw wrapSmtpError(err);
   }
+}
+
+export async function requestPasswordResetEmail(email: string) {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    throw new Error('Supabase não configurado.');
+  }
+
+  const redirectTo = recoveryRedirectTo();
+  const normalized = email.trim().toLowerCase();
+
+  if (useSiteSmtpForPasswordReset()) {
+    await sendViaSiteSmtp(admin, normalized, redirectTo);
+    return;
+  }
+
+  await sendViaGoTrue(admin, normalized, redirectTo);
 }
