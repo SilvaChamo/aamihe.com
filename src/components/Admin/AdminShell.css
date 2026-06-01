@@ -134,9 +134,8 @@ button.admin-brand-action {
   height: 14px;
 }
 
-/* Content Wrapper */
+/* Content Wrapper — barra lateral é fixed; só o main ocupa a faixa útil */
 .admin-content-wrapper {
-  display: flex;
   flex: 1;
   min-width: 0;
   margin-top: var(--admin-topbar-height);

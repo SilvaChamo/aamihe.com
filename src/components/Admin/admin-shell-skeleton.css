@@ -40,9 +40,9 @@
 }
 
 .admin-shell-skeleton-sidebar {
-  width: 220px;
+  width: var(--admin-sidebar-width, 224px);
   flex-shrink: 0;
-  background: #1d2327;
+  background: var(--primary, #561713);
   padding: 16px 12px;
   display: flex;
   flex-direction: column;

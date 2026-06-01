@@ -2,9 +2,10 @@
 
 import { usePathname } from 'next/navigation';
 import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
-import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
+import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import { LOGIN_PATH } from '@/lib/login-path';
 
+/** Só o conteúdo — o layout já inclui AdminShell (evita segunda barra lateral escura). */
 export default function AdminAreaLoading() {
   const pathname = usePathname();
   const isLogin =
@@ -14,5 +15,11 @@ export default function AdminAreaLoading() {
     return <AdminLoginSkeleton />;
   }
 
-  return <AdminShellSkeleton />;
+  const variant = pathname === '/dashboard' || pathname === '/admin/dashboard' ? 'dashboard' : 'default';
+
+  return (
+    <div className="admin-main-content" aria-busy="true" aria-label="A carregar">
+      <AdminPanelLoading variant={variant} />
+    </div>
+  );
 }
