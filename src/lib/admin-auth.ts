@@ -91,7 +91,7 @@ export async function requestPasswordReset(email: string) {
   const supabase = getSupabaseBrowserClient();
   const origin = window.location.origin;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/confirm?next=/admin/login?action=new-password`,
+    redirectTo: `${origin}/auth/confirm?next=/dashboard/login?action=new-password`,
   });
   if (error) throw error;
 }

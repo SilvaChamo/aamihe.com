@@ -149,31 +149,79 @@ export async function requireAamiheProfile(userId: string) {
   return profile;
 }
 
-export async function findUserByLogin(login: string) {
+function escapeIlike(value: string): string {
+  return value.replace(/[%_\\]/g, '\\$&');
+}
+
+async function findProfileByColumn(
+  admin: ReturnType<typeof adminClient>,
+  column: keyof ProfileRow,
+  value: string,
+  pattern?: string,
+): Promise<ProfileRow | undefined> {
+  const filter = pattern ?? value;
+  const { data, error } = await admin.from(TABLE).select('*').ilike(column, filter).limit(2);
+  if (error) {
+    console.error(`[findUserByLogin] ${column}:`, error.message);
+    throw new Error('Não foi possível validar as credenciais. Tente novamente em instantes.');
+  }
+  const rows = (data || []) as ProfileRow[];
+  if (rows.length === 1) return rows[0];
+  return undefined;
+}
+
+export async function findUserByLogin(login: string): Promise<ProfileRow | undefined> {
   const value = login.trim().toLowerCase();
   if (!value) return undefined;
 
   const admin = adminClient();
-  const { data: byEmail, error: emailError } = await admin
-    .from(TABLE)
-    .select('*')
-    .ilike('email', value)
-    .maybeSingle();
-  if (emailError) throw new Error(emailError.message);
-  if (byEmail) return byEmail as ProfileRow;
+  const partial = `%${escapeIlike(value)}%`;
 
-  const { data: byUsername, error: usernameError } = await admin
-    .from(TABLE)
-    .select('*')
-    .ilike('username', value)
-    .maybeSingle();
-  if (usernameError) throw new Error(usernameError.message);
-  if (byUsername) return byUsername as ProfileRow;
+  const byEmail = await findProfileByColumn(admin, 'email', value);
+  if (byEmail) return byEmail;
+
+  const byUsername = await findProfileByColumn(admin, 'username', value);
+  if (byUsername) return byUsername;
+
+  const byUsernamePartial = await findProfileByColumn(admin, 'username', value, partial);
+  if (byUsernamePartial) return byUsernamePartial;
+
+  const byAlcunha = await findProfileByColumn(admin, 'alcunha', value);
+  if (byAlcunha) return byAlcunha;
+
+  const byAlcunhaPartial = await findProfileByColumn(admin, 'alcunha', value, partial);
+  if (byAlcunhaPartial) return byAlcunhaPartial;
+
+  const byFirstName = await findProfileByColumn(admin, 'first_name', value);
+  if (byFirstName) return byFirstName;
+
+  const byLastName = await findProfileByColumn(admin, 'last_name', value);
+  if (byLastName) return byLastName;
+
+  const byFirstNamePartial = await findProfileByColumn(admin, 'first_name', value, partial);
+  if (byFirstNamePartial) return byFirstNamePartial;
+
+  const byLastNamePartial = await findProfileByColumn(admin, 'last_name', value, partial);
+  if (byLastNamePartial) return byLastNamePartial;
 
   const { data: allRows, error: listError } = await admin.from(TABLE).select('*');
-  if (listError) throw new Error(listError.message);
+  if (listError) {
+    console.error('[findUserByLogin] list:', listError.message);
+    throw new Error('Não foi possível validar as credenciais. Tente novamente em instantes.');
+  }
 
-  return (allRows as ProfileRow[]).find((row) => getDisplayName(row).toLowerCase() === value);
+  const displayMatches = (allRows as ProfileRow[]).filter(
+    (row) => getDisplayName(row).toLowerCase() === value,
+  );
+  if (displayMatches.length === 1) return displayMatches[0];
+
+  const byFullName = (allRows as ProfileRow[]).filter((row) => {
+    const combined = `${row.first_name} ${row.last_name}`.trim().toLowerCase();
+    return combined === value;
+  });
+  if (byFullName.length === 1) return byFullName[0];
+
+  return undefined;
 }
 
 export async function verifyUserPassword(userId: string, password: string) {

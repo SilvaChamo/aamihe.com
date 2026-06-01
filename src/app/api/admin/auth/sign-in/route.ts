@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { getSupabaseAdmin, hasSupabaseServiceRole } from '@/lib/supabase/server';
+import { safeErrorMessage } from '@/lib/safe-error-message';
 import { findUserByLogin, getUserById } from '@/lib/users';
 
 export async function POST(request: Request) {
@@ -11,21 +12,29 @@ export async function POST(request: Request) {
 
     if (!login || !password) {
       return NextResponse.json(
-        { success: false, error: 'Nome, email ou utilizador e senha são obrigatórios.' },
+        { success: false, error: 'Email, utilizador, alcunha e senha são obrigatórios.' },
         { status: 400 },
       );
     }
 
-    let email = login;
-    if (!email.includes('@')) {
-      const profile = await findUserByLogin(login);
-      if (!profile) {
-        return NextResponse.json(
-          { success: false, error: 'Nome, email ou utilizador, ou senha incorrectos.' },
-          { status: 401 },
-        );
-      }
-      email = profile.email;
+    const profile = await findUserByLogin(login);
+    const email = profile?.email?.trim().toLowerCase() || (login.includes('@') ? login.toLowerCase() : '');
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: 'Email, utilizador, alcunha ou senha incorrectos.' },
+        { status: 401 },
+      );
+    }
+
+    if (!hasSupabaseServiceRole()) {
+      console.error('[sign-in] SUPABASE_SERVICE_ROLE_KEY em falta no servidor');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Serviço de autenticação indisponível. Contacte a administração do site.',
+        },
+        { status: 503 },
+      );
     }
 
     const admin = getSupabaseAdmin();
@@ -37,7 +46,7 @@ export async function POST(request: Request) {
 
     if (error || !data.session || !data.user) {
       return NextResponse.json(
-        { success: false, error: 'Nome, email ou utilizador, ou senha incorrectos.' },
+        { success: false, error: 'Email, utilizador, alcunha ou senha incorrectos.' },
         { status: 401 },
       );
     }
@@ -78,7 +87,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    const message = safeErrorMessage(
+      error instanceof Error ? error.message : '',
+      'Não foi possível iniciar sessão. Verifique email, utilizador ou alcunha e a senha.',
+    );
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

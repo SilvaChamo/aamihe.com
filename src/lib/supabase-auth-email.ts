@@ -21,7 +21,7 @@ export async function requestPasswordResetEmail(email: string) {
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3004');
 
-  const redirectTo = `${siteUrl.replace(/\/$/, '')}/auth/confirm?next=/admin/login?action=new-password`;
+  const redirectTo = `${siteUrl.replace(/\/$/, '')}/auth/confirm?next=/dashboard/login?action=new-password`;
 
   const { error } = await admin.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) {

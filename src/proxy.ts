@@ -8,7 +8,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/confirm') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/public') ||
+    pathname.startsWith('/api/') ||
     pathname.includes('.')
   ) {
     return NextResponse.next();

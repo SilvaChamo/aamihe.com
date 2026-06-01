@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
+import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
 
 export default function AdminAuthGate({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -28,21 +29,7 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
   }, []);
 
   if (authorized === null) {
-    return (
-      <div
-        className="admin-auth-gate-loading"
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#666',
-          fontSize: 14,
-        }}
-      >
-        A carregar…
-      </div>
-    );
+    return <AdminShellSkeleton />;
   }
 
   if (!authorized) {

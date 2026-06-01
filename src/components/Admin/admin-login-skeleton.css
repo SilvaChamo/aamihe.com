@@ -1,0 +1,101 @@
+.admin-login-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #ececec 0%,
+    #f5f5f5 45%,
+    #ececec 90%
+  );
+  background-size: 200% 100%;
+  animation: admin-login-skeleton-shimmer 1.35s ease-in-out infinite;
+  border-radius: 5px;
+}
+
+@keyframes admin-login-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.admin-login-skeleton-logo {
+  width: 200px;
+  height: 56px;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+.admin-login-skeleton-field {
+  width: 100%;
+  height: 46px;
+}
+
+.admin-login-skeleton-field--short {
+  width: 42%;
+  height: 18px;
+}
+
+.admin-login-skeleton-submit-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.admin-login-skeleton-btn {
+  flex: 1;
+  height: 46px;
+  border-radius: 5px;
+}
+
+.admin-login-skeleton-google {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 5px;
+}
+
+.admin-login-skeleton-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.admin-login-skeleton-link {
+  width: 72px;
+  height: 16px;
+}
+
+.admin-login-skeleton-back {
+  width: 140px;
+  height: 16px;
+  margin: 24px auto 0;
+}
+
+.admin-login-left--skeleton {
+  background-color: #8a6b45;
+  background-image: none;
+}
+
+.admin-login-left--skeleton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 45%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: admin-login-skeleton-shimmer 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-login-skeleton-shimmer,
+  .admin-login-left--skeleton::before {
+    animation: none;
+    background: #ececec;
+  }
+}

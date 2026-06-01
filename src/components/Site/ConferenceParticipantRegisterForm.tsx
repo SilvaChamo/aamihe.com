@@ -95,7 +95,7 @@ export default function ConferenceParticipantRegisterForm({
       const loginResult = await loginRes.json();
 
       if (!loginRes.ok || !loginResult.success) {
-        router.push('/admin/login');
+        router.push('/dashboard/login');
         return;
       }
 

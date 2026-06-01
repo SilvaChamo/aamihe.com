@@ -11,7 +11,9 @@ import {
   updatePassword,
 } from '@/lib/admin-auth';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
-import { isSubscriberRole } from '@/lib/user-types';
+import { readApiJsonResponse, safeErrorMessage } from '@/lib/safe-error-message';
+import { isSubscriberRole, type UserProfile } from '@/lib/user-types';
+import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
 import AdminLoginMathChallenge, { createLoginMathChallenge } from '@/components/Admin/AdminLoginMathChallenge';
 import { verifyMathCaptcha } from '@/lib/math-captcha';
 import './AdminLoginPage.css';
@@ -49,12 +51,7 @@ function GoogleIcon() {
 type AuthMode = 'login' | 'register' | 'reset' | 'new-password';
 
 function formatApiError(value: unknown, fallback: string): string {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed || trimmed === '{}') return fallback;
-    return trimmed;
-  }
-  return fallback;
+  return safeErrorMessage(value, fallback);
 }
 
 interface AdminLoginPageProps {
@@ -65,7 +62,7 @@ interface AdminLoginPageProps {
 
 export default function AdminLoginPage(props: AdminLoginPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AdminLoginSkeleton />}>
       <AdminLoginPageInner {...props} />
     </Suspense>
   );
@@ -105,7 +102,8 @@ function AdminLoginPageInner({
   useEffect(() => {
     const desc = searchParams.get('error_description');
     if (desc) {
-      setError(decodeURIComponent(desc.replace(/\+/g, ' ')));
+      const decoded = decodeURIComponent(desc.replace(/\+/g, ' '));
+      setError(safeErrorMessage(decoded, 'Não foi possível iniciar sessão.'));
     }
   }, [searchParams]);
 
@@ -139,16 +137,26 @@ function AdminLoginPageInner({
       const response = await fetch('/api/admin/auth/sign-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({
           login: username.trim(),
           password,
         }),
       });
 
-      const result = await response.json();
+      const { data: result } = await readApiJsonResponse(response);
 
       if (!response.ok || !result.success) {
-        setError(formatApiError(result.error, 'Não foi possível iniciar sessão.'));
+        setError(
+          formatApiError(
+            result.error,
+            response.status === 401
+              ? 'Email, utilizador, alcunha ou senha incorrectos.'
+              : response.status === 503
+                ? 'Serviço de autenticação indisponível. Tente com o email completo ou contacte a administração.'
+                : 'Não foi possível iniciar sessão.',
+          ),
+        );
         return;
       }
 
@@ -167,11 +175,11 @@ function AdminLoginPageInner({
         }
       }
 
-      setSessionProfile(result.user ?? null);
+      const profile = result.user as UserProfile | undefined;
+      setSessionProfile(profile ?? null);
       onSuccess?.();
-      const profile = result.user as { role?: string } | undefined;
       const target =
-        profile && isSubscriberRole(profile.role || '')
+        profile && isSubscriberRole(profile.role)
           ? '/dashboard'
           : redirectTo.startsWith('/admin')
             ? redirectTo
@@ -344,7 +352,7 @@ function AdminLoginPageInner({
                       type="text"
                       name="log"
                       className="input"
-                      placeholder="Nome, email ou utilizador"
+                      placeholder="Email, utilizador ou alcunha"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       autoComplete="username"

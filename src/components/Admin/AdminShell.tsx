@@ -29,7 +29,7 @@ import { resolveUserDisplayName } from '@/lib/user-types';
 import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
 import { useAdminBase } from '@/lib/admin-base';
 import { useNotificationUnread } from '@/hooks/useNotificationUnread';
-import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
+import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
 import './AdminShell.css';
 import './admin-buttons.css';
 
@@ -361,8 +361,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const handleLogout = () => {
     clearAdminSecret();
-    router.push('/admin/login');
+    router.push('/dashboard/login');
   };
+
+  if (sessionLoading) {
+    return (
+      <AdminShellSkeleton
+        variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}
+      />
+    );
+  }
 
   return (
     <div className="admin-shell">
@@ -467,15 +475,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             )}
           </button>
 
-          <div className="admin-main-content">
-            {sessionLoading ? (
-              <AdminPanelLoading
-                variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}
-              />
-            ) : (
-              children
-            )}
-          </div>
+          <div className="admin-main-content">{children}</div>
         </main>
       </div>
     </div>
