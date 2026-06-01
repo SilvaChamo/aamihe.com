@@ -13,7 +13,7 @@ import {
   PanelPageHeaderSkeleton,
 } from '@/components/Admin/PanelSkeleton';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 type ConferenceSubmissionsListProps = {
   viewPath: string;
@@ -60,9 +60,9 @@ export default function ConferenceSubmissionsList({ viewPath }: ConferenceSubmis
       ) : (
         <div className="docs-admin-header">
           <div>
-            <h1 className="docs-admin-title">Submissões da Conferência</h1>
+            <h1 className="docs-admin-title">Resumos recebidos</h1>
             <p className="docs-admin-intro">
-              Documentos recebidos pelo formulário público. Abra cada documento para aprovar ou devolver com comentário.
+              Resumos e documentos enviados pelo formulário da conferência. Abra cada entrada para aprovar ou devolver com comentário.
             </p>
           </div>
         </div>

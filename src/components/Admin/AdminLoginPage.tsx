@@ -10,6 +10,8 @@ import {
   signInWithGoogle,
   updatePassword,
 } from '@/lib/admin-auth';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import { isSubscriberRole } from '@/lib/user-types';
 import AdminLoginMathChallenge, { createLoginMathChallenge } from '@/components/Admin/AdminLoginMathChallenge';
 import { verifyMathCaptcha } from '@/lib/math-captcha';
 import './AdminLoginPage.css';
@@ -150,9 +152,31 @@ function AdminLoginPageInner({
         return;
       }
 
+      const tokens = result.session as
+        | { access_token?: string; refresh_token?: string }
+        | undefined;
+      if (tokens?.access_token && tokens?.refresh_token) {
+        const supabase = getSupabaseBrowserClient();
+        const { error: browserSessionError } = await supabase.auth.setSession({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+        });
+        if (browserSessionError) {
+          setError('Sessão incompleta no browser. Tente iniciar sessão novamente.');
+          return;
+        }
+      }
+
       setSessionProfile(result.user ?? null);
       onSuccess?.();
-      window.location.assign(redirectTo);
+      const profile = result.user as { role?: string } | undefined;
+      const target =
+        profile && isSubscriberRole(profile.role || '')
+          ? '/dashboard'
+          : redirectTo.startsWith('/admin')
+            ? redirectTo
+            : '/admin/dashboard';
+      window.location.assign(target);
     } catch {
       setError('Erro de ligação. Tente novamente.');
     } finally {
@@ -298,15 +322,7 @@ function AdminLoginPageInner({
 
   return (
     <div className="admin-login-page">
-      <div className="admin-login-left">
-        <img
-          src="/images/login-bg.png"
-          alt=""
-          className="admin-login-bg"
-          decoding="async"
-          fetchPriority="high"
-        />
-      </div>
+      <div className="admin-login-left" role="img" aria-label="" />
 
       <div className="admin-login-panel">
         <div className="admin-login-panel-inner">

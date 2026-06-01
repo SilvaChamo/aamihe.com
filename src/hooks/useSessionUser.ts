@@ -15,10 +15,14 @@ type SessionState = {
 export function useSessionUser(): SessionState {
   const [user, setUser] = useState<UserProfile | null>(() => getSessionProfile());
   const [isAdminSecret, setIsAdminSecret] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !getSessionProfile();
+  });
 
   useEffect(() => {
     let cancelled = false;
+    const hadCachedProfile = Boolean(getSessionProfile());
 
     (async () => {
       try {
@@ -30,9 +34,13 @@ export function useSessionUser(): SessionState {
           const nextUser = (data.user as UserProfile | null) ?? null;
           setUser(nextUser);
           setSessionProfile(nextUser);
+        } else if (!hadCachedProfile) {
+          setUser(null);
+          setIsAdminSecret(false);
+          setSessionProfile(null);
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelled && !hadCachedProfile) {
           setUser(null);
           setIsAdminSecret(false);
           setSessionProfile(null);

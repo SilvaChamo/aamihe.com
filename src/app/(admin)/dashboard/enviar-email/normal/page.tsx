@@ -1,5 +1,3 @@
-import EmailSendPage from '@/components/Admin/EmailSendPage';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function DashboardSendEmailNormalRoute() {
-  return <EmailSendPage />;
-}
+export default createDashboardStaffRedirect('/admin/enviar-email/normal');

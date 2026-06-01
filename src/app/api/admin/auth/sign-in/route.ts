@@ -72,6 +72,10 @@ export async function POST(request: Request) {
       success: true,
       username: user.username || login,
       user,
+      session: {
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      },
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Erro desconhecido';

@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Activity, FileUp, ImageIcon, Newspaper, Users } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
+import { adminFetch } from '@/lib/admin-auth';
 import { useLanguage } from '@/context/LanguageContext';
+import { PanelStatsSkeleton } from '@/components/Admin/PanelSkeleton';
 import './SiteStatsPage.css';
 
 type Stats = {
@@ -75,16 +77,14 @@ export default function SiteStatsPage() {
 
     (async () => {
       try {
-        const [contentRes, mediaRes, usersRes, docsRes] = await Promise.all([
-          fetch('/api/admin/content'),
-          fetch('/api/admin/media'),
-          fetch('/api/admin/users/list'),
-          fetch('/api/admin/documents?category=conferencia'),
+        const [statsRes, usersRes, docsRes] = await Promise.all([
+          adminFetch('/api/admin/dashboard/stats', { cache: 'no-store' }),
+          adminFetch('/api/admin/users/list', { cache: 'no-store' }),
+          adminFetch('/api/admin/documents?category=conferencia', { cache: 'no-store' }),
         ]);
 
-        const [contentData, mediaData, usersData, docsData] = await Promise.all([
-          contentRes.json(),
-          mediaRes.json(),
+        const [statsData, usersData, docsData] = await Promise.all([
+          statsRes.json(),
           usersRes.json(),
           docsRes.json(),
         ]);
@@ -92,8 +92,8 @@ export default function SiteStatsPage() {
         if (cancelled) return;
 
         setStats({
-          news: Array.isArray(contentData?.news) ? contentData.news.length : 0,
-          media: Array.isArray(mediaData?.media) ? mediaData.media.length : 0,
+          news: statsData?.stats?.news ?? 0,
+          media: statsData?.stats?.media ?? 0,
           users: Array.isArray(usersData?.users) ? usersData.users.length : 0,
           conferenceSubmissions: Array.isArray(docsData?.documents) ? docsData.documents.length : 0,
         });
@@ -118,6 +118,9 @@ export default function SiteStatsPage() {
         <p>{tx.subtitle}</p>
       </div>
 
+      {loading ? (
+        <PanelStatsSkeleton count={4} />
+      ) : (
       <div className="site-stats-grid">
         <Link href={`${base}/noticias`} className="site-stats-card">
           <div className="site-stats-icon"><Newspaper size={18} /></div>
@@ -143,6 +146,7 @@ export default function SiteStatsPage() {
           <div className="site-stats-label">{tx.conf}</div>
         </Link>
       </div>
+      )}
 
       <div className="site-stats-analytics">
         <div className="site-stats-analytics-header">

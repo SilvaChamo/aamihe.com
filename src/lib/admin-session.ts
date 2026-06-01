@@ -23,21 +23,21 @@ async function resolveUserFromAccessToken(token: string): Promise<UserProfile | 
 }
 
 export async function resolveSessionUser(request: Request): Promise<SessionUser | null> {
+  const bearer = extractBearerToken(request);
+  if (bearer) {
+    const fromToken = await resolveUserFromAccessToken(bearer);
+    if (fromToken) return { type: 'user', user: fromToken };
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) {
-    const profile = await getUserById(user.id);
-    return profile ? { type: 'user', user: profile } : null;
-  }
+  if (!user) return null;
 
-  const bearer = extractBearerToken(request);
-  if (!bearer) return null;
-
-  const fromToken = await resolveUserFromAccessToken(bearer);
-  return fromToken ? { type: 'user', user: fromToken } : null;
+  const profile = await getUserById(user.id);
+  return profile ? { type: 'user', user: profile } : null;
 }
 
 export function isStaffSession(session: SessionUser | null): session is SessionUser {

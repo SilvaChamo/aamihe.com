@@ -1,22 +1,8 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import React, { use } from 'react';
-import NewsForm from '@/components/Admin/NewsForm';
-import { useNews } from '@/context/NewsContext';
+type Props = { params: Promise<{ id: string }> };
 
-export default function EditarNoticiaPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const { getNewsById } = useNews();
-  const newsItem = getNewsById(parseInt(resolvedParams.id));
-
-  if (!newsItem) {
-    return (
-      <div style={{ padding: '50px', textAlign: 'center' }}>
-        <h2>Notícia não encontrada</h2>
-        <p>A notícia que procura não existe ou foi eliminada.</p>
-      </div>
-    );
-  }
-
-  return <NewsForm key={newsItem.id} initialData={newsItem} isEdit={true} />;
+export default async function DashboardNoticiasEditarRedirect({ params }: Props) {
+  const { id } = await params;
+  redirect(`/admin/noticias/editar/${id}`);
 }

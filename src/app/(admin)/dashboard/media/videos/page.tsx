@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function VideosRedirectPage() {
-  redirect('/admin/media/galeria');
-}
+export default createDashboardStaffRedirect('/admin/media/videos');

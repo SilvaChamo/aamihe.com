@@ -13,7 +13,7 @@ import {
   getSubscriberStatusLabel,
 } from '@/lib/document-review-status';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('pt-PT', {

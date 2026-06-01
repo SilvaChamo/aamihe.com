@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import styles from './SobreHistoriaSection.module.css';
 
 const PDF_ICON_URL =
-  'https://gwankhxcbkrtgxopbxwd.supabase.co/storage/v1/object/public/aamihe-media/legacy/ref/Documentos%20gerais_files/PDF-1-1.png.webp';
+  'https://supabase.aamihe.com/storage/v1/object/public/aamihe-media/legacy/ref/Documentos%20gerais_files/PDF-1-1.png.webp';
 
 export const sobreHistoriaSectionCopy = {
   pt: {

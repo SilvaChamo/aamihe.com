@@ -44,6 +44,6 @@ export async function GET(request: Request) {
   }
 
   const isStaff = profile.role !== 'Subscritor';
-  const redirectPath = isStaff ? '/dashboard' : '/dashboard/minha-conta';
+  const redirectPath = isStaff ? '/admin/dashboard' : '/dashboard';
   return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
 }

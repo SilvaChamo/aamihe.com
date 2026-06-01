@@ -1,11 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-/** Chave para sessão SSR — service role evita falhas quando a anon key local está desactualizada. */
+/** Anon key — obrigatória para validar sessão/cookies do utilizador (não usar service role). */
 function resolveSupabaseAuthKey(): string {
   return (
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
     ''
   );
 }

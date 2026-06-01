@@ -12,7 +12,7 @@ import {
 } from '@/lib/document-review-status';
 import { getFileTypeLabel, isPdfPreviewable } from '@/lib/conference-document-files';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 type ConferenceDocumentReviewPageProps = {
   id: string;

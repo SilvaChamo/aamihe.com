@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
+import { SkeletonMediaGrid } from '@/components/Admin/Skeleton';
 import './MediaLibrary.css';
 
 interface MediaLibraryProps {
@@ -35,6 +36,8 @@ interface MediaLibraryProps {
   externalSearchQuery?: string;
   /** Galeria pública: inclui ficheiros em /gallery e arquivo legado */
   fullCatalog?: boolean;
+  /** Filtro inicial nas páginas Biblioteca / Documentos / Vídeos */
+  initialCategory?: MediaCategory;
 }
 
 interface MediaFile {
@@ -59,12 +62,20 @@ const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
 
 const PAGE_BATCH = 48;
 
-export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, fullCatalog }: MediaLibraryProps) {
+export default function MediaLibrary({
+  onSelect,
+  isModal,
+  externalSearchQuery,
+  fullCatalog,
+  initialCategory,
+}: MediaLibraryProps) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>(isModal ? 'all' : 'imagens');
+  const defaultFilter: 'all' | MediaCategory =
+    initialCategory ?? (isModal ? 'all' : 'imagens');
+  const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>(defaultFilter);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -553,7 +564,7 @@ export default function MediaLibrary({ onSelect, isModal, externalSearchQuery, f
         {/* Grid Principal */}
         <div className="media-grid-container">
           {loading && files.length === 0 ? (
-            <div className="media-loading"><RefreshCw className="media-loading-icon" /></div>
+            <SkeletonMediaGrid count={12} />
           ) : viewMode === 'grid' ? (
             <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (

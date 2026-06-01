@@ -1,5 +1,3 @@
-import ConferenceSubmissionsList from '@/components/Admin/ConferenceSubmissionsList';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function DashboardDocumentosConferenciaPage() {
-  return <ConferenceSubmissionsList viewPath="/dashboard/documentos-gerais/ver" />;
-}
+export default createDashboardStaffRedirect('/admin/documentos-gerais');

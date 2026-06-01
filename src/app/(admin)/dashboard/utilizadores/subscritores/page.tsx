@@ -1,5 +1,3 @@
-import ConferenceSubscribersPage from '@/components/Admin/ConferenceSubscribersPage';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function DashboardConferenceSubscribersRoute() {
-  return <ConferenceSubscribersPage />;
-}
+export default createDashboardStaffRedirect('/admin/utilizadores/subscritores');

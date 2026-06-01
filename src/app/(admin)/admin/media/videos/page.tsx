@@ -1,5 +1,8 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export default function VideosRedirectPage() {
-  redirect('/admin/media/galeria');
+import MediaLibrarySection from '@/components/Admin/MediaLibrarySection';
+import '../media.css';
+
+export default function AdminMediaVideosPage() {
+  return <MediaLibrarySection title="Vídeos do site" initialCategory="videos" />;
 }

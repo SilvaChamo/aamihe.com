@@ -1,8 +1,3 @@
-'use client';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-import React from 'react';
-import MediaLibrary from '@/components/Admin/MediaLibrary';
-
-export default function MediaLibraryPage() {
-  return <MediaLibrary />;
-}
+export default createDashboardStaffRedirect('/admin/media');

@@ -8,7 +8,7 @@ import { interpolateSubmissionDeadline } from '@/lib/conference-schedule';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import ConferenceSubmissionForm from '@/components/Site/ConferenceSubmissionForm';
 import SubmissionSidebar from '@/components/Admin/SubmissionSidebar';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 type SubscriberSubmissionPageProps = {
   title?: string;

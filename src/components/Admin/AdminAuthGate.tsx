@@ -28,7 +28,21 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
   }, []);
 
   if (authorized === null) {
-    return null;
+    return (
+      <div
+        className="admin-auth-gate-loading"
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: 14,
+        }}
+      >
+        A carregar…
+      </div>
+    );
   }
 
   if (!authorized) {

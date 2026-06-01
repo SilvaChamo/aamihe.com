@@ -16,7 +16,7 @@ import {
   PanelDocumentsGridSkeleton,
   PanelPageHeaderSkeleton,
 } from '@/components/Admin/PanelSkeleton';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('pt-PT', {

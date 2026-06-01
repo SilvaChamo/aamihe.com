@@ -604,27 +604,41 @@ function UserFormLayout({
               </>
             )}
 
-            <tr className="section-row">
-              <th colSpan={2}>
-                <h2>Papel</h2>
-              </th>
-            </tr>
-            <tr>
-              <th scope="row">Papel</th>
-              <td>
-                <select
-                  className="wp-select"
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-              </td>
-            </tr>
+            {form.role !== 'Actor' ? (
+              <>
+                <tr className="section-row">
+                  <th colSpan={2}>
+                    <h2>Papel</h2>
+                  </th>
+                </tr>
+                <tr>
+                  <th scope="row">Papel</th>
+                  <td>
+                    <select
+                      className="wp-select"
+                      value={form.role}
+                      onChange={(e) => setForm({ ...form, role: e.target.value })}
+                    >
+                      {ROLES.filter((r) => r !== 'Actor').map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              </>
+            ) : (
+              <tr>
+                <th scope="row">Papel</th>
+                <td>
+                  <span className="wp-role-badge">Actor</span>
+                  <p className="description" style={{ marginTop: 8 }}>
+                    O papel Actor não pode ser alterado neste painel.
+                  </p>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 

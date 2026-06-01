@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import MediaLibrary from '@/components/Admin/MediaLibrary';
+import MediaLibrarySection from '@/components/Admin/MediaLibrarySection';
+import './media.css';
 
 export default function MediaLibraryPage() {
-  return <MediaLibrary />;
+  return <MediaLibrarySection title="Biblioteca multimédia" initialCategory="imagens" />;
 }

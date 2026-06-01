@@ -13,7 +13,7 @@ function AdminLoginContent() {
   const initialMode =
     action === 'new-password' ? 'new-password' : action === 'register' ? 'register' : 'login';
   const redirectTo =
-    next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+    next && next.startsWith('/') && !next.startsWith('//') ? next : '/admin/dashboard';
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -21,7 +21,15 @@ function AdminLoginContent() {
       if (!session || initialMode === 'new-password') return;
       const me = await fetch('/api/admin/users/me', { credentials: 'same-origin' });
       if (me.ok) {
-        router.replace(redirectTo);
+        const data = await me.json();
+        const role = String(data?.user?.role || '');
+        const target =
+          role === 'Subscritor'
+            ? '/dashboard'
+            : redirectTo.startsWith('/admin')
+              ? redirectTo
+              : '/admin/dashboard';
+        router.replace(target);
       } else {
         await supabase.auth.signOut();
       }

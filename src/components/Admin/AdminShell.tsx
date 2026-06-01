@@ -24,9 +24,12 @@ import {
 import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { resolveUserDisplayName } from '@/lib/user-types';
+import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
 import { useAdminBase } from '@/lib/admin-base';
 import { useNotificationUnread } from '@/hooks/useNotificationUnread';
+import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import './AdminShell.css';
 import './admin-buttons.css';
 
@@ -164,8 +167,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const router = useRouter();
   const base = useAdminBase();
-  const { user, isAdminSecret, isSubscriber, loading: sessionLoading } = useSessionUser();
-  const unreadNotifications = useNotificationUnread();
+  const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
+  const { canManageNews, canManageUsers, canViewNews } = useAdminPermissions();
+  const showSubscriberNav = base === '/dashboard' && isSubscriber;
+  const menuBase = showSubscriberNav ? '/dashboard' : '/admin';
+  const unreadNotifications = useNotificationUnread(showSubscriberNav);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
@@ -197,36 +203,82 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     '/dashboard/submissao-resumo',
   ];
 
-  const showSubscriberNav = base === '/dashboard' && isSubscriber;
-
   React.useEffect(() => {
-    if (sessionLoading || !showSubscriberNav) return;
+    if (sessionLoading) return;
+
+    if (isSubscriber && pathname.startsWith('/admin')) {
+      router.replace('/dashboard');
+      return;
+    }
+
+    if (isStaff && !isSubscriber) {
+      const adminPath = staffDashboardPathToAdmin(pathname);
+      if (adminPath) {
+        router.replace(adminPath);
+        return;
+      }
+    }
+
+    if (!canManageNews && canViewNews) {
+      const blocked =
+        pathname.includes('/noticias/nova') ||
+        pathname.includes('/noticias/editar') ||
+        pathname.includes('/noticias/categorias') ||
+        pathname.includes('/noticias/etiquetas');
+      if (blocked) {
+        router.replace(`${menuBase}/noticias`);
+      }
+    }
+
+    if (!showSubscriberNav) return;
+
     const allowed = subscriberPaths.some(
       (path) => pathname === path || pathname.startsWith(`${path}/`),
     );
     if (!allowed) {
       router.replace('/dashboard');
     }
-  }, [pathname, router, sessionLoading, showSubscriberNav]);
+  }, [
+    pathname,
+    router,
+    sessionLoading,
+    showSubscriberNav,
+    isSubscriber,
+    isStaff,
+    canManageNews,
+    canViewNews,
+    menuBase,
+  ]);
 
   const handleToggleSubmenu = (label: string) => {
     setOpenSubmenu((prev) => (prev === label ? null : label));
   };
 
   React.useEffect(() => {
-    if (openSubmenu === 'Multimédia' && !pathname.startsWith(`${base}/media`)) {
+    if (openSubmenu === 'Multimédia' && !pathname.startsWith(`${menuBase}/media`)) {
       setOpenSubmenu(null);
     }
-    if (openSubmenu === 'Notícias' && !pathname.startsWith(`${base}/noticias`)) {
+    if (openSubmenu === 'Notícias' && !pathname.startsWith(`${menuBase}/noticias`)) {
       setOpenSubmenu(null);
     }
-    if (openSubmenu === 'Utilizadores' && !pathname.startsWith(`${base}/utilizadores`)) {
+    if (openSubmenu === 'Utilizadores' && !pathname.startsWith(`${menuBase}/utilizadores`)) {
       setOpenSubmenu(null);
     }
-    if (openSubmenu === 'Definições' && !pathname.startsWith(`${base}/definicoes`)) {
+    if (openSubmenu === 'Definições' && !pathname.startsWith(`${menuBase}/definicoes`)) {
       setOpenSubmenu(null);
     }
-  }, [pathname, openSubmenu, base]);
+  }, [pathname, openSubmenu, menuBase]);
+
+  const newsSubmenu: SubmenuEntry[] = canManageNews
+    ? [
+        { label: 'Todas as Notícias', href: `${menuBase}/noticias` },
+        { label: 'Adicionar Nova', href: `${menuBase}/noticias/nova` },
+        { label: 'Categorias', href: `${menuBase}/noticias/categorias` },
+        { label: 'Etiquetas', href: `${menuBase}/noticias/etiquetas` },
+      ]
+    : canViewNews
+      ? [{ label: 'Todas as Notícias', href: `${menuBase}/noticias` }]
+      : [];
 
   const menuItems: MenuItem[] = showSubscriberNav
     ? [
@@ -238,82 +290,70 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       ]
     : [
         {
-          href: base === '/dashboard' ? '/dashboard' : '/admin/dashboard',
+          href: `${menuBase}/dashboard`,
           icon: LayoutDashboard,
           label: 'Dashboard',
         },
+    ...(canViewNews
+      ? [
+          {
+            href: `${menuBase}/noticias`,
+            icon: Newspaper,
+            label: 'Notícias',
+            submenu: newsSubmenu,
+          },
+        ]
+      : []),
     {
-      href: `${base}/noticias`,
-      icon: Newspaper,
-      label: 'Notícias',
-      submenu: [
-        { label: 'Todas as Notícias', href: `${base}/noticias` },
-        { label: 'Adicionar Nova', href: `${base}/noticias/nova` },
-        { label: 'Categorias', href: `${base}/noticias/categorias` },
-        { label: 'Etiquetas', href: `${base}/noticias/etiquetas` },
-      ],
-    },
-    {
-      href: `${base}/media`,
+      href: `${menuBase}/media`,
       icon: ImageIcon,
       label: 'Multimédia',
       submenu: [
-        { label: 'Biblioteca', href: `${base}/media` },
-        ...(base === '/dashboard'
-          ? [{ label: 'Documentos', href: `${base}/media/documentos` }]
-          : [
-              { label: 'Adicionar novo', href: `${base}/media/novo` },
-              { label: 'Galeria', href: `${base}/media/galeria` },
-            ]),
-        { label: 'Vídeos', href: `${base}/media/videos` },
+        { label: 'Biblioteca', href: `${menuBase}/media` },
+        { label: 'Documentos', href: `${menuBase}/media/documentos` },
+        { label: 'Vídeos', href: `${menuBase}/media/videos` },
       ],
     },
-    ...(base === '/dashboard'
+    {
+      href: `${menuBase}/documentos-gerais`,
+      icon: FileUp,
+      label: 'Resumos recebidos',
+    },
+    ...(canManageUsers
       ? [
           {
-            href: `${base}/submissao-resumo`,
-            icon: FileUp,
-            label: 'RESUMOS',
+            href: `${menuBase}/utilizadores`,
+            icon: Users,
+            label: 'Utilizadores',
+            submenu: [
+              { label: 'Todos os Utilizadores', href: `${menuBase}/utilizadores` },
+              { label: 'Subscritores Conferência', href: `${menuBase}/utilizadores/subscritores` },
+              { label: 'Adicionar Novo', href: `${menuBase}/utilizadores/novo` },
+            ],
           },
         ]
-      : [
-          {
-            href: `${base}/documentos-gerais`,
-            icon: FileUp,
-            label: 'Documentos',
-          },
-        ]),
+      : []),
     {
-      href: `${base}/utilizadores`,
-      icon: Users,
-      label: 'Utilizadores',
-      submenu: [
-        { label: 'Todos os Utilizadores', href: `${base}/utilizadores` },
-        { label: 'Subscritores Conferência', href: `${base}/utilizadores/subscritores` },
-        { label: 'Adicionar Novo', href: `${base}/utilizadores/novo` },
-      ],
-    },
-    {
-      href: `${base}/enviar-email/normal`,
+      href: `${menuBase}/enviar-email/normal`,
       icon: Mail,
       label: 'Enviar e-mail',
     },
     {
-      href: `${base}/definicoes`,
+      href: `${menuBase}/definicoes`,
       icon: Settings,
       label: 'Definições',
       submenu: [
-        { label: 'Configurações do Site', href: `${base}/definicoes` },
-        { label: 'Notícias', href: `${base}/definicoes/noticias` },
-        { label: 'Utilizadores', href: `${base}/definicoes/utilizadores` },
-        { label: 'Media', href: `${base}/definicoes/media` },
-        { label: 'Segurança', href: `${base}/definicoes/seguranca` },
-        { label: 'Backup', href: `${base}/definicoes/backup` },
-        { label: 'API & Integrações', href: `${base}/definicoes/api` },
+        { label: 'Configurações do Site', href: `${menuBase}/definicoes` },
+        { label: 'Notícias', href: `${menuBase}/definicoes/noticias` },
+        { label: 'Utilizadores', href: `${menuBase}/definicoes/utilizadores` },
+        { label: 'Media', href: `${menuBase}/definicoes/media` },
+        { label: 'Segurança', href: `${menuBase}/definicoes/seguranca` },
+        { label: 'Backup', href: `${menuBase}/definicoes/backup` },
+        { label: 'API & Integrações', href: `${menuBase}/definicoes/api` },
       ],
     },
     {
-      href: `${base}/estatisticas`,
+      href: `${menuBase}/estatisticas`,
       icon: ChartColumnIncreasing,
       label: 'Estatísticas',
     },
@@ -427,7 +467,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             )}
           </button>
 
-          <div className="admin-main-content">{children}</div>
+          <div className="admin-main-content">
+            {sessionLoading ? (
+              <AdminPanelLoading
+                variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}
+              />
+            ) : (
+              children
+            )}
+          </div>
         </main>
       </div>
     </div>

@@ -1,5 +1,3 @@
-import { AddUserFormPage } from '@/components/Admin/UserFormPage';
+import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function DashboardAddUserPage() {
-  return <AddUserFormPage />;
-}
+export default createDashboardStaffRedirect('/admin/utilizadores/novo');

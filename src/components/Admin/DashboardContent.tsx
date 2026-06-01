@@ -13,7 +13,9 @@ import {
 } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { useLanguage } from '@/context/LanguageContext';
+import { PanelActivitySkeleton, PanelStatsSkeleton } from '@/components/Admin/PanelSkeleton';
 import './DashboardContent.css';
 
 interface Stats {
@@ -32,8 +34,8 @@ interface ActivityItem {
 
 export default function DashboardContent() {
   const base = useAdminBase();
+  const { canManageNews } = useAdminPermissions();
   const { locale } = useLanguage();
-  const [isSuperAdmin, setIsSuperAdmin] = React.useState(false);
   const [stats, setStats] = React.useState<Stats>({
     news: 0,
     media: 0,
@@ -123,52 +125,23 @@ export default function DashboardContent() {
 
   React.useEffect(() => {
     let cancelled = false;
+
     (async () => {
       try {
-        const res = await adminFetch('/api/admin/users/me', { cache: 'no-store' });
+        const res = await adminFetch('/api/admin/dashboard/stats', { cache: 'no-store' });
         const data = await res.json();
-        if (!res.ok || cancelled) return;
-        const role = String(data?.user?.role || '');
-        const isSuper = role === 'Administrador' || Boolean(data?.isAdminSecret);
-        if (!cancelled) setIsSuperAdmin(isSuper);
-      } catch {
-        if (!cancelled) setIsSuperAdmin(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  React.useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const [mediaRes, docsRes, contentRes] = await Promise.all([
-          fetch('/api/admin/media?catalog=full', { cache: 'no-store' }),
-          fetch('/api/admin/documents', { cache: 'no-store' }),
-          fetch('/api/admin/content', { cache: 'no-store' }),
-        ]);
-
-        const [mediaData, docsData, contentData] = await Promise.all([
-          mediaRes.json(),
-          docsRes.json(),
-          contentRes.json(),
-        ]);
 
         if (cancelled) return;
 
-        const mediaItems = Array.isArray(mediaData?.media) ? mediaData.media : [];
-        const documents = Array.isArray(docsData?.documents) ? docsData.documents : [];
-        const news = Array.isArray(contentData?.news) ? contentData.news : [];
-
-        setStats({
-          news: news.length,
-          media: mediaItems.filter((item: { category?: string }) => item?.category === 'imagens').length,
-          videos: mediaItems.filter((item: { category?: string }) => item?.category === 'videos').length,
-          documents: documents.length,
-        });
+        if (res.ok && data.stats) {
+          setStats({
+            news: data.stats.news ?? 0,
+            media: data.stats.media ?? 0,
+            videos: data.stats.videos ?? 0,
+            documents: data.stats.documents ?? 0,
+          });
+          return;
+        }
       } catch {
         if (!cancelled) {
           setStats({ news: 0, media: 0, videos: 0, documents: 0 });
@@ -199,26 +172,18 @@ export default function DashboardContent() {
           </div>
           
           <div className="dashboard-grid">
-            <div>
-              <h3 className="dashboard-section-title">
-                {t.introTitle}
-              </h3>
-              <Link 
-                href={isSuperAdmin ? `${base}/noticias/nova` : `${base}/submissao-resumo`}
-                className="dashboard-button"
-              >
-                {isSuperAdmin ? t.addNews : t.submitAbstract}
-              </Link>
-            </div>
-            
+            {canManageNews ? (
+              <div>
+                <h3 className="dashboard-section-title">{t.introTitle}</h3>
+                <Link href={`${base}/noticias/nova`} className="dashboard-button">
+                  {t.addNews}
+                </Link>
+              </div>
+            ) : null}
+
             <div>
               <h3 className="dashboard-section-title">{t.nextSteps}</h3>
               <ul className="dashboard-list">
-                <li>
-                  <Link href={`${base}/noticias`} className="dashboard-list-item">
-                    <FileUp /> {t.reviewConf}
-                  </Link>
-                </li>
                 <li>
                   <Link href={`${base}/estatisticas`} className="dashboard-list-item">
                     <Activity /> {t.stats}
@@ -237,7 +202,7 @@ export default function DashboardContent() {
                 </li>
                 <li>
                   <Link href={`${base}/media`} className="dashboard-list-item">
-                    <Plus /> {t.addMedia}
+                    <Plus /> Biblioteca multimédia
                   </Link>
                 </li>
                 <li>
@@ -259,13 +224,8 @@ export default function DashboardContent() {
                   </Link>
                 </li>
                 <li>
-                  <Link href={`${base}/submissao-resumo`} className="dashboard-list-item">
-                    <FileUp /> {t.submitAbstract}
-                  </Link>
-                </li>
-                <li>
                   <Link href={`${base}/documentos-gerais`} className="dashboard-list-item">
-                    <FileUp /> {t.submittedDocs}
+                    <FileUp /> Resumos recebidos
                   </Link>
                 </li>
               </ul>
@@ -285,14 +245,21 @@ export default function DashboardContent() {
                 </h2>
               </div>
               <div className="dashboard-card-body">
-                {recentActivities.length > 0 ? (
+                {statsLoading ? (
+                  <PanelActivitySkeleton count={4} />
+                ) : recentActivities.length > 0 ? (
                   <ul className="dashboard-activity-list">
-                    {recentActivities.slice(0, 4).map(activity => (
+                    {recentActivities.slice(0, 4).map((activity) => (
                       <li key={activity.id} className="dashboard-activity-item">
-                        <p className="dashboard-activity-date">{new Date(activity.date).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
-                        <p className="dashboard-activity-title">
-                          {activity.title}
+                        <p className="dashboard-activity-date">
+                          {new Date(activity.date).toLocaleDateString('pt-PT', {
+                            day: 'numeric',
+                            month: 'long',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </p>
+                        <p className="dashboard-activity-title">{activity.title}</p>
                       </li>
                     ))}
                   </ul>
@@ -304,6 +271,9 @@ export default function DashboardContent() {
           </div>
 
           <div className="dashboard-stats-column">
+            {statsLoading ? (
+              <PanelStatsSkeleton count={4} />
+            ) : (
             <div className="dashboard-stats-grid">
               <Link href={`${base}/documentos-gerais`} className="dashboard-stat-link">
                 <div className="dashboard-stat-card">
@@ -361,7 +331,7 @@ export default function DashboardContent() {
                 </div>
               </Link>
             </div>
-
+            )}
           </div>
         </div>
       </div>

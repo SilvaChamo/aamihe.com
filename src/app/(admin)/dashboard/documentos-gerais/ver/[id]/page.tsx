@@ -1,15 +1,8 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { use } from 'react';
-import ConferenceDocumentReviewPage from '@/components/Admin/ConferenceDocumentReviewPage';
+type Props = { params: Promise<{ id: string }> };
 
-export default function VerDocumentoDashboardPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  return (
-    <ConferenceDocumentReviewPage id={id} listPath="/dashboard/documentos-gerais" />
-  );
+export default async function DashboardDocumentosVerRedirect({ params }: Props) {
+  const { id } = await params;
+  redirect(`/admin/documentos-gerais/ver/${id}`);
 }

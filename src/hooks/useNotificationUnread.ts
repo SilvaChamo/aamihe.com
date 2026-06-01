@@ -10,7 +10,7 @@ import {
   writeNotificationCache,
 } from '@/lib/notification-client-cache';
 
-export function useNotificationUnread() {
+export function useNotificationUnread(enabled = true) {
   const pathname = usePathname();
   const [unread, setUnread] = useState(readCachedUnreadCount);
 
@@ -24,6 +24,11 @@ export function useNotificationUnread() {
   }, [syncFromCache]);
 
   useEffect(() => {
+    if (!enabled) {
+      setUnread(0);
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
@@ -55,7 +60,7 @@ export function useNotificationUnread() {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [pathname, enabled]);
 
   return unread;
 }

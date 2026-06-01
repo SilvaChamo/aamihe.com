@@ -18,6 +18,31 @@ function storagePathForFile(originalName: string, subcategory: string): string {
   return `${prefix}/${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
 }
 
+export type MediaCategoryCounts = Record<MediaCategory, number>;
+
+/** Contagens rápidas para o dashboard (sem listar todos os ficheiros). */
+export async function countSupabaseMediaByCategory(): Promise<MediaCategoryCounts> {
+  const admin = getSupabaseAdmin();
+  const empty: MediaCategoryCounts = { imagens: 0, videos: 0, documentos: 0 };
+  if (!admin) return empty;
+
+  const categories: MediaCategory[] = ['imagens', 'videos', 'documentos'];
+  const counts = { ...empty };
+
+  await Promise.all(
+    categories.map(async (category) => {
+      const { count, error } = await admin
+        .from('site_media')
+        .select('*', { count: 'exact', head: true })
+        .eq('published', true)
+        .eq('category', category);
+      if (!error && typeof count === 'number') counts[category] = count;
+    }),
+  );
+
+  return counts;
+}
+
 export async function listSupabaseMedia(): Promise<SiteMediaRecord[]> {
   const admin = getSupabaseAdmin();
   if (!admin) return [];

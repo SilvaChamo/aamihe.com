@@ -7,7 +7,7 @@ import {
   PanelNotificationsListSkeleton,
   PanelPageHeaderSkeleton,
 } from '@/components/Admin/PanelSkeleton';
-import '@/app/(admin)/dashboard/documentos-gerais/documentos-conferencia.css';
+import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
 function formatWhen(value: string) {
   return new Date(value).toLocaleDateString('pt-PT', {

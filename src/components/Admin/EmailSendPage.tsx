@@ -8,6 +8,7 @@ import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
 import { htmlToPlainText } from '@/lib/email-template';
 import EmailComposer from './EmailComposer';
+import { PanelPageHeaderSkeleton } from '@/components/Admin/PanelSkeleton';
 import './NewsForm.css';
 import './admin-wp.css';
 import './EmailSendPage.css';
@@ -185,6 +186,14 @@ export default function EmailSendPage() {
       )}
     </button>
   );
+
+  if (loadingCount) {
+    return (
+      <div className="news-form-container email-send-page" key={pathname}>
+        <PanelPageHeaderSkeleton withAction={false} />
+      </div>
+    );
+  }
 
   return (
     <div className="news-form-container email-send-page" key={pathname}>
