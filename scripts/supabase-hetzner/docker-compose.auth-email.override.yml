@@ -1,0 +1,8 @@
+# Copiar para /opt/supabase-aamihe/docker/docker-compose.override.yml
+# Permite Auth ligar ao Exim do host e aceitar hosts nos emails.
+services:
+  auth:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      GOTRUE_MAILER_EXTERNAL_HOSTS: supabase.aamihe.com,aamihe.com

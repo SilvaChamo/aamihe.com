@@ -34,7 +34,7 @@ function resetEmailErrorMessage(error: { message?: string; status?: number }): s
     return `Aguarde ${rateLimit[1]} segundos e tente novamente (limite de segurança).`;
   }
   if (/etimedout|econnrefused|enotfound/i.test(raw)) {
-    return 'Servidor de email inacessível a partir da cloud. A reposição de senha deve usar o email enviado pelo Supabase no Hetzner (configure SMTP no VPS).';
+    return 'O Supabase no servidor não alcança o SMTP (ex.: mail.aamihe.com:587). No VPS execute fix-auth-recovery-email.sh para usar Exim local na porta 25.';
   }
   if (!raw || raw === '{}') {
     return 'Não foi possível enviar o email de recuperação. Contacte a administração.';
@@ -46,7 +46,7 @@ function wrapSmtpError(err: unknown): Error {
   const msg = err instanceof Error ? err.message : String(err);
   if (/etimedout|econnrefused/i.test(msg)) {
     return new Error(
-      'Não foi possível ligar ao servidor de email (porta bloqueada para a Vercel). Em produção o email é enviado pelo Supabase no Hetzner — configure SMTP no VPS.',
+      'Ligação SMTP falhou (porta 587 bloqueada ou SMTP_HOST errado no Supabase). No VPS: bash fix-auth-recovery-email.sh',
     );
   }
   return err instanceof Error ? err : new Error(msg);

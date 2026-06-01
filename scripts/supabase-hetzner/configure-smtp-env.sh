@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# SMTP GoTrue (Auth) no Supabase self-hosted — envio a partir do VPS.
+# SMTP do Auth (GoTrue) — variáveis SMTP_* no .env (não GOTRUE_SMTP_*).
 #
-# Modo local (recomendado): Exim/DirectAdmin no host, porta 25, sem auth.
+# Modo local (recomendado): Exim no host, porta 25.
 #   bash configure-smtp-env.sh
 #
-# Modo remoto (mail.aamihe.com:587 com autenticação):
+# Modo remoto (mail.aamihe.com:587 — só se a porta estiver aberta):
 #   SMTP_MODE=remote SMTP_PASS='...' bash configure-smtp-env.sh
 set -euo pipefail
 
 ENV_FILE="${ENV_FILE:-/opt/supabase-aamihe/docker/.env}"
+COMPOSE_DIR="${COMPOSE_DIR:-/opt/supabase-aamihe/docker}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SMTP_MODE="${SMTP_MODE:-local}"
 
 SMTP_ADMIN_EMAIL="${SMTP_ADMIN_EMAIL:-noreply@aamihe.com}"
@@ -23,39 +25,39 @@ set_var() {
   fi
 }
 
-unset_var() {
-  local k="$1"
-  if grep -q "^${k}=" "$ENV_FILE" 2>/dev/null; then
-    sed -i "/^${k}=/d" "$ENV_FILE"
-  fi
-}
-
 if [[ "$SMTP_MODE" == "local" ]]; then
-  set_var GOTRUE_SMTP_HOST "${SMTP_HOST:-host.docker.internal}"
-  set_var GOTRUE_SMTP_PORT "${SMTP_PORT:-25}"
-  set_var GOTRUE_SMTP_ADMIN_EMAIL "$SMTP_ADMIN_EMAIL"
-  set_var GOTRUE_SMTP_SENDER_NAME "$SMTP_SENDER_NAME"
-  unset_var GOTRUE_SMTP_USER
-  unset_var GOTRUE_SMTP_PASS
-  echo "Modo local: GoTrue → ${SMTP_HOST:-host.docker.internal}:${SMTP_PORT:-25} (Exim no host)."
+  HOST="${SMTP_HOST:-host.docker.internal}"
+  PORT="${SMTP_PORT:-25}"
+  set_var SMTP_HOST "$HOST"
+  set_var SMTP_PORT "$PORT"
+  set_var SMTP_ADMIN_EMAIL "$SMTP_ADMIN_EMAIL"
+  set_var SMTP_SENDER_NAME "$SMTP_SENDER_NAME"
+  set_var SMTP_USER ""
+  set_var SMTP_PASS ""
+  echo "Modo local: Auth → ${HOST}:${PORT} (Exim/DirectAdmin no host)."
 else
-  SMTP_HOST="${SMTP_HOST:-mail.aamihe.com}"
-  SMTP_PORT="${SMTP_PORT:-587}"
-  SMTP_USER="${SMTP_USER:-noreply@aamihe.com}"
+  HOST="${SMTP_HOST:-mail.aamihe.com}"
+  PORT="${SMTP_PORT:-587}"
+  USER="${SMTP_USER:-noreply@aamihe.com}"
   if [[ -z "${SMTP_PASS:-}" ]]; then
-    echo "Modo remote: defina SMTP_PASS (conta noreply@aamihe.com)."
+    echo "Modo remote: defina SMTP_PASS."
     exit 1
   fi
-  set_var GOTRUE_SMTP_HOST "$SMTP_HOST"
-  set_var GOTRUE_SMTP_PORT "$SMTP_PORT"
-  set_var GOTRUE_SMTP_USER "$SMTP_USER"
-  set_var GOTRUE_SMTP_PASS "$SMTP_PASS"
-  set_var GOTRUE_SMTP_ADMIN_EMAIL "$SMTP_ADMIN_EMAIL"
-  set_var GOTRUE_SMTP_SENDER_NAME "$SMTP_SENDER_NAME"
-  echo "Modo remote: GoTrue → ${SMTP_USER}@${SMTP_HOST}:${SMTP_PORT}."
+  set_var SMTP_HOST "$HOST"
+  set_var SMTP_PORT "$PORT"
+  set_var SMTP_USER "$USER"
+  set_var SMTP_PASS "$SMTP_PASS"
+  set_var SMTP_ADMIN_EMAIL "$SMTP_ADMIN_EMAIL"
+  set_var SMTP_SENDER_NAME "$SMTP_SENDER_NAME"
+  echo "Modo remote: Auth → ${USER}@${HOST}:${PORT}."
 fi
 
-cd /opt/supabase-aamihe/docker
-docker compose restart auth
+cp -f "${SCRIPT_DIR}/docker-compose.auth-email.override.yml" "${COMPOSE_DIR}/docker-compose.override.yml"
 
-echo "Auth reiniciado. Teste «Repor senha» no site (aguarde ~60s entre tentativas)."
+cd "$COMPOSE_DIR"
+docker compose up -d auth
+
+echo ""
+echo "Verifique no contentor:"
+echo "  docker compose exec auth printenv | grep -E 'GOTRUE_SMTP|MAILER_EXTERNAL'"
+echo "  (SMTP_HOST no .env deve ser ${HOST:-host.docker.internal}, não mail.aamihe.com)"
