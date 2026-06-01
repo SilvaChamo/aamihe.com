@@ -20,6 +20,8 @@ set_var SITE_URL "$SITE_URL"
 set_var API_EXTERNAL_URL "https://supabase.aamihe.com"
 set_var SUPABASE_PUBLIC_URL "https://supabase.aamihe.com"
 set_var ADDITIONAL_REDIRECT_URLS "$REDIRECTS"
+# Links nos emails de recuperação (evita aviso nos logs e hosts ignorados)
+set_var GOTRUE_MAILER_EXTERNAL_HOSTS "supabase.aamihe.com,aamihe.com"
 
 cd /opt/supabase-aamihe/docker
 docker compose restart auth kong studio
