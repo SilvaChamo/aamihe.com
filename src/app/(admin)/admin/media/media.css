@@ -114,12 +114,6 @@
   border-bottom-color: #00a651;
 }
 
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
-
 .media-placeholder {
   grid-column: 1 / -1;
   display: flex;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { adminFetch } from '@/lib/admin-auth';
 import { uploadMediaFiles } from '@/lib/persist-client-media';
-import { canDeleteMedia, dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
+import { dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { 
   Trash2, 
@@ -51,6 +51,7 @@ interface MediaFile {
     size: number;
     mimetype: string;
   } | null;
+  created_at?: string;
 }
 
 const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
@@ -60,7 +61,8 @@ const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
   { value: 'all', label: 'Todos' },
 ];
 
-const PAGE_BATCH = 48;
+/** 7 colunas × 7 linhas por página da grelha */
+const PAGE_BATCH = 49;
 
 export default function MediaLibrary({
   onSelect,
@@ -81,8 +83,6 @@ export default function MediaLibrary({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(PAGE_BATCH);
   
-  // Advanced Editor States
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isEditingImage, setIsEditingImage] = useState(false);
   const [editWidth, setEditWidth] = useState(0);
   const [editHeight, setEditHeight] = useState(0);
@@ -108,6 +108,7 @@ export default function MediaLibrary({
   const [isCleaning, setIsCleaning] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const originalImageDimensions = useRef({ width: 0, height: 0 });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -144,6 +145,7 @@ export default function MediaLibrary({
             size: item.size || 0,
             mimetype: item.mime_type,
           },
+          created_at: item.created_at,
         }));
         setFiles(mapped);
       } else {
@@ -168,6 +170,21 @@ export default function MediaLibrary({
     window.addEventListener('mediaUpdated', onMediaUpdated);
     return () => window.removeEventListener('mediaUpdated', onMediaUpdated);
   }, [typeFilter, fullCatalog]);
+
+  useEffect(() => {
+    if (!isEditingImage || !activeFile) {
+      setEstimatedSize(null);
+      return;
+    }
+    const { width: origW, height: origH } = originalImageDimensions.current;
+    if (!origW || !origH) return;
+    const baseSize = activeFile.metadata?.size || 0;
+    const scale = (editWidth * editHeight) / (origW * origH);
+    let est = baseSize * scale;
+    if (editFormat === 'webp') est *= 0.72;
+    else if (editFormat === 'jpeg') est *= 0.95;
+    setEstimatedSize(est > 0 ? est : null);
+  }, [isEditingImage, activeFile, editWidth, editHeight, editFormat]);
 
   const filteredFiles = useMemo(() => {
     const query = (externalSearchQuery || searchQuery).toLowerCase();
@@ -225,6 +242,7 @@ export default function MediaLibrary({
       const img = new Image();
       img.src = getPublicUrl(file);
       img.onload = () => {
+        originalImageDimensions.current = { width: img.width, height: img.height };
         setEditWidth(img.width);
         setEditHeight(img.height);
       };
@@ -300,17 +318,13 @@ export default function MediaLibrary({
   };
 
   const deleteSingle = async (file: MediaFile) => {
-    if (!canDeleteMedia(file)) {
-      alert('Este item do arquivo legado não pode ser eliminado aqui.');
-      return;
-    }
     if (!confirm('Eliminar este item permanentemente?')) return;
     setLoading(true);
     try {
       await requestDelete([file]);
       removeDeletedFromState([file]);
       setActiveFile(null);
-      setIsEditorOpen(false);
+      setIsEditingImage(false);
       await loadImages();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao eliminar');
@@ -322,27 +336,18 @@ export default function MediaLibrary({
   const deleteBulk = async () => {
     if (selectedIds.size === 0) return;
     const ids = Array.from(selectedIds);
-    const deletable = files.filter((f) => ids.includes(f.id) && canDeleteMedia(f));
-    if (deletable.length === 0) {
-      alert('Nenhum dos itens seleccionados pode ser eliminado.');
+    const selectedFiles = files.filter((f) => ids.includes(f.id));
+    if (!selectedFiles.length) {
+      alert('Nenhum item seleccionado para eliminar.');
       return;
     }
-    if (deletable.length < ids.length) {
-      const skipped = ids.length - deletable.length;
-      if (
-        !confirm(
-          `${skipped} item(ns) do arquivo legado serão ignorados. Eliminar ${deletable.length} item(ns)?`
-        )
-      ) {
-        return;
-      }
-    } else if (!confirm(`Eliminar ${deletable.length} item(ns)?`)) {
+    if (!confirm(`Eliminar ${selectedFiles.length} item(ns)?`)) {
       return;
     }
     setLoading(true);
     try {
-      await requestDelete(deletable);
-      removeDeletedFromState(deletable);
+      await requestDelete(selectedFiles);
+      removeDeletedFromState(selectedFiles);
       setSelectedIds(new Set());
       setIsBulkMode(false);
       await loadImages();
@@ -407,7 +412,6 @@ export default function MediaLibrary({
       setIsSaveConfirmOpen(false);
       setPendingBlob(null);
       setIsEditingImage(false);
-      setIsEditorOpen(false);
       loadImages();
     } catch (err: any) {
       alert('Erro ao guardar: ' + err.message);
@@ -470,9 +474,35 @@ export default function MediaLibrary({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const formatUploadedAt = (iso?: string) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('pt-PT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const closeAttachmentDetails = () => {
+    setActiveFile(null);
+    setIsEditingImage(false);
+  };
+
+  const copyFileUrl = async (file: MediaFile) => {
+    const url = getPublicUrl(file);
+    try {
+      await navigator.clipboard.writeText(url);
+      alert('URL copiada.');
+    } catch {
+      alert(url);
+    }
+  };
+
   return (
     <div
-      className={`media-library ${isModal ? 'modal' : ''} ${activeFile && !isBulkMode ? 'has-detail-sidebar' : ''}`}
+      className={`media-library ${isModal ? 'modal' : ''}`}
     >
       {/* Toolbar Superior */}
       <div className="media-toolbar">
@@ -583,7 +613,7 @@ export default function MediaLibrary({
               <SkeletonMediaGrid count={8} />
             )
           ) : viewMode === 'grid' ? (
-            <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
+            <div className="media-grid">
               {paginatedFiles.map((file) => (
                 <div 
                   key={`${file.id}::${mediaCatalogKey(file.url)}`}
@@ -620,48 +650,11 @@ export default function MediaLibrary({
                       <span className="media-select-text">Selecionar</span>
                     </div>
                   )}
-                  {!(isModal && onSelect) && (
-                  <div className="media-item-actions">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDetails(file);
-                      }}
-                      className="media-action-button edit"
-                      title="Editar"
-                    >
-                      <Edit3 className="media-action-icon" />
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openPreview(file);
-                      }}
-                      className="media-action-button view"
-                      title="Ver"
-                    >
-                      <Eye className="media-action-icon" />
-                    </button>
-                    {canDeleteMedia(file) && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSingle(file);
-                        }}
-                        className="media-action-button delete"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="media-action-icon" />
-                      </button>
-                    )}
-                  </div>
-                  )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className={`media-list ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
+            <div className="media-list">
               {paginatedFiles.map((file) => (
                 <div
                   key={`${file.id}::${mediaCatalogKey(file.url)}`}
@@ -722,19 +715,17 @@ export default function MediaLibrary({
                     >
                       <Eye className="media-action-icon" />
                     </button>
-                    {canDeleteMedia(file) && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSingle(file);
-                        }}
-                        className="media-action-button delete"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="media-action-icon" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSingle(file);
+                      }}
+                      className="media-action-button delete"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="media-action-icon" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -754,127 +745,282 @@ export default function MediaLibrary({
           )}
         </div>
 
-        {/* Barra Lateral WordPress */}
-        {activeFile && !isBulkMode && (
-          <aside className="media-sidebar">
-            <div className="media-sidebar-header">
-              <h3 className="media-sidebar-title">Detalhes do anexo</h3>
-              <button onClick={() => setActiveFile(null)} className="media-sidebar-close"><X className="media-close-icon" /></button>
-            </div>
-
-            <div className="media-sidebar-content">
-              <div className="media-preview">
-                {fileDisplayKind(activeFile) === 'imagens' ? (
-                  <img src={getPublicUrl(activeFile)} className="media-preview-image" alt="" />
-                ) : fileDisplayKind(activeFile) === 'videos' ? (
-                  <div className="media-item-placeholder video"><Video className="media-toolbar-icon" /></div>
-                ) : (
-                  <div className="media-item-placeholder document"><FileDown className="media-toolbar-icon" /></div>
-                )}
-              </div>
-
-              <div className="media-metadata">
-                <div>
-                  <label className="media-label">Texto alternativo</label>
-                  <textarea value={metadata.alt_text} onChange={(e) => setMetadata({...metadata, alt_text: e.target.value})} className="media-textarea" />
-                </div>
-                <div>
-                  <label className="media-label">Título</label>
-                  <input type="text" value={metadata.title} onChange={(e) => setMetadata({...metadata, title: e.target.value})} className="media-input" />
-                </div>
-                <div>
-                  <label className="media-label">Legenda</label>
-                  <textarea value={metadata.caption} onChange={(e) => setMetadata({...metadata, caption: e.target.value})} className="media-textarea" />
-                </div>
-              </div>
-
-              <div className="media-sidebar-actions">
-                <button onClick={() => setIsEditorOpen(true)} className="media-edit-button">Editar Imagem</button>
-                <button onClick={saveMetadata} disabled={savingMetadata} className="media-save-button">{savingMetadata ? '...' : 'Salvar'}</button>
-                {canDeleteMedia(activeFile) && (
-                  <button type="button" onClick={() => deleteSingle(activeFile)} className="media-delete-button"><Trash2 className="media-delete-icon" /></button>
-                )}
-              </div>
-
-              <div className="media-file-info">
-                <div className="media-info-item">
-                  <span className="media-info-label">Nome do ficheiro:</span>
-                  <span className="media-info-value">{activeFile.name}</span>
-                </div>
-                <div className="media-info-item">
-                  <span className="media-info-label">Tipo:</span>
-                  <span className="media-info-value">{activeFile.category}</span>
-                </div>
-                <div className="media-info-item">
-                  <span className="media-info-label">Categoria:</span>
-                  <span className="media-info-value">{activeFile.subcategory}</span>
-                </div>
-                <div className="media-info-item">
-                  <span className="media-info-label">Mime:</span>
-                  <span className="media-info-value">{activeFile.metadata?.mimetype}</span>
-                </div>
-                <div className="media-info-item">
-                  <span className="media-info-label">Tamanho:</span>
-                  <span className="media-info-value">{formatSize(activeFile.metadata?.size)}</span>
-                </div>
-                <div className="media-info-item">
-                  <span className="media-info-label">URL:</span>
-                  <span className="media-info-value">{getPublicUrl(activeFile)}</span>
-                </div>
-              </div>
-            </div>
-          </aside>
-        )}
       </div>
 
-      {/* MODAL DE EDIÇÃO AVANÇADA (WP STYLE) */}
-      {isEditorOpen && activeFile && (
-        <div className="media-editor-modal">
-          <div className="media-editor-header">
-            <h2 className="media-editor-title">Editar Imagem</h2>
-            <button onClick={() => setIsEditorOpen(false)} className="media-editor-close"><X className="media-close-icon" /></button>
-          </div>
+      {/* Detalhes do anexo (ecrã completo, estilo WordPress) */}
+      {activeFile && !isBulkMode && (
+        <div className="media-attachment-modal" role="dialog" aria-modal="true" aria-labelledby="media-attachment-title">
+          <header className="media-attachment-header">
+            <h2 id="media-attachment-title" className="media-attachment-title">Detalhes do anexo</h2>
+            <button type="button" onClick={closeAttachmentDetails} className="media-attachment-close" aria-label="Fechar">
+              <X className="media-close-icon" />
+            </button>
+          </header>
 
-          <div className="media-editor-body">
-            <div className="media-editor-preview">
-              <div className="media-editor-image-container">
-                <img src={getPublicUrl(activeFile)} className="media-editor-image" alt="" />
-              </div>
+          <div className="media-attachment-body">
+            <div className="media-attachment-preview">
+              {isEditingImage && fileDisplayKind(activeFile) === 'imagens' ? (
+                <div className="media-edit-card">
+                  <div className="media-edit-card-header">
+                    <h3 className="media-edit-card-title">Ferramentas de Edição</h3>
+                    <button
+                      type="button"
+                      className="media-edit-card-back"
+                      onClick={() => setIsEditingImage(false)}
+                    >
+                      Voltar aos detalhes
+                    </button>
+                  </div>
+
+                  <div className="media-edit-card-body">
+                    <div className="media-edit-card-preview">
+                      <img
+                        src={getPublicUrl(activeFile)}
+                        className="media-edit-card-image"
+                        alt={metadata.alt_text || activeFile.name}
+                      />
+                    </div>
+
+                    <div className="media-edit-card-controls">
+                      <div className="media-edit-control-block">
+                        <h4 className="media-edit-control-title">Redimensionar</h4>
+                        <div className="media-editor-scale">
+                          <div className="media-editor-scale-input">
+                            <span className="media-scale-label">Largura</span>
+                            <input
+                              type="number"
+                              value={editWidth}
+                              onChange={(e) => setEditWidth(parseInt(e.target.value, 10) || 0)}
+                              className="media-scale-input"
+                            />
+                          </div>
+                          <span className="media-scale-x" aria-hidden>×</span>
+                          <div className="media-editor-scale-input">
+                            <span className="media-scale-label">Altura</span>
+                            <input
+                              type="number"
+                              value={editHeight}
+                              onChange={(e) => setEditHeight(parseInt(e.target.value, 10) || 0)}
+                              className="media-scale-input"
+                            />
+                          </div>
+                        </div>
+                        <div className="media-edit-scale-links">
+                          <button
+                            type="button"
+                            className="media-edit-scale-link"
+                            onClick={() => {
+                              setEditWidth(Math.round(editWidth * 0.5));
+                              setEditHeight(Math.round(editHeight * 0.5));
+                            }}
+                          >
+                            50%
+                          </button>
+                          <button
+                            type="button"
+                            className="media-edit-scale-link"
+                            onClick={() => {
+                              setEditWidth(Math.round(editWidth * 0.75));
+                              setEditHeight(Math.round(editHeight * 0.75));
+                            }}
+                          >
+                            75%
+                          </button>
+                        </div>
+                        <div className="media-edit-size-info">
+                          <p>
+                            <span className="media-edit-size-label">Tamanho atual:</span>{' '}
+                            {formatSize(activeFile.metadata?.size)}
+                          </p>
+                          <p className="media-edit-size-estimate">
+                            <span className="media-edit-size-label">Tamanho final estimado:</span>{' '}
+                            {estimatedSize != null ? formatSize(Math.round(estimatedSize)) : '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="media-edit-control-block">
+                        <h4 className="media-edit-control-title">Formato e Otimização</h4>
+                        <div className="media-editor-formats">
+                          <label className="media-format-label">
+                            <input
+                              type="radio"
+                              checked={editFormat === 'original'}
+                              onChange={() => setEditFormat('original')}
+                            />
+                            <span>Manter original ({activeFile.metadata?.mimetype || 'image/jpeg'})</span>
+                          </label>
+                          <label className="media-format-label">
+                            <input type="radio" checked={editFormat === 'webp'} onChange={() => setEditFormat('webp')} />
+                            <span className="media-format-webp">Converter para WebP (Otimizado para Web)</span>
+                          </label>
+                          <label className="media-format-label">
+                            <input type="radio" checked={editFormat === 'jpeg'} onChange={() => setEditFormat('jpeg')} />
+                            <span>Converter para JPEG</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="media-edit-card-actions">
+                        <button
+                          type="button"
+                          onClick={applyImageEdits}
+                          disabled={processingImage}
+                          className="media-attachment-primary-btn"
+                        >
+                          {processingImage ? 'A processar…' : 'Guardar Alterações'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingImage(false)}
+                          className="media-edit-cancel-btn"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="media-attachment-preview-stage">
+                    {fileDisplayKind(activeFile) === 'imagens' ? (
+                      <img
+                        src={getPublicUrl(activeFile)}
+                        className="media-attachment-preview-image"
+                        alt={metadata.alt_text || activeFile.name}
+                      />
+                    ) : fileDisplayKind(activeFile) === 'videos' ? (
+                      <video src={getPublicUrl(activeFile)} className="media-attachment-preview-image" controls />
+                    ) : (
+                      <div className="media-attachment-preview-placeholder">
+                        <FileDown className="media-toolbar-icon" />
+                        <span>{activeFile.name}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="media-attachment-preview-actions">
+                    {fileDisplayKind(activeFile) === 'imagens' && (
+                      <button
+                        type="button"
+                        className="media-attachment-primary-btn"
+                        onClick={() => setIsEditingImage(true)}
+                      >
+                        Editar imagem
+                      </button>
+                    )}
+                    <a
+                      href={getPublicUrl(activeFile)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="media-attachment-secondary-btn"
+                    >
+                      <ExternalLink className="media-action-icon" aria-hidden />
+                      Ver ficheiro completo
+                    </a>
+                  </div>
+                </>
+              )}
             </div>
 
-            <aside className="media-editor-sidebar">
-              <div className="media-editor-section">
-                <h3 className="media-editor-section-title">Escalar Imagem</h3>
-                <div className="media-editor-scale">
-                  <div className="media-editor-scale-input">
-                    <span className="media-scale-label">Largura</span>
-                    <input type="number" value={editWidth} onChange={(e) => setEditWidth(parseInt(e.target.value))} className="media-scale-input" />
+            <aside className="media-attachment-sidebar">
+              <div className="media-attachment-sidebar-scroll">
+                <dl className="media-attachment-meta">
+                  <div className="media-attachment-meta-row">
+                    <dt>Carregado em</dt>
+                    <dd>{formatUploadedAt(activeFile.created_at)}</dd>
                   </div>
-                  <X className="media-scale-x" />
-                  <div className="media-editor-scale-input">
-                    <span className="media-scale-label">Altura</span>
-                    <input type="number" value={editHeight} onChange={(e) => setEditHeight(parseInt(e.target.value))} className="media-scale-input" />
+                  <div className="media-attachment-meta-row">
+                    <dt>Nome</dt>
+                    <dd>{activeFile.name}</dd>
                   </div>
-                </div>
-                <div className="media-editor-presets">
-                  <button onClick={() => { setEditWidth(Math.round(editWidth*0.5)); setEditHeight(Math.round(editHeight*0.5)); }} className="media-preset-button">50%</button>
-                  <button onClick={() => { setEditWidth(Math.round(editWidth*0.75)); setEditHeight(Math.round(editHeight*0.75)); }} className="media-preset-button">75%</button>
+                  <div className="media-attachment-meta-row">
+                    <dt>Tipo</dt>
+                    <dd>{activeFile.metadata?.mimetype || '—'}</dd>
+                  </div>
+                  <div className="media-attachment-meta-row">
+                    <dt>Tamanho</dt>
+                    <dd>{formatSize(activeFile.metadata?.size)}</dd>
+                  </div>
+                </dl>
+
+                <div className="media-metadata">
+                  <div>
+                    <label className="media-label" htmlFor="media-alt">Texto alternativo</label>
+                    <textarea
+                      id="media-alt"
+                      value={metadata.alt_text}
+                      onChange={(e) => setMetadata({ ...metadata, alt_text: e.target.value })}
+                      className="media-textarea"
+                    />
+                  </div>
+                  <div>
+                    <label className="media-label" htmlFor="media-title">Título</label>
+                    <input
+                      id="media-title"
+                      type="text"
+                      value={metadata.title}
+                      onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
+                      className="media-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="media-label" htmlFor="media-caption">Legenda</label>
+                    <textarea
+                      id="media-caption"
+                      value={metadata.caption}
+                      onChange={(e) => setMetadata({ ...metadata, caption: e.target.value })}
+                      className="media-textarea"
+                    />
+                  </div>
+                  <div>
+                    <label className="media-label" htmlFor="media-description">Descrição</label>
+                    <textarea
+                      id="media-description"
+                      value={metadata.description}
+                      onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
+                      className="media-textarea"
+                    />
+                  </div>
+                  <div>
+                    <label className="media-label" htmlFor="media-file-url">URL do ficheiro</label>
+                    <input
+                      id="media-file-url"
+                      type="text"
+                      readOnly
+                      value={getPublicUrl(activeFile)}
+                      className="media-input media-input-readonly"
+                    />
+                    <button
+                      type="button"
+                      className="media-attachment-copy-url"
+                      onClick={() => copyFileUrl(activeFile)}
+                    >
+                      <Copy className="media-action-icon" aria-hidden />
+                      Copiar URL
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="media-editor-section">
-                <h3 className="media-editor-section-title">Formato e Otimização</h3>
-                <div className="media-editor-formats">
-                  <label className="media-format-label"><input type="radio" checked={editFormat === 'original'} onChange={() => setEditFormat('original')} /><span>Original ({activeFile.metadata?.mimetype})</span></label>
-                  <label className="media-format-label"><input type="radio" checked={editFormat === 'webp'} onChange={() => setEditFormat('webp')} /><span className="media-format-webp">WebP (Super Leve)</span></label>
-                  <label className="media-format-label"><input type="radio" checked={editFormat === 'jpeg'} onChange={() => setEditFormat('jpeg')} /><span>JPEG</span></label>
-                </div>
-              </div>
-
-              <div className="media-editor-actions">
-                <button onClick={applyImageEdits} disabled={processingImage} className="media-editor-save">{processingImage ? 'A processar...' : 'Guardar Como Novo'}</button>
-                <button onClick={() => setIsEditorOpen(false)} className="media-editor-cancel">Cancelar</button>
-              </div>
+              <footer className="media-attachment-footer">
+                <button
+                  type="button"
+                  className="media-attachment-delete-link"
+                  onClick={() => deleteSingle(activeFile)}
+                >
+                  Eliminar permanentemente
+                </button>
+                <button
+                  type="button"
+                  onClick={saveMetadata}
+                  disabled={savingMetadata}
+                  className="media-attachment-save-btn"
+                >
+                  {savingMetadata ? 'A guardar…' : 'Salvar'}
+                </button>
+              </footer>
             </aside>
           </div>
         </div>
