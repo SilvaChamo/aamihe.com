@@ -1,18 +1,26 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
 import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import { LOGIN_PATH } from '@/lib/login-path';
 
-/** Só o conteúdo — o layout já inclui AdminShell (evita segunda barra lateral escura). */
+/**
+ * Loading de grupo (admin) — renderizado DENTRO do AdminShell.
+ * Para rotas de login retorna null: o dashboard/login/loading.tsx dedicado
+ * trata o skeleton de login de forma isolada, sem shell visível.
+ */
 export default function AdminAreaLoading() {
   const pathname = usePathname();
   const isLogin =
-    pathname === LOGIN_PATH || pathname === '/admin/login' || pathname === '/login';
+    pathname === LOGIN_PATH ||
+    pathname.startsWith(`${LOGIN_PATH}/`) ||
+    pathname === '/admin/login' ||
+    pathname.startsWith('/admin/login/') ||
+    pathname === '/login' ||
+    pathname.startsWith('/login/');
 
   if (isLogin) {
-    return <AdminLoginSkeleton />;
+    return null;
   }
 
   const variant = pathname === '/dashboard' || pathname === '/admin/dashboard' ? 'dashboard' : 'default';

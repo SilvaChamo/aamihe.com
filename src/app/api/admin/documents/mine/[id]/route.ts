@@ -104,7 +104,11 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     db.documents[index] = current;
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
+    try {
+      await syncDocumentsToSupabase();
+    } catch (syncError) {
+      console.error('Falha ao sincronizar documentos (PATCH mine/[id]):', syncError);
+    }
 
     return NextResponse.json({ success: true, document: current });
   } catch (error) {
@@ -130,7 +134,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     db.documents = db.documents.filter((item) => item.id !== id);
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
+    try {
+      await syncDocumentsToSupabase();
+    } catch (syncError) {
+      console.error('Falha ao sincronizar documentos (DELETE mine/[id]):', syncError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

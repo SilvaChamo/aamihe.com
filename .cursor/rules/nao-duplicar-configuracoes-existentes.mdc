@@ -1,0 +1,11 @@
+---
+description: Evitar criar configurações duplicadas
+alwaysApply: true
+---
+
+# Reutilizar configurações existentes
+
+- Antes de adicionar nova configuração, verificar se já existe opção equivalente no sistema.
+- Reutilizar ou estender a configuração existente em vez de criar nova chave/flag redundante.
+- Não introduzir novas configurações sem justificar a necessidade técnica.
+- Em caso de dúvida, listar as configurações já existentes relacionadas e confirmar a abordagem.

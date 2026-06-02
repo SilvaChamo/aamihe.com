@@ -11,10 +11,12 @@ export async function notifyDocumentRevisionRequested(
   doc: SiteDocumentRecord,
   comment: string,
 ): Promise<void> {
-  const email = String(doc.email || '').trim();
-  if (!email) return;
-
   await createDocumentRevisionNotification(doc, comment);
+
+  const email = String(doc.email || '').trim();
+  if (!email) {
+    throw new Error('Notificação no painel criada, mas o subscritor não tem e-mail associado.');
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
   const dashboardUrl = `${siteUrl}/dashboard/meus-documentos`;
@@ -58,10 +60,12 @@ export async function notifyDocumentApproved(
   doc: SiteDocumentRecord,
   adminMessage?: string,
 ): Promise<void> {
-  const email = String(doc.email || '').trim();
-  if (!email) return;
-
   await createDocumentApprovedNotification(doc, adminMessage);
+
+  const email = String(doc.email || '').trim();
+  if (!email) {
+    throw new Error('Notificação no painel criada, mas o subscritor não tem e-mail associado.');
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
   const dashboardUrl = `${siteUrl}/dashboard/meus-documentos`;

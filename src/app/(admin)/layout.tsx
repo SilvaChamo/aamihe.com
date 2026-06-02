@@ -12,8 +12,15 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isLoginPath =
+    pathname === LOGIN_PATH ||
+    pathname.startsWith(`${LOGIN_PATH}/`) ||
+    pathname === '/admin/login' ||
+    pathname.startsWith('/admin/login/') ||
+    pathname === '/login' ||
+    pathname.startsWith('/login/');
 
-  if (pathname === LOGIN_PATH || pathname === '/admin/login' || pathname === '/login') {
+  if (isLoginPath) {
     return <>{children}</>;
   }
 

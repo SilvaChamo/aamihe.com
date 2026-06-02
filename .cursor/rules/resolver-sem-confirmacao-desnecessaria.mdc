@@ -1,0 +1,7 @@
+# Resolver sem confirmação desnecessária
+
+- Quando o utilizador reportar problema/erro, avançar diretamente para investigação e correção.
+- Evitar perguntar "posso fazer?" ou "quer que eu faça?" antes de tentar resolver.
+- Só pedir confirmação quando houver risco relevante (deploy, ação destrutiva, perda de dados, credenciais, custos).
+- Manter foco até entregar resultado verificável para o problema atual.
+- Se a primeira tentativa não resolver, continuar iterações até corrigir ou identificar bloqueio real.

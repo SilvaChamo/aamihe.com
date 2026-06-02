@@ -10,7 +10,12 @@ import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
 } from '@/lib/document-review-status';
-import { getFileTypeLabel, isPdfPreviewable } from '@/lib/conference-document-files';
+import {
+  getFileTypeLabel,
+  getOfficeEmbedPreviewUrl,
+  isPdfPreviewable,
+  isWordPreviewable,
+} from '@/lib/conference-document-files';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
@@ -94,8 +99,8 @@ export default function ConferenceDocumentReviewPage({
       setApprovalMessage('');
       setSuccess(
         action === 'approve'
-          ? 'Documento aprovado. O subscritor foi notificado por e-mail e no painel.'
-          : 'Documento devolvido. O subscritor recebeu a mensagem com os motivos.',
+          ? 'Documento aprovado. Notificação no painel enviada ao subscritor.'
+          : 'Documento devolvido. Notificação no painel enviada ao subscritor.',
       );
     } catch {
       setError('Erro de ligação. Tente novamente.');
@@ -128,6 +133,9 @@ export default function ConferenceDocumentReviewPage({
 
   const status = getDocumentReviewStatus(document);
   const badgeClass = getStatusBadgeClass(document, 'admin');
+  const canPreviewPdf = isPdfPreviewable(document.file_url, document.mime_type);
+  const canPreviewWord = isWordPreviewable(document.file_url, document.mime_type);
+  const officePreviewUrl = canPreviewWord ? getOfficeEmbedPreviewUrl(document.file_url) : '';
 
   return (
     <div className="docs-admin-page">
@@ -143,11 +151,13 @@ export default function ConferenceDocumentReviewPage({
 
       <div className="docs-review-layout">
         <div className="docs-review-reader">
-          {isPdfPreviewable(document.file_url, document.mime_type) ? (
+          {canPreviewPdf ? (
             <iframe
               src={`${document.file_url}#toolbar=1&navpanes=0&view=FitH`}
               title={document.title_pt}
             />
+          ) : canPreviewWord ? (
+            <iframe src={officePreviewUrl} title={`${document.title_pt} (Word)`} />
           ) : (
             <div className="docs-review-file-fallback">
               <p>

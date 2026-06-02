@@ -35,7 +35,11 @@ export async function PUT(request: Request) {
       updated_at: new Date().toISOString(),
     };
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
+    try {
+      await syncDocumentsToSupabase();
+    } catch (syncError) {
+      console.error('Falha ao sincronizar documentos (PUT /api/admin/documents):', syncError);
+    }
     return NextResponse.json({ success: true, document: db.documents[index] });
   } catch (error) {
     console.error(error);
@@ -54,7 +58,11 @@ export async function DELETE(request: Request) {
     const db = await getDashboardDb();
     db.documents = db.documents.filter((d) => d.id !== id);
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
+    try {
+      await syncDocumentsToSupabase();
+    } catch (syncError) {
+      console.error('Falha ao sincronizar documentos (DELETE /api/admin/documents):', syncError);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

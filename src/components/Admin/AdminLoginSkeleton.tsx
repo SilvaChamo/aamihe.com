@@ -40,11 +40,11 @@ export default function AdminLoginSkeleton() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <p className="admin-login-back">
-            <span className="admin-login-skeleton-shimmer admin-login-skeleton-back-line" />
-          </p>
+            <p className="admin-login-back">
+              <span className="admin-login-skeleton-shimmer admin-login-skeleton-back-line" />
+            </p>
+          </div>
         </div>
       </div>
     </div>

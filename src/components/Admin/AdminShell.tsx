@@ -28,7 +28,6 @@ import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { resolveUserDisplayName } from '@/lib/user-types';
 import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
 import { useAdminBase } from '@/lib/admin-base';
-import { useNotificationUnread } from '@/hooks/useNotificationUnread';
 import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
 import './AdminShell.css';
 import './admin-buttons.css';
@@ -171,7 +170,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { canManageNews, canManageUsers, canViewNews } = useAdminPermissions();
   const showSubscriberNav = base === '/dashboard' && isSubscriber;
   const menuBase = showSubscriberNav ? '/dashboard' : '/admin';
-  const unreadNotifications = useNotificationUnread(showSubscriberNav);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
@@ -284,8 +282,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     ? [
         { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
-        { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Documentos' },
-        { href: '/dashboard/notificacoes', icon: Bell, label: 'Notificações', badge: unreadNotifications },
+        { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Resumos' },
+        { href: '/dashboard/notificacoes', icon: Bell, label: 'Notificações' },
         { href: '/dashboard/definicoes-conta', icon: Settings, label: 'Definições' },
       ]
     : [
@@ -317,7 +315,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     {
       href: `${menuBase}/documentos-gerais`,
       icon: FileUp,
-      label: 'Resumos recebidos',
+      label: 'Resumos',
     },
     ...(canManageUsers
       ? [
@@ -379,25 +377,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <span className="admin-brand-title">AAMIHE</span>
         </div>
         <div className="admin-brand-right">
-          {showSubscriberNav ? (
-            <Link
-              href="/dashboard/notificacoes"
-              className="admin-brand-action admin-brand-notify"
-              aria-label={
-                unreadNotifications > 0
-                  ? `Notificações (${unreadNotifications} por ler)`
-                  : 'Notificações'
-              }
-            >
-              <span className="admin-brand-notify-bell">
-                <Bell className="admin-brand-action-icon" />
-                {unreadNotifications > 0 ? (
-                  <span className="admin-brand-notify-dot" aria-hidden />
-                ) : null}
-              </span>
-              Notificações
-            </Link>
-          ) : null}
           <Link href="/" target="_blank" className="admin-brand-action">
             <ExternalLink className="admin-brand-action-icon" />
             Ver Site

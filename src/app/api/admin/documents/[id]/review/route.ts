@@ -6,6 +6,7 @@ import {
 } from '@/lib/document-review';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
+import { findUserByLogin } from '@/lib/users';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -35,6 +36,16 @@ export async function POST(request: Request, context: RouteContext) {
 
     const current = db.documents[index];
     const now = new Date().toISOString();
+    if (!current.user_id && current.email) {
+      try {
+        const profile = await findUserByLogin(current.email);
+        if (profile?.id) {
+          current.user_id = profile.id;
+        }
+      } catch (error) {
+        console.error('Failed to resolve document user_id before notification:', error);
+      }
+    }
 
     if (action === 'approve') {
       const message = approvalMessage;
@@ -47,10 +58,23 @@ export async function POST(request: Request, context: RouteContext) {
 
       db.documents[index] = current;
       await saveDashboardDb(db);
-      await syncDocumentsToSupabase();
-      await notifyDocumentApproved(current, message);
+      const warnings: string[] = [];
+      try {
+        await syncDocumentsToSupabase();
+      } catch (error) {
+        console.error('Documents sync failed after approval:', error);
+        warnings.push('Sincronização do site pendente.');
+      }
+      try {
+        await notifyDocumentApproved(current, message);
+      } catch (error) {
+        console.error('Approval notification failed:', error);
+        const detail =
+          error instanceof Error ? error.message : 'Falha desconhecida ao notificar o subscritor.';
+        warnings.push(`Notificação externa: ${detail}`);
+      }
 
-      return NextResponse.json({ success: true, document: current });
+      return NextResponse.json({ success: true, document: current, warnings });
     }
 
     const comment = revisionComment;
@@ -70,10 +94,23 @@ export async function POST(request: Request, context: RouteContext) {
 
     db.documents[index] = current;
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
-    await notifyDocumentRevisionRequested(current, comment);
+    const warnings: string[] = [];
+    try {
+      await syncDocumentsToSupabase();
+    } catch (error) {
+      console.error('Documents sync failed after revision request:', error);
+      warnings.push('Sincronização do site pendente.');
+    }
+    try {
+      await notifyDocumentRevisionRequested(current, comment);
+    } catch (error) {
+      console.error('Revision notification failed:', error);
+      const detail =
+        error instanceof Error ? error.message : 'Falha desconhecida ao notificar o subscritor.';
+      warnings.push(`Notificação externa: ${detail}`);
+    }
 
-    return NextResponse.json({ success: true, document: current });
+    return NextResponse.json({ success: true, document: current, warnings });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao rever documento.' }, { status: 500 });

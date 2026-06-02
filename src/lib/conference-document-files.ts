@@ -59,6 +59,24 @@ export function isPdfPreviewable(nameOrUrl: string, mimeType?: string): boolean 
   return isPdfFile(nameOrUrl, mimeType);
 }
 
+export function isWordFile(nameOrUrl: string, mimeType?: string): boolean {
+  if (mimeType === 'application/msword') return true;
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    return true;
+  }
+  const ext = getFileExtension(nameOrUrl);
+  return ext === 'doc' || ext === 'docx';
+}
+
+export function isWordPreviewable(nameOrUrl: string, mimeType?: string): boolean {
+  return isWordFile(nameOrUrl, mimeType);
+}
+
+export function getOfficeEmbedPreviewUrl(fileUrl: string): string {
+  const encodedUrl = encodeURIComponent(fileUrl);
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
+}
+
 export function getFileTypeLabel(nameOrUrl: string): string {
   const ext = getFileExtension(nameOrUrl);
   const labels: Record<string, string> = {

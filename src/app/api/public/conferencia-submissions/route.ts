@@ -136,7 +136,13 @@ export async function POST(request: Request) {
 
     db.documents.push(...records);
     await saveDashboardDb(db);
-    await syncDocumentsToSupabase();
+
+    try {
+      await syncDocumentsToSupabase();
+    } catch (syncError) {
+      // Não bloquear o utilizador se a sincronização externa falhar.
+      console.error('Falha ao sincronizar submissões para Supabase:', syncError);
+    }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
     const adminUrl = `${siteUrl}/admin/documentos-gerais`;
@@ -145,38 +151,43 @@ export async function POST(request: Request) {
         `${index + 1}. ${files[index].name} — ${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}`,
     );
 
-    await notifySiteEmail({
-      to: [...CONFERENCE_SUBMISSION_NOTIFY_EMAILS],
-      subject: `Nova submissão da conferência — ${name} (${records.length} ficheiro${records.length > 1 ? 's' : ''})`,
-      text: [
-        'Nova submissão de documento(s) da conferência AAMIHE.',
-        '',
-        `Nome: ${name}`,
-        `E-mail: ${email}`,
-        message ? `Mensagem: ${message}` : '',
-        '',
-        'Ficheiros:',
-        ...fileLines,
-        '',
-        `Abrir painel: ${adminUrl}`,
-      ].filter(Boolean).join('\n'),
-      html: [
-        '<p>Nova submissão de documento(s) da conferência AAMIHE.</p>',
-        '<ul>',
-        `<li><strong>Nome:</strong> ${name}</li>`,
-        `<li><strong>E-mail:</strong> ${email}</li>`,
-        message ? `<li><strong>Mensagem:</strong> ${message}</li>` : '',
-        `<li><strong>Ficheiros (${records.length}):</strong></li>`,
-        ...records.map(
-          (record, index) =>
-            `<li><a href="${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}">${files[index].name}</a></li>`,
-        ),
-        '</ul>',
-        `<p><a href="${adminUrl}">Abrir painel de administração</a></p>`,
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    });
+    try {
+      await notifySiteEmail({
+        to: [...CONFERENCE_SUBMISSION_NOTIFY_EMAILS],
+        subject: `Nova submissão da conferência — ${name} (${records.length} ficheiro${records.length > 1 ? 's' : ''})`,
+        text: [
+          'Nova submissão de documento(s) da conferência AAMIHE.',
+          '',
+          `Nome: ${name}`,
+          `E-mail: ${email}`,
+          message ? `Mensagem: ${message}` : '',
+          '',
+          'Ficheiros:',
+          ...fileLines,
+          '',
+          `Abrir painel: ${adminUrl}`,
+        ].filter(Boolean).join('\n'),
+        html: [
+          '<p>Nova submissão de documento(s) da conferência AAMIHE.</p>',
+          '<ul>',
+          `<li><strong>Nome:</strong> ${name}</li>`,
+          `<li><strong>E-mail:</strong> ${email}</li>`,
+          message ? `<li><strong>Mensagem:</strong> ${message}</li>` : '',
+          `<li><strong>Ficheiros (${records.length}):</strong></li>`,
+          ...records.map(
+            (record, index) =>
+              `<li><a href="${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}">${files[index].name}</a></li>`,
+          ),
+          '</ul>',
+          `<p><a href="${adminUrl}">Abrir painel de administração</a></p>`,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      });
+    } catch (emailError) {
+      // Documento guardado; e-mail é secundário.
+      console.error('Falha ao notificar submissão por e-mail:', emailError);
+    }
 
     const count = records.length;
     return NextResponse.json({

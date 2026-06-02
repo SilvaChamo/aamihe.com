@@ -1,7 +1,12 @@
 'use client';
 
 import { FileText } from 'lucide-react';
-import { getFileTypeLabel, isPdfPreviewable } from '@/lib/conference-document-files';
+import {
+  getFileTypeLabel,
+  getOfficeEmbedPreviewUrl,
+  isPdfPreviewable,
+  isWordPreviewable,
+} from '@/lib/conference-document-files';
 
 type DocumentFilePreviewProps = {
   url: string;
@@ -21,6 +26,17 @@ export default function DocumentFilePreview({
       <iframe
         src={`${url}#toolbar=0&navpanes=0&view=FitH`}
         title={`Pré-visualização — ${title}`}
+        loading={lazy ? 'lazy' : undefined}
+        tabIndex={-1}
+      />
+    );
+  }
+
+  if (isWordPreviewable(url, mimeType)) {
+    return (
+      <iframe
+        src={getOfficeEmbedPreviewUrl(url)}
+        title={`Pré-visualização Word — ${title}`}
         loading={lazy ? 'lazy' : undefined}
         tabIndex={-1}
       />
