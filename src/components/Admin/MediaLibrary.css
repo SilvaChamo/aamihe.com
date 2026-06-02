@@ -1,27 +1,33 @@
 .media-library {
-  background: transparent;
+  background: #fff;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .media-library.modal {
   height: 100%;
 }
 
-/* Toolbar */
+/* Toolbar — fundo claro como na captura da biblioteca */
 .media-toolbar {
-  background: transparent;
-  border-bottom: 1px solid #ccd0d4;
-  padding: 8px;
+  background: #fff;
+  color: #1d2327;
+  border: 1px solid #ccd0d4;
+  border-bottom: 1px solid #dcdcde;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 768px) {
@@ -40,19 +46,20 @@
   padding: 6px;
   color: #50575e;
   border: none;
-  background: none;
+  background: transparent;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .media-toolbar-button:hover {
   color: #561713;
+  background: #f6f7f7;
 }
 
 .media-toolbar-button.active {
   background: #f0f0f1;
   color: #561713;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .media-toolbar-icon {
@@ -86,14 +93,15 @@
 }
 
 .media-bulk-button {
-  margin-left: 16px;
+  margin-left: 12px;
   height: 32px;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 13px;
-  font-weight: bold;
+  font-weight: 600;
   border: 1px solid #ccd0d4;
-  border-radius: 3px;
-  background: white;
+  border-radius: 4px;
+  background: #fff;
+  color: #1d2327;
   cursor: pointer;
 }
 
@@ -146,7 +154,7 @@
   padding: 0 10px;
   font-size: 13px;
   font-weight: 600;
-  background: white;
+  background: #fff;
   color: #1d2327;
 }
 
@@ -177,6 +185,7 @@
 .media-count {
   font-size: 13px;
   color: #50575e;
+  font-weight: 600;
 }
 
 .media-search {
@@ -195,13 +204,16 @@
 
 .media-search-input {
   width: 100%;
+  min-width: 180px;
   height: 32px;
   padding-left: 32px;
   padding-right: 8px;
   border: 1px solid #ccd0d4;
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 14px;
   outline: none;
+  background: #fff;
+  color: #1d2327;
 }
 
 .media-search-input:focus {
@@ -296,61 +308,70 @@
 
 .media-item-actions {
   position: absolute;
-  inset: auto 0 0 0;
+  inset: auto 8px 8px 8px;
   display: flex;
-  gap: 4px;
-  padding: 6px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  gap: 6px;
+  justify-content: flex-end;
   opacity: 0;
   transition: opacity 0.2s;
+  pointer-events: none;
 }
 
 .media-item:hover .media-item-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .media-action-button {
-  flex: 1;
-  padding: 6px;
-  border: none;
-  border-radius: 4px;
+  flex: 0 0 auto;
+  width: clamp(26px, 22%, 34px);
+  height: clamp(26px, 22%, 34px);
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.media-action-button.edit {
-  background: #561713;
-  color: white;
+.media-action-button:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.04);
 }
 
-.media-action-button.edit:hover {
-  background: #135e96;
+.media-action-button--danger:hover {
+  background: rgba(214, 54, 56, 0.55);
+  border-color: rgba(255, 200, 200, 0.5);
 }
 
-.media-action-button.view {
-  background: white;
+.media-action-button--list {
+  width: 32px;
+  height: 32px;
   color: #561713;
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(86, 23, 19, 0.2);
+  box-shadow: none;
 }
 
-.media-action-button.view:hover {
-  background: #f0f0f1;
+.media-action-button--list:hover {
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.media-action-button.delete {
-  background: #dc2626;
-  color: white;
-}
-
-.media-action-button.delete:hover {
-  background: #b91c1c;
+.media-action-button--list.media-action-button--danger:hover {
+  background: rgba(214, 54, 56, 0.15);
+  color: #b91c1c;
 }
 
 .media-action-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .media-item.selected {
@@ -1068,30 +1089,45 @@
 
 .media-preview-close {
   position: absolute;
-  top: -48px;
+  top: -44px;
   right: 0;
-  background: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
 }
 
 .media-preview-full-image {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: calc(80vh - 72px);
   object-fit: contain;
   border-radius: 8px;
 }
 
-.media-preview-info {
+.media-preview-toolbar {
   margin-top: 16px;
-  text-align: center;
+  width: 100%;
+  max-width: min(960px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.media-preview-info {
+  text-align: left;
   color: white;
+  flex: 1;
+  min-width: 160px;
 }
 
 .media-preview-title {
@@ -1104,6 +1140,44 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
   margin: 0;
+}
+
+.media-preview-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.media-glass-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.media-glass-button:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.media-glass-button--danger:hover {
+  background: rgba(214, 54, 56, 0.5);
+  border-color: rgba(255, 180, 180, 0.45);
+}
+
+.media-attachment-delete-disabled {
+  font-size: 13px;
+  color: #8c8f94;
 }
 
 /* Detalhes do anexo — ecrã completo */

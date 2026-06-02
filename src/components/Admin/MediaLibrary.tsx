@@ -19,7 +19,6 @@ import {
   Check,
   Plus,
   FileDown,
-  Eye,
   Edit3,
   Video,
 } from 'lucide-react';
@@ -277,6 +276,34 @@ export default function MediaLibrary({
     setPreviewImage(null);
   };
 
+  const openEditFromPreview = (file: MediaFile) => {
+    closePreview();
+    void openDetails(file, true);
+  };
+
+  const handlePrimaryItemClick = (file: MediaFile) => {
+    if (isBulkMode) {
+      toggleSelect(file.id);
+      return;
+    }
+    if (isModal && onSelect) {
+      const kind = resolveMediaCategory({
+        category: file.category,
+        mime_type: file.metadata?.mimetype,
+        url: file.url,
+      });
+      if (kind === 'imagens') {
+        onSelect(getPublicUrl(file));
+      }
+      return;
+    }
+    if (fileDisplayKind(file) === 'imagens') {
+      openPreview(file);
+      return;
+    }
+    void openDetails(file);
+  };
+
   const closeAttachmentDetails = () => {
     setActiveFile(null);
     setIsEditingImage(false);
@@ -286,9 +313,8 @@ export default function MediaLibrary({
     if (!activeFile) return;
     setSavingMetadata(true);
     try {
-      const res = await fetch('/api/admin/media', {
+      const res = await adminFetch('/api/admin/media', {
         method: 'PATCH',
-        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: activeFile.id,
@@ -327,9 +353,9 @@ export default function MediaLibrary({
   const requestDelete = async (items: MediaFile[]) => {
     if (items.length === 1) {
       const item = items[0];
-      const res = await fetch(
+      const res = await adminFetch(
         `/api/admin/media?id=${encodeURIComponent(item.id)}&url=${encodeURIComponent(item.url)}`,
-        { method: 'DELETE', credentials: 'same-origin' }
+        { method: 'DELETE' },
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
@@ -372,7 +398,8 @@ export default function MediaLibrary({
     try {
       await requestDelete([file]);
       removeDeletedFromState([file]);
-      closeAttachmentDetails();
+      if (activeFile?.id === file.id) closeAttachmentDetails();
+      if (previewImage?.id === file.id) closePreview();
       dispatchMediaUpdated();
       await loadImages();
     } catch (err) {
@@ -661,22 +688,7 @@ export default function MediaLibrary({
               {paginatedFiles.map((file) => (
                 <div 
                   key={`${file.id}::${mediaCatalogKey(file.url)}`}
-                  onClick={() => {
-                    if (isBulkMode) {
-                      toggleSelect(file.id);
-                    } else if (isModal && onSelect) {
-                      const kind = resolveMediaCategory({
-                        category: file.category,
-                        mime_type: file.metadata?.mimetype,
-                        url: file.url,
-                      });
-                      if (kind === 'imagens') {
-                        onSelect(getPublicUrl(file));
-                      }
-                    } else {
-                      openDetails(file);
-                    }
-                  }}
+                  onClick={() => handlePrimaryItemClick(file)}
                   className={`media-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
                 >
                   {fileDisplayKind(file) === 'imagens' ? (
@@ -702,21 +714,10 @@ export default function MediaLibrary({
                           e.stopPropagation();
                           void openDetails(file, true);
                         }}
-                        className="media-action-button edit"
+                        className="media-action-button"
                         title="Editar"
                       >
                         <Edit3 className="media-action-icon" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openPreview(file);
-                        }}
-                        className="media-action-button view"
-                        title="Ver"
-                      >
-                        <Eye className="media-action-icon" />
                       </button>
                       {canDeleteMedia(file) && (
                         <button
@@ -725,7 +726,7 @@ export default function MediaLibrary({
                             e.stopPropagation();
                             void deleteSingle(file);
                           }}
-                          className="media-action-button delete"
+                          className="media-action-button media-action-button--danger"
                           title="Eliminar"
                         >
                           <Trash2 className="media-action-icon" />
@@ -742,15 +743,7 @@ export default function MediaLibrary({
                 <div
                   key={`${file.id}::${mediaCatalogKey(file.url)}`}
                   className={`media-list-item ${selectedIds.has(file.id) || activeFile?.id === file.id ? 'selected' : ''}`}
-                  onClick={() => {
-                    if (isBulkMode) {
-                      toggleSelect(file.id);
-                    } else if (isModal && onSelect) {
-                      onSelect(getPublicUrl(file));
-                    } else {
-                      openDetails(file);
-                    }
-                  }}
+                  onClick={() => handlePrimaryItemClick(file)}
                 >
                   <input
                     type="checkbox"
@@ -782,21 +775,10 @@ export default function MediaLibrary({
                         e.stopPropagation();
                         void openDetails(file, true);
                       }}
-                      className="media-action-button edit"
+                      className="media-action-button media-action-button--list"
                       title="Editar"
                     >
                       <Edit3 className="media-action-icon" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openPreview(file);
-                      }}
-                      className="media-action-button view"
-                      title="Ver"
-                    >
-                      <Eye className="media-action-icon" />
                     </button>
                     {canDeleteMedia(file) && (
                       <button
@@ -805,7 +787,7 @@ export default function MediaLibrary({
                           e.stopPropagation();
                           void deleteSingle(file);
                         }}
-                        className="media-action-button delete"
+                        className="media-action-button media-action-button--list media-action-button--danger"
                         title="Eliminar"
                       >
                         <Trash2 className="media-action-icon" />
@@ -1090,13 +1072,19 @@ export default function MediaLibrary({
               </div>
 
               <footer className="media-attachment-footer">
-                <button
-                  type="button"
-                  className="media-attachment-delete-link"
-                  onClick={() => deleteSingle(activeFile)}
-                >
-                  Eliminar permanentemente
-                </button>
+                {canDeleteMedia(activeFile) ? (
+                  <button
+                    type="button"
+                    className="media-attachment-delete-link"
+                    onClick={() => void deleteSingle(activeFile)}
+                  >
+                    Eliminar permanentemente
+                  </button>
+                ) : (
+                  <span className="media-attachment-delete-disabled">
+                    Este item não pode ser eliminado aqui.
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={saveMetadata}
@@ -1113,13 +1101,51 @@ export default function MediaLibrary({
 
       {/* IMAGE PREVIEW MODAL */}
       {isPreviewOpen && previewImage && (
-        <div className="media-preview-modal">
-          <div className="media-preview-content">
-            <button onClick={closePreview} className="media-preview-close"><X className="media-close-icon" /></button>
-            <img src={getPublicUrl(previewImage)} className="media-preview-full-image" alt={previewImage.name} />
-            <div className="media-preview-info">
-              <h3 className="media-preview-title">{previewImage.name}</h3>
-              <p className="media-preview-meta">{formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}</p>
+        <div
+          className="media-preview-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Pré-visualização — ${previewImage.name}`}
+          onClick={closePreview}
+        >
+          <div className="media-preview-content" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={closePreview} className="media-preview-close" aria-label="Fechar">
+              <X className="media-close-icon" />
+            </button>
+            <img
+              src={getPublicUrl(previewImage)}
+              className="media-preview-full-image"
+              alt={previewImage.name}
+            />
+            <div className="media-preview-toolbar">
+              <div className="media-preview-info">
+                <h3 className="media-preview-title">{previewImage.name}</h3>
+                <p className="media-preview-meta">
+                  {formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}
+                </p>
+              </div>
+              <div className="media-preview-actions">
+                <button
+                  type="button"
+                  className="media-glass-button"
+                  title="Editar"
+                  onClick={() => openEditFromPreview(previewImage)}
+                >
+                  <Edit3 className="media-action-icon" />
+                  <span>Editar</span>
+                </button>
+                {canDeleteMedia(previewImage) && (
+                  <button
+                    type="button"
+                    className="media-glass-button media-glass-button--danger"
+                    title="Eliminar"
+                    onClick={() => void deleteSingle(previewImage)}
+                  >
+                    <Trash2 className="media-action-icon" />
+                    <span>Eliminar</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
