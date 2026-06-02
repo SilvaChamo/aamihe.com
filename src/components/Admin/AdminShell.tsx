@@ -24,6 +24,7 @@ import {
 import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { useSessionUser } from '@/hooks/useSessionUser';
+import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { resolveUserDisplayName } from '@/lib/user-types';
 import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
@@ -91,7 +92,7 @@ const SidebarItem = ({
       <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
       <span className="sidebar-label-row">
         <span className="sidebar-label">{label}</span>
-        {badge > 0 ? (
+        {badge != null && badge > 0 ? (
           <span className="sidebar-notify-badge" aria-label={`${badge} notificações por ler`}>
             {badge > 99 ? '99+' : badge}
           </span>
@@ -167,6 +168,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const base = useAdminBase();
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
+  const { unread: subscriberUnread } = useSubscriberNotifications();
   const { canManageNews, canManageUsers, canViewNews } = useAdminPermissions();
   const showSubscriberNav = base === '/dashboard' && isSubscriber;
   const menuBase = showSubscriberNav ? '/dashboard' : '/admin';
@@ -283,7 +285,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
         { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Resumos' },
-        { href: '/dashboard/notificacoes', icon: Bell, label: 'Notificações' },
+        {
+          href: '/dashboard/notificacoes',
+          icon: Bell,
+          label: 'Notificações',
+          badge: subscriberUnread,
+        },
         { href: '/dashboard/definicoes-conta', icon: Settings, label: 'Definições' },
       ]
     : [

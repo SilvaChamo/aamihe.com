@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
-import { getNotificationsList, saveNotificationsList } from '@/lib/dashboard-notifications-store';
 import {
-  countUnreadForUser,
-  listNotificationsForUser,
-} from '@/lib/subscriber-notifications';
+  countUnreadForUserId,
+  listNotificationsForUserId,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from '@/lib/aamihe-notifications-store';
 
 export async function GET(request: Request) {
   try {
@@ -13,9 +14,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: session.error }, { status: session.status });
     }
 
-    const all = await getNotificationsList();
-    const unread = countUnreadForUser(all, session.user.id);
     const countOnly = new URL(request.url).searchParams.get('countOnly') === '1';
+    const unread = await countUnreadForUserId(session.user.id);
 
     if (countOnly) {
       return NextResponse.json(
@@ -24,11 +24,11 @@ export async function GET(request: Request) {
       );
     }
 
-    const notifications = listNotificationsForUser(all, session.user.id);
+    const notifications = await listNotificationsForUserId(session.user.id);
 
     return NextResponse.json(
       { success: true, notifications, unread },
-      { headers: { 'Cache-Control': 'private, max-age=15' } },
+      { headers: { 'Cache-Control': 'private, no-store' } },
     );
   } catch (error) {
     console.error(error);
@@ -44,29 +44,19 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const notifications = await getNotificationsList();
 
     if (body.markAllRead) {
-      for (const item of notifications) {
-        if (item.user_id === session.user.id) {
-          item.read = true;
-        }
-      }
+      await markAllNotificationsRead(session.user.id);
     } else if (body.id) {
-      const item = notifications.find(
-        (entry) => entry.id === body.id && entry.user_id === session.user.id,
-      );
-      if (!item) {
+      const ok = await markNotificationRead(String(body.id), session.user.id);
+      if (!ok) {
         return NextResponse.json({ success: false, error: 'Notificação não encontrada.' }, { status: 404 });
       }
-      item.read = true;
     } else {
       return NextResponse.json({ success: false, error: 'Pedido inválido.' }, { status: 400 });
     }
 
-    await saveNotificationsList(notifications);
-
-    const unread = countUnreadForUser(notifications, session.user.id);
+    const unread = await countUnreadForUserId(session.user.id);
     return NextResponse.json({ success: true, unread });
   } catch (error) {
     console.error(error);

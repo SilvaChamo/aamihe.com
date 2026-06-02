@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { listDocuments } from '@/lib/aamihe-documents-store';
 import { loadSiteContentFromSupabase, saveSiteContentToSupabase } from '@/lib/supabase-content';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { newsCatalog } from '@/data/news-catalog';
@@ -7,11 +7,7 @@ import { NEWS_CATEGORIES } from '@/data/news-categories';
 import type { NewsItem } from '@/data/news';
 import type { NewsCategory } from '@/data/news-categories';
 
-async function bootstrapIfEmpty(
-  news: NewsItem[],
-  categories: NewsCategory[],
-  documents: Awaited<ReturnType<typeof getDashboardDb>>['documents'],
-) {
+async function bootstrapIfEmpty(news: NewsItem[], categories: NewsCategory[]) {
   if (news.length > 0 || !isSupabaseConfigured()) {
     return { news, categories, bootstrapped: false };
   }
@@ -19,7 +15,7 @@ async function bootstrapIfEmpty(
   const payload = {
     news: newsCatalog,
     categories: categories.length ? categories : NEWS_CATEGORIES,
-    documents,
+    documents: [] as never[],
   };
 
   await saveSiteContentToSupabase(payload);
@@ -28,14 +24,13 @@ async function bootstrapIfEmpty(
 
 export async function GET() {
   try {
-    const db = await getDashboardDb();
     const fromSupabase = await loadSiteContentFromSupabase();
+    const documents = await listDocuments();
 
     let news = fromSupabase?.news?.length ? fromSupabase.news : [];
     let categories = fromSupabase?.categories?.length ? fromSupabase.categories : NEWS_CATEGORIES;
-    const documents = fromSupabase?.documents?.length ? fromSupabase.documents : db.documents;
 
-    const boot = await bootstrapIfEmpty(news, categories, documents);
+    const boot = await bootstrapIfEmpty(news, categories);
     news = boot.news;
     categories = boot.categories;
 
@@ -62,15 +57,9 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const news = Array.isArray(body.news) ? (body.news as NewsItem[]) : [];
     const categories = Array.isArray(body.categories) ? body.categories : NEWS_CATEGORIES;
-    const db = await getDashboardDb();
-    const documents = Array.isArray(body.documents) ? body.documents : db.documents;
+    const documents = await listDocuments();
 
-    if (Array.isArray(body.documents)) {
-      db.documents = documents;
-      await saveDashboardDb(db);
-    }
-
-    const synced = await saveSiteContentToSupabase({ news, categories, documents });
+    const synced = await saveSiteContentToSupabase({ news, categories, documents: [] });
 
     return NextResponse.json({ success: true, supabase: synced, count: news.length });
   } catch (error) {

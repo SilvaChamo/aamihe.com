@@ -1,14 +1,13 @@
 import { access, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import {
   dedupeMediaRecords,
   mediaCatalogKey,
   mediaUniqueBasename,
   mediaQualityScore,
 } from '@/lib/media-catalog-key';
-import { deleteSupabaseMedia } from '@/lib/supabase-media';
+import { deleteSupabaseMedia, upsertSupabaseMedia } from '@/lib/supabase-media';
 import { getSupabaseAdmin, isSupabaseConfigured, rowToMediaRecord } from '@/lib/supabase/server';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import type { SupabaseMediaRow } from '@/lib/supabase/server';
@@ -17,15 +16,6 @@ const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
 
 function stableMediaId(basename: string): string {
   return `media_${createHash('sha1').update(basename).digest('hex').slice(0, 12)}`;
-}
-
-async function fileExists(absPath: string): Promise<boolean> {
-  try {
-    await access(absPath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function walkPublicSubdir(publicSubdir: string): Promise<Map<string, string>> {
@@ -61,17 +51,12 @@ async function walkPublicSubdir(publicSubdir: string): Promise<Map<string, strin
   return byBasename;
 }
 
-/** Mapa basename → URL local existente em public/gallery e public/uploads/imagens */
 export async function indexLocalMediaUrls(): Promise<Map<string, string>> {
   const gallery = await walkPublicSubdir('gallery');
   const uploads = await walkPublicSubdir('uploads/imagens');
   const merged = new Map<string, string>(uploads);
   for (const [key, url] of gallery) merged.set(key, url);
   return merged;
-}
-
-function rowToRecord(row: SupabaseMediaRow): SiteMediaRecord {
-  return rowToMediaRecord(row);
 }
 
 function titleFromUrl(url: string): string {
@@ -85,7 +70,7 @@ function titleFromUrl(url: string): string {
 function buildKeeper(
   basename: string,
   localUrl: string | undefined,
-  candidates: SiteMediaRecord[]
+  candidates: SiteMediaRecord[],
 ): SiteMediaRecord {
   const url = localUrl ?? candidates[0]?.url ?? '';
   const best = [...candidates].sort((a, b) => mediaQualityScore(b) - mediaQualityScore(a))[0];
@@ -116,43 +101,19 @@ function buildKeeper(
 export type MediaCatalogCleanupResult = {
   supabaseBefore: number;
   supabaseAfter: number;
-  dashboardBefore: number;
-  dashboardAfter: number;
   deletedFromSupabase: number;
   localFilesIndexed: number;
   dryRun: boolean;
 };
 
-/**
- * Uma entrada Supabase + ficheiro local por foto (sem duplicados).
- */
 export async function cleanupMediaCatalog(options?: {
   dryRun?: boolean;
 }): Promise<MediaCatalogCleanupResult> {
   const dryRun = options?.dryRun ?? false;
   const localByBasename = await indexLocalMediaUrls();
-  const db = await getDashboardDb();
-  const dashboardBefore = db.media.length;
 
   if (!isSupabaseConfigured()) {
-    const keepers: SiteMediaRecord[] = [];
-    for (const [basename, localUrl] of localByBasename) {
-      keepers.push(buildKeeper(basename, localUrl, []));
-    }
-    const finalKeepers = dedupeMediaRecords(keepers);
-    if (!dryRun) {
-      db.media = finalKeepers;
-      await saveDashboardDb(db);
-    }
-    return {
-      supabaseBefore: 0,
-      supabaseAfter: finalKeepers.length,
-      dashboardBefore,
-      dashboardAfter: finalKeepers.length,
-      deletedFromSupabase: 0,
-      localFilesIndexed: localByBasename.size,
-      dryRun,
-    };
+    throw new Error('Supabase é obrigatório para limpeza do catálogo multimédia.');
   }
 
   const admin = getSupabaseAdmin();
@@ -166,7 +127,7 @@ export async function cleanupMediaCatalog(options?: {
 
   const byBasename = new Map<string, SiteMediaRecord[]>();
   for (const row of allRows) {
-    const record = rowToRecord(row);
+    const record = rowToMediaRecord(row);
     const key = mediaUniqueBasename(record.url);
     if (!key) continue;
     const list = byBasename.get(key) || [];
@@ -186,7 +147,7 @@ export async function cleanupMediaCatalog(options?: {
   }
 
   for (const [basename, candidates] of byBasename) {
-    const cloudOnly = candidates.filter((c) => c.url.includes('supabase.co/storage'));
+    const cloudOnly = candidates.filter((c) => c.url.includes('supabase'));
     if (cloudOnly.length === 0) continue;
     const keeper = buildKeeper(basename, undefined, cloudOnly);
     keepers.push(keeper);
@@ -201,7 +162,6 @@ export async function cleanupMediaCatalog(options?: {
       await deleteSupabaseMedia(id);
     }
 
-    const { upsertSupabaseMedia } = await import('@/lib/supabase-media');
     for (const record of finalKeepers) {
       const row = allRows.find((r) => r.id === record.id);
       await upsertSupabaseMedia({
@@ -210,16 +170,11 @@ export async function cleanupMediaCatalog(options?: {
         storage_path: row?.storage_path ?? null,
       });
     }
-
-    db.media = finalKeepers;
-    await saveDashboardDb(db);
   }
 
   return {
     supabaseBefore,
     supabaseAfter: finalKeepers.length,
-    dashboardBefore,
-    dashboardAfter: finalKeepers.length,
     deletedFromSupabase: deleteIds.length,
     localFilesIndexed: localByBasename.size,
     dryRun,

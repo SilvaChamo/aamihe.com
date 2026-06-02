@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDashboardDb } from '@/lib/dashboard-db';
+import { listDocuments } from '@/lib/aamihe-documents-store';
 import { localizeDocument } from '@/lib/site-documents';
 import type { SiteDocumentCategory, SiteDocumentLanguage } from '@/lib/site-documents';
 
@@ -8,9 +8,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as SiteDocumentCategory | null;
     const language = (searchParams.get('language') || 'pt') as SiteDocumentLanguage;
-    const db = await getDashboardDb();
 
-    let documents = db.documents.filter((d) => d.published);
+    let documents = await listDocuments({ published: true });
     if (category) {
       documents = documents.filter((d) => d.category === category);
     }

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { requireAdminAuth } from '@/lib/admin-session';
-import { getDashboardDb, saveDashboardDb, type DashboardDb } from '@/lib/dashboard-db';
 import { getSupabaseAdmin, isSupabaseConfigured, MEDIA_BUCKET } from '@/lib/supabase/server';
 
 type StorageBackupFile = {
@@ -21,7 +20,9 @@ type SiteBackupPayload = {
   createdAt: string;
   siteContentRows: Record<string, unknown>[];
   siteMediaRows: Record<string, unknown>[];
-  dashboardDb: DashboardDb;
+  documentRows: Record<string, unknown>[];
+  notificationRows: Record<string, unknown>[];
+  emailDailyLogRows: Record<string, unknown>[];
   usersDb: Record<string, unknown>;
   storage: StorageBackupBucket[];
 };
@@ -98,13 +99,21 @@ async function buildBackupPayload(): Promise<SiteBackupPayload> {
     throw new Error('Supabase não configurado.');
   }
 
-  const [{ data: contentRows }, { data: mediaRows }, { data: profileRows }, dashboardDb] =
-    await Promise.all([
-      admin.from('site_content').select('*'),
-      admin.from('site_media').select('*'),
-      admin.from(PROFILES_TABLE).select('*'),
-      getDashboardDb(),
-    ]);
+  const [
+    { data: contentRows },
+    { data: mediaRows },
+    { data: profileRows },
+    { data: documentRows },
+    { data: notificationRows },
+    { data: emailDailyLogRows },
+  ] = await Promise.all([
+    admin.from('site_content').select('*'),
+    admin.from('site_media').select('*'),
+    admin.from(PROFILES_TABLE).select('*'),
+    admin.from('aamihe_documents').select('*'),
+    admin.from('aamihe_subscriber_notifications').select('*'),
+    admin.from('aamihe_email_daily_log').select('*'),
+  ]);
 
   const usersDb = { users: profileRows ?? [] };
   const [mediaStorage, avatarStorage] = await Promise.all([
@@ -117,7 +126,9 @@ async function buildBackupPayload(): Promise<SiteBackupPayload> {
     createdAt: new Date().toISOString(),
     siteContentRows: (contentRows ?? []) as Record<string, unknown>[],
     siteMediaRows: (mediaRows ?? []) as Record<string, unknown>[],
-    dashboardDb,
+    documentRows: (documentRows ?? []) as Record<string, unknown>[],
+    notificationRows: (notificationRows ?? []) as Record<string, unknown>[],
+    emailDailyLogRows: (emailDailyLogRows ?? []) as Record<string, unknown>[],
     usersDb,
     storage: [mediaStorage, avatarStorage],
   };
@@ -185,6 +196,9 @@ async function restoreBackupPayload(payload: SiteBackupPayload) {
 
   await admin.from('site_media').delete().neq('id', '');
   await admin.from('site_content').delete().neq('site_slug', '');
+  await admin.from('aamihe_documents').delete().neq('id', '');
+  await admin.from('aamihe_subscriber_notifications').delete().neq('id', '');
+  await admin.from('aamihe_email_daily_log').delete().neq('date_key', '1970-01-01');
 
   if (payload.siteContentRows.length > 0) {
     const { error } = await admin.from('site_content').insert(payload.siteContentRows);
@@ -196,7 +210,34 @@ async function restoreBackupPayload(payload: SiteBackupPayload) {
     if (error) throw new Error(`Erro ao restaurar media: ${error.message}`);
   }
 
-  await saveDashboardDb(payload.dashboardDb);
+  if (payload.documentRows?.length) {
+    const { error } = await admin.from('aamihe_documents').insert(payload.documentRows);
+    if (error) throw new Error(`Erro ao restaurar documentos: ${error.message}`);
+  }
+
+  if (payload.notificationRows?.length) {
+    const { error } = await admin.from('aamihe_subscriber_notifications').insert(payload.notificationRows);
+    if (error) throw new Error(`Erro ao restaurar notificações: ${error.message}`);
+  }
+
+  if (payload.emailDailyLogRows?.length) {
+    const { error } = await admin.from('aamihe_email_daily_log').insert(payload.emailDailyLogRows);
+    if (error) throw new Error(`Erro ao restaurar quota de e-mail: ${error.message}`);
+  }
+
+  const legacyDashboard = (payload as { dashboardDb?: { emailSendLog?: { days?: Record<string, number> } } })
+    .dashboardDb;
+  if (legacyDashboard?.emailSendLog?.days) {
+    const rows = Object.entries(legacyDashboard.emailSendLog.days).map(([date_key, send_count]) => ({
+      date_key,
+      send_count,
+      updated_at: new Date().toISOString(),
+    }));
+    if (rows.length) {
+      await admin.from('aamihe_email_daily_log').upsert(rows, { onConflict: 'date_key' });
+    }
+  }
+
   if (Array.isArray(payload.usersDb?.users) && payload.usersDb.users.length > 0) {
     const { error } = await admin.from(PROFILES_TABLE).upsert(payload.usersDb.users, { onConflict: 'id' });
     if (error) throw new Error(`Erro ao restaurar perfis: ${error.message}`);

@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { getNotificationsList, saveNotificationsList } from '@/lib/dashboard-notifications-store';
+import {
+  countUnreadForUserId,
+  insertNotification,
+  listNotificationsForUserId,
+} from '@/lib/aamihe-notifications-store';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { findUserByLogin } from '@/lib/users';
 
@@ -33,10 +37,9 @@ export async function createSubscriberNotification(input: {
   const userId = await resolveUserId(input.doc);
   if (!userId) return;
 
-  const notifications = await getNotificationsList();
   const now = new Date().toISOString();
 
-  notifications.unshift({
+  await insertNotification({
     id: `notif_${randomUUID().slice(0, 8)}`,
     user_id: userId,
     document_id: input.doc.id,
@@ -46,8 +49,6 @@ export async function createSubscriberNotification(input: {
     read: false,
     created_at: now,
   });
-
-  await saveNotificationsList(notifications);
 }
 
 export async function createDocumentApprovedNotification(
@@ -91,4 +92,10 @@ export function countUnreadForUser(
   userId: string,
 ) {
   return notifications.filter((item) => item.user_id === userId && !item.read).length;
+}
+
+export async function fetchNotificationsForUser(userId: string) {
+  const notifications = await listNotificationsForUserId(userId);
+  const unread = await countUnreadForUserId(userId);
+  return { notifications, unread };
 }

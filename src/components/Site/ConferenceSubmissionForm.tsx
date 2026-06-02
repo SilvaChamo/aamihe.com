@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
-import { adminFetch } from '@/lib/admin-auth';
+import { adminFetch, getSessionProfile } from '@/lib/admin-auth';
 import { useLanguage } from '@/context/LanguageContext';
 import { conferenceFormExtra } from '@/i18n/messages';
 import {
@@ -63,12 +63,26 @@ export default function ConferenceSubmissionForm({
 }: ConferenceSubmissionFormProps) {
   const { locale } = useLanguage();
   const extra = conferenceFormExtra[locale];
+  const [adminNoticeEmail, setAdminNoticeEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formKey, setFormKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authenticated) {
+      setAdminNoticeEmail(null);
+      return;
+    }
+    const profile = getSessionProfile();
+    if (profile?.isAdmin && profile.email) {
+      setAdminNoticeEmail(profile.email);
+    } else {
+      setAdminNoticeEmail(null);
+    }
+  }, [authenticated]);
 
   function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const list = Array.from(e.target.files || []);
@@ -144,6 +158,13 @@ export default function ConferenceSubmissionForm({
     <section className="conference-form-section">
       <h2 className="conference-form-title">{labels.title}</h2>
       <p className="conference-form-intro">{labels.intro}</p>
+
+      {adminNoticeEmail ? (
+        <p className="conference-form-admin-notice" role="status">
+          Está autenticado como administrador ({adminNoticeEmail}). Os ficheiros ficam associados a{' '}
+          <strong>esta conta</strong>, não ao nome escrito no formulário.
+        </p>
+      ) : null}
 
       <form key={formKey} className="conference-form" onSubmit={handleSubmit}>
         <label>

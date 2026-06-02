@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, Loader2, Upload } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
+import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import { CONFERENCE_FILE_ACCEPT } from '@/lib/conference-document-files';
 import {
@@ -25,6 +26,7 @@ function formatDate(value: string) {
 
 export default function SubscriberDocumentEditPage({ id }: { id: string }) {
   const router = useRouter();
+  const { markReadForDocument } = useSubscriberNotifications();
   const [document, setDocument] = useState<SiteDocumentRecord | null>(null);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -60,6 +62,12 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!loading && document) {
+      void markReadForDocument(id);
+    }
+  }, [loading, document, id, markReadForDocument]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

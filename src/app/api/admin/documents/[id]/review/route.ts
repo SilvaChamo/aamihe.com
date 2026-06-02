@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireAdminRole } from '@/lib/admin-session';
 import {
-  notifyDocumentApproved,
-  notifyDocumentRevisionRequested,
-} from '@/lib/document-review';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
-import { findUserByLogin } from '@/lib/users';
+  createDocumentApprovedNotification,
+  createDocumentRevisionNotification,
+} from '@/lib/subscriber-notifications';
+import { scheduleDocumentReviewFollowUp } from '@/lib/document-review-follow-up';
+import { getDocumentById, updateDocument } from '@/lib/aamihe-documents-store';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -27,54 +26,33 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Acção inválida.' }, { status: 400 });
     }
 
-    const db = await getDashboardDb();
-    const index = db.documents.findIndex((item) => item.id === id);
-
-    if (index === -1) {
+    const existing = await getDocumentById(id);
+    if (!existing) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado.' }, { status: 404 });
     }
 
-    const current = db.documents[index];
     const now = new Date().toISOString();
-    if (!current.user_id && current.email) {
-      try {
-        const profile = await findUserByLogin(current.email);
-        if (profile?.id) {
-          current.user_id = profile.id;
-        }
-      } catch (error) {
-        console.error('Failed to resolve document user_id before notification:', error);
-      }
-    }
 
     if (action === 'approve') {
       const message = approvalMessage;
-      current.review_status = 'approved';
-      current.published = true;
-      current.reviewed_at = now;
-      current.review_comment = message || undefined;
-      current.review_comment_at = message ? now : undefined;
-      current.updated_at = now;
+      const current = await updateDocument(id, {
+        review_status: 'approved',
+        published: true,
+        reviewed_at: now,
+        review_comment: message || undefined,
+        review_comment_at: message ? now : undefined,
+        updated_at: now,
+      });
 
-      db.documents[index] = current;
-      await saveDashboardDb(db);
-      const warnings: string[] = [];
       try {
-        await syncDocumentsToSupabase();
+        await createDocumentApprovedNotification(current, message);
       } catch (error) {
-        console.error('Documents sync failed after approval:', error);
-        warnings.push('Sincronização do site pendente.');
-      }
-      try {
-        await notifyDocumentApproved(current, message);
-      } catch (error) {
-        console.error('Approval notification failed:', error);
-        const detail =
-          error instanceof Error ? error.message : 'Falha desconhecida ao notificar o subscritor.';
-        warnings.push(`Notificação externa: ${detail}`);
+        console.error('Panel notification failed after approval:', error);
       }
 
-      return NextResponse.json({ success: true, document: current, warnings });
+      scheduleDocumentReviewFollowUp(current, 'approve', { message });
+
+      return NextResponse.json({ success: true, document: current });
     }
 
     const comment = revisionComment;
@@ -85,32 +63,24 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    current.review_status = 'revision_requested';
-    current.published = false;
-    current.review_comment = comment;
-    current.review_comment_at = now;
-    current.reviewed_at = now;
-    current.updated_at = now;
+    const current = await updateDocument(id, {
+      review_status: 'revision_requested',
+      published: false,
+      review_comment: comment,
+      review_comment_at: now,
+      reviewed_at: now,
+      updated_at: now,
+    });
 
-    db.documents[index] = current;
-    await saveDashboardDb(db);
-    const warnings: string[] = [];
     try {
-      await syncDocumentsToSupabase();
+      await createDocumentRevisionNotification(current, comment);
     } catch (error) {
-      console.error('Documents sync failed after revision request:', error);
-      warnings.push('Sincronização do site pendente.');
-    }
-    try {
-      await notifyDocumentRevisionRequested(current, comment);
-    } catch (error) {
-      console.error('Revision notification failed:', error);
-      const detail =
-        error instanceof Error ? error.message : 'Falha desconhecida ao notificar o subscritor.';
-      warnings.push(`Notificação externa: ${detail}`);
+      console.error('Panel notification failed after revision request:', error);
     }
 
-    return NextResponse.json({ success: true, document: current, warnings });
+    scheduleDocumentReviewFollowUp(current, 'request_revision', { comment });
+
+    return NextResponse.json({ success: true, document: current });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao rever documento.' }, { status: 500 });

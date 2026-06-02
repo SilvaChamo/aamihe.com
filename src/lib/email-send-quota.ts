@@ -1,5 +1,4 @@
-import type { DashboardDb } from '@/lib/dashboard-db';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { readEmailSendDays, writeEmailSendDays } from '@/lib/aamihe-email-quota-store';
 
 /** Limite diário recomendado para domínios em aquecimento (Gmail / reputação de IP). */
 export const RECOMMENDED_DAILY_EMAIL_LIMIT = 50;
@@ -14,17 +13,6 @@ function getDailyLimit() {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : RECOMMENDED_DAILY_EMAIL_LIMIT;
 }
 
-async function readSendDays(): Promise<Record<string, number>> {
-  const db = await getDashboardDb();
-  return db.emailSendLog?.days || {};
-}
-
-async function writeSendDays(days: Record<string, number>) {
-  const db = await getDashboardDb();
-  db.emailSendLog = { days };
-  await saveDashboardDb(db);
-}
-
 export type EmailSendQuota = {
   dailyLimit: number;
   sentToday: number;
@@ -32,10 +20,9 @@ export type EmailSendQuota = {
   dateKey: string;
 };
 
-export function getEmailSendQuotaFromDb(db: DashboardDb): EmailSendQuota {
+export function quotaFromSendDays(days: Record<string, number>): EmailSendQuota {
   const dailyLimit = getDailyLimit();
   const dateKey = todayKey();
-  const days = db.emailSendLog?.days || {};
   const sentToday = days[dateKey] || 0;
 
   return {
@@ -47,8 +34,8 @@ export function getEmailSendQuotaFromDb(db: DashboardDb): EmailSendQuota {
 }
 
 export async function getEmailSendQuota(): Promise<EmailSendQuota> {
-  const db = await getDashboardDb();
-  return getEmailSendQuotaFromDb(db);
+  const days = await readEmailSendDays();
+  return quotaFromSendDays(days);
 }
 
 export async function assertEmailSendQuota(requested: number): Promise<EmailSendQuota> {
@@ -72,7 +59,7 @@ export async function recordEmailSends(count: number) {
   if (count <= 0) return;
 
   const dateKey = todayKey();
-  const days = await readSendDays();
+  const days = await readEmailSendDays();
   days[dateKey] = (days[dateKey] || 0) + count;
 
   const cutoff = new Date();
@@ -82,5 +69,5 @@ export async function recordEmailSends(count: number) {
     if (key < cutoffKey) delete days[key];
   }
 
-  await writeSendDays(days);
+  await writeEmailSendDays(days);
 }

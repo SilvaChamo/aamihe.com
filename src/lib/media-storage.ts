@@ -2,34 +2,19 @@ import { mkdir, writeFile, copyFile, access, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveMissingPublicImage } from '@/lib/reference-image-sync';
-import { BLOB_ACCESS } from '@/lib/blob-access';
-
-function hasBlobStorage(): boolean {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
 
 export function newsImageFilename(originalName: string): string {
   const ext = path.extname(originalName) || '.jpg';
   return `news-${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
 }
 
+/** Fallback local quando Supabase Storage não está disponível (desenvolvimento). */
 export async function storeImageBuffer(
   buffer: Buffer,
   originalName: string,
-  mimeType: string
+  mimeType: string,
 ): Promise<{ url: string; filename: string }> {
   const filename = newsImageFilename(originalName);
-
-  if (hasBlobStorage()) {
-    const { put } = await import('@vercel/blob');
-    const blob = await put(`gallery/${filename}`, buffer, {
-      access: BLOB_ACCESS,
-      contentType: mimeType,
-      addRandomSuffix: false,
-    });
-    return { url: blob.url, filename };
-  }
-
   const dir = path.join(process.cwd(), 'public', 'gallery');
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), buffer);
@@ -40,21 +25,10 @@ export async function storeUploadBuffer(
   buffer: Buffer,
   originalName: string,
   subfolder: string,
-  mimeType: string
+  mimeType: string,
 ): Promise<{ url: string; filename: string }> {
   const ext = path.extname(originalName) || '';
   const filename = `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
-
-  if (hasBlobStorage()) {
-    const { put } = await import('@vercel/blob');
-    const blob = await put(`${subfolder}/${filename}`, buffer, {
-      access: BLOB_ACCESS,
-      contentType: mimeType,
-      addRandomSuffix: false,
-    });
-    return { url: blob.url, filename };
-  }
-
   const dir = path.join(process.cwd(), 'public', subfolder);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), buffer);
@@ -71,20 +45,11 @@ export function isVercelBlobUrl(url: string): boolean {
   }
 }
 
-/** Remove ficheiro no Vercel Blob (produção). */
-export async function deleteBlobFile(url: string): Promise<boolean> {
-  if (!hasBlobStorage() || !isVercelBlobUrl(url)) return false;
-  try {
-    const { del } = await import('@vercel/blob');
-    await del(url);
-    return true;
-  } catch (error) {
-    console.error('deleteBlobFile:', url, error);
-    return false;
-  }
+/** URLs antigas no Vercel Blob — registo removido da BD; ficheiro pode já não existir. */
+export async function deleteBlobFile(_url: string): Promise<boolean> {
+  return false;
 }
 
-/** Remove ficheiro em public/ (ex.: /gallery/foto.jpg). */
 export async function deleteLocalPublicFile(url: string): Promise<boolean> {
   if (!url.startsWith('/')) return false;
 

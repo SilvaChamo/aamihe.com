@@ -7,11 +7,7 @@ import { adminFetch } from '@/lib/admin-auth';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import { PanelDocumentsGridSkeleton } from '@/components/Admin/PanelSkeleton';
 import { getFileTypeLabel } from '@/lib/conference-document-files';
-import {
-  getDocumentReviewStatus,
-  getStatusBadgeClass,
-  getSubscriberStatusLabel,
-} from '@/lib/document-review-status';
+import { getStatusBadgeClass, getSubscriberStatusLabel } from '@/lib/document-review-status';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
 
@@ -97,7 +93,6 @@ export default function SubscriberDocumentsPage() {
         ) : (
           <div className="docs-subscriber-grid">
             {documents.map((doc) => {
-              const status = getDocumentReviewStatus(doc);
               const badgeClass = getStatusBadgeClass(doc, 'subscriber');
 
               return (
@@ -150,16 +145,6 @@ export default function SubscriberDocumentsPage() {
                       </div>
                     </div>
                   </article>
-
-                  {status === 'revision_requested' && doc.review_comment ? (
-                    <div className="docs-subscriber-feedback">
-                      <strong>Resposta da comissão</strong>
-                      <p>{doc.review_comment}</p>
-                      <Link href={`/dashboard/meus-documentos/editar/${doc.id}`}>
-                        Editar e reenviar
-                      </Link>
-                    </div>
-                  ) : null}
                 </div>
               );
             })}

@@ -1,10 +1,9 @@
-import type { DashboardDb } from '@/lib/dashboard-db';
-import { getDashboardDb } from '@/lib/dashboard-db';
+import { listDocuments } from '@/lib/aamihe-documents-store';
 import { htmlToPlainText, wrapMarketingEmailHtml, wrapPlainEmailHtml } from '@/lib/email-template';
 import { listSenderAccounts, resolveSenderFrom } from '@/lib/sender-accounts';
 import {
   assertEmailSendQuota,
-  getEmailSendQuotaFromDb,
+  getEmailSendQuota,
   recordEmailSends,
   type EmailSendQuota,
 } from '@/lib/email-send-quota';
@@ -13,7 +12,7 @@ import { listUsers } from '@/lib/users';
 import type { UserListItem } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
 
-export function collectSubscriberEmailsFrom(users: UserListItem[], db: DashboardDb): string[] {
+export async function collectSubscriberEmailsFrom(users: UserListItem[]): Promise<string[]> {
   const emails = new Set<string>();
 
   for (const user of users) {
@@ -22,8 +21,8 @@ export function collectSubscriberEmailsFrom(users: UserListItem[], db: Dashboard
     }
   }
 
-  for (const doc of db.documents) {
-    if (doc.category !== 'conferencia') continue;
+  const documents = await listDocuments({ category: 'conferencia' });
+  for (const doc of documents) {
     const email = String(doc.email || '').trim().toLowerCase();
     if (email) emails.add(email);
   }
@@ -32,19 +31,17 @@ export function collectSubscriberEmailsFrom(users: UserListItem[], db: Dashboard
 }
 
 export async function collectSubscriberEmails(): Promise<string[]> {
-  const [users, db] = await Promise.all([listUsers(), getDashboardDb()]);
-  return collectSubscriberEmailsFrom(users, db);
+  const users = await listUsers();
+  return collectSubscriberEmailsFrom(users);
 }
 
-/** Uma leitura do dashboard + utilizadores (evita vários GET ao Blob na mesma página). */
 export async function loadBroadcastPageData(): Promise<{
   emails: string[];
   quota: EmailSendQuota;
   senders: Awaited<ReturnType<typeof listSenderAccounts>>;
 }> {
-  const [users, db] = await Promise.all([listUsers(), getDashboardDb()]);
-  const emails = collectSubscriberEmailsFrom(users, db);
-  const quota = getEmailSendQuotaFromDb(db);
+  const [users, quota] = await Promise.all([listUsers(), getEmailSendQuota()]);
+  const emails = await collectSubscriberEmailsFrom(users);
   const senders = await listSenderAccounts(users);
   return { emails, quota, senders };
 }

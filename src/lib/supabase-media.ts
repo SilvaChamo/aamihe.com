@@ -1,8 +1,9 @@
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { MediaCategory } from '@/lib/site-media';
 import type { SiteMediaRecord } from '@/lib/site-media';
-import { mediaCatalogKey, mediaUniqueBasename } from '@/lib/media-catalog-key';
+import { isLocalMediaPath, mediaCatalogKey, mediaUniqueBasename } from '@/lib/media-catalog-key';
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
@@ -43,15 +44,19 @@ export async function countSupabaseMediaByCategory(): Promise<MediaCategoryCount
   return counts;
 }
 
-export async function listSupabaseMedia(): Promise<SiteMediaRecord[]> {
+export async function listSupabaseMedia(options?: {
+  /** Por defeito só publicados; admin passa `all: true`. */
+  all?: boolean;
+}): Promise<SiteMediaRecord[]> {
   const admin = getSupabaseAdmin();
   if (!admin) return [];
 
-  const { data, error } = await admin
-    .from('site_media')
-    .select('*')
-    .eq('published', true)
-    .order('created_at', { ascending: false });
+  let query = admin.from('site_media').select('*').order('created_at', { ascending: false });
+  if (!options?.all) {
+    query = query.eq('published', true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Supabase list media:', error.message);
@@ -59,6 +64,24 @@ export async function listSupabaseMedia(): Promise<SiteMediaRecord[]> {
   }
 
   return (data as SupabaseMediaRow[]).map(rowToMediaRecord);
+}
+
+export async function getSupabaseMediaById(id: string): Promise<SiteMediaRecord | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data, error } = await admin.from('site_media').select('*').eq('id', id).maybeSingle();
+  if (error || !data) return null;
+  return rowToMediaRecord(data as SupabaseMediaRow);
+}
+
+export async function getSupabaseMediaByUrl(url: string): Promise<SiteMediaRecord | null> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data, error } = await admin.from('site_media').select('*').eq('url', url).maybeSingle();
+  if (error || !data) return null;
+  return rowToMediaRecord(data as SupabaseMediaRow);
 }
 
 export async function upsertSupabaseMedia(
@@ -157,6 +180,96 @@ export async function deleteSupabaseMediaRelated(url: string): Promise<number> {
   }
 
   return deleted;
+}
+
+/** Caminho no bucket a partir do URL público Supabase. */
+export function storagePathFromMediaUrl(url: string): string | null {
+  const bucket = MEDIA_BUCKET;
+  const markers = [`/storage/v1/object/public/${bucket}/`, `/object/public/${bucket}/`];
+  for (const marker of markers) {
+    const index = url.indexOf(marker);
+    if (index >= 0) {
+      return decodeURIComponent(url.slice(index + marker.length).split('?')[0] || '');
+    }
+  }
+  return null;
+}
+
+/**
+ * Substitui o ficheiro existente (upsert no storage), como no entrecampos — sem eliminar o registo.
+ */
+export async function replaceExistingMediaFile(
+  existing: SiteMediaRecord,
+  buffer: Buffer,
+  mimeType: string,
+  title?: string,
+): Promise<SiteMediaRecord> {
+  const admin = getSupabaseAdmin();
+  const now = new Date().toISOString();
+  const nextTitle = title?.trim() || existing.title;
+
+  if (admin && isSupabaseConfigured()) {
+    let storagePath: string | null = null;
+
+    const { data: byId } = await admin
+      .from('site_media')
+      .select('storage_path')
+      .eq('id', existing.id)
+      .maybeSingle();
+    if (byId?.storage_path) storagePath = byId.storage_path;
+
+    if (!storagePath) {
+      const { data: byUrl } = await admin
+        .from('site_media')
+        .select('storage_path')
+        .eq('url', existing.url)
+        .maybeSingle();
+      if (byUrl?.storage_path) storagePath = byUrl.storage_path;
+    }
+
+    if (!storagePath) {
+      storagePath = storagePathFromMediaUrl(existing.url);
+    }
+
+    if (storagePath) {
+      const { error } = await admin.storage
+        .from(MEDIA_BUCKET)
+        .upload(storagePath, buffer, { contentType: mimeType, upsert: true });
+
+      if (error) {
+        throw new Error(`Não foi possível substituir o ficheiro: ${error.message}`);
+      }
+
+      const updated: SiteMediaRecord = {
+        ...existing,
+        title: nextTitle,
+        mime_type: mimeType,
+        size: buffer.length,
+        updated_at: now,
+      };
+
+      const saved = await upsertSupabaseMedia({
+        ...updated,
+        storage_path: storagePath,
+        catalog_key: mediaCatalogKey(existing.url),
+      });
+      return saved ?? updated;
+    }
+  }
+
+  if (isLocalMediaPath(existing.url)) {
+    const filePath = path.join(process.cwd(), 'public', existing.url.replace(/^\//, ''));
+    await writeFile(filePath, buffer);
+    return {
+      ...existing,
+      title: nextTitle,
+      mime_type: mimeType,
+      size: buffer.length,
+      updated_at: now,
+    };
+  }
+
+  throw new Error('Não foi possível substituir este ficheiro no armazenamento actual.');
 }
 
 export async function uploadFileToStore(

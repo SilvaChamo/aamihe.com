@@ -17,6 +17,10 @@ build
 .DS_Store
 *.pem
 
+# legado (dados já no Supabase Hetzner)
+aamihe_dashboard.json
+aamihe_notifications.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdminRole } from '@/lib/admin-session';
-import { getDashboardDb } from '@/lib/dashboard-db';
+import { getDocumentById } from '@/lib/aamihe-documents-store';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -12,8 +12,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const db = await getDashboardDb();
-    const document = db.documents.find((item) => item.id === id);
+    const document = await getDocumentById(id);
 
     if (!document) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado.' }, { status: 404 });

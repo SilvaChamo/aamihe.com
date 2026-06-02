@@ -106,6 +106,9 @@ function createTransporter(): Mail {
     host,
     port,
     secure,
+    connectionTimeout: 12_000,
+    greetingTimeout: 12_000,
+    socketTimeout: 20_000,
     tls: process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'false' ? { rejectUnauthorized: false } : undefined,
   };
 

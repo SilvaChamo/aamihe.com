@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import path from 'node:path';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 import { deleteMediaItem } from '@/lib/media-delete';
 import { buildAdminMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
 import { ensureGalleryFile } from '@/lib/media-storage';
@@ -55,8 +54,7 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
     publicUrl = await ensureGalleryFile(url, title);
   }
 
-  const db = await getDashboardDb();
-  const record = upsertMediaRecord(db, {
+  return upsertMediaRecord({
     site_slug: 'aamihe',
     title: title || titleFromUrl(publicUrl),
     url: publicUrl,
@@ -66,14 +64,6 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
     source: mediaSource(subcategory),
     published: true,
   });
-  await saveDashboardDb(db);
-
-  if (isSupabaseConfigured()) {
-    const { upsertSupabaseMedia } = await import('@/lib/supabase-media');
-    await upsertSupabaseMedia(record);
-  }
-
-  return record;
 }
 
 async function prepareImageBuffer(
@@ -105,28 +95,20 @@ async function processUpload(file: File, subcategory: string, title?: string) {
   const category = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(fileName)
     ? 'imagens'
     : inferMediaCategory(mimeType);
-  const record = await uploadFileToStore(buffer, fileName, mimeType, category, subcategory);
-
-  const db = await getDashboardDb();
-  upsertMediaRecord(db, record);
-  await saveDashboardDb(db);
-
-  return record;
+  return uploadFileToStore(buffer, fileName, mimeType, category, subcategory);
 }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as MediaCategory | null;
-    const db = await getDashboardDb();
-    // Uma fonte: Supabase + dashboard (sem varrer public/ — evita duplicar o que já está na BD)
-    const allItems = await buildAdminMediaCatalog(db);
+    const allItems = await buildAdminMediaCatalog();
     const items = category
       ? allItems.filter((item) => item.category === category)
       : allItems;
     return NextResponse.json(
       { success: true, media: items, supabase: isSupabaseConfigured() },
-      { headers: { 'Cache-Control': 'no-store' } }
+      { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
     console.error(error);
@@ -147,7 +129,7 @@ export async function POST(request: Request) {
         const record = await registerImageUrl(
           pathUrl || registerUrl,
           subcategory,
-          String(form.get('title') || 'Imagem')
+          String(form.get('title') || 'Imagem'),
         );
         return NextResponse.json({ success: true, media: record });
       }
@@ -168,13 +150,7 @@ export async function POST(request: Request) {
         title = prepared.name;
       }
       const record = await uploadFileToStore(buffer, title, mimeType, 'imagens', subcategory);
-      const db = await getDashboardDb();
-      upsertMediaRecord(db, record);
-      await saveDashboardDb(db);
-      if (isSupabaseConfigured()) {
-        const { upsertSupabaseMedia } = await import('@/lib/supabase-media');
-        await upsertSupabaseMedia(record);
-      }
+      await upsertMediaRecord(record);
       return NextResponse.json({ success: true, media: record });
     }
 
@@ -191,7 +167,9 @@ export async function POST(request: Request) {
 
     const uploaded = [];
     for (const file of fileEntries) {
-      uploaded.push(await processUpload(file, subcategory, file.name));
+      const record = await processUpload(file, subcategory, file.name);
+      await upsertMediaRecord(record);
+      uploaded.push(record);
     }
 
     return NextResponse.json({
@@ -203,6 +181,38 @@ export async function POST(request: Request) {
     console.error(error);
     const message = error instanceof Error ? error.message : 'Erro no upload';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const id = String(body.id || '').trim();
+    const url = String(body.url || '').trim();
+    if (!id && !url) {
+      return NextResponse.json({ success: false, error: 'ID ou URL em falta' }, { status: 400 });
+    }
+
+    const catalog = await buildAdminMediaCatalog();
+    const record =
+      catalog.find((m) => (id && m.id === id) || (url && m.url === url)) ?? null;
+
+    if (!record) {
+      return NextResponse.json({ success: false, error: 'Item não encontrado.' }, { status: 404 });
+    }
+
+    const updated = await upsertMediaRecord({
+      ...record,
+      title: typeof body.title === 'string' ? body.title.trim() || record.title : record.title,
+      alt_text: typeof body.alt_text === 'string' ? body.alt_text : record.alt_text,
+      caption: typeof body.caption === 'string' ? body.caption : record.caption,
+      description: typeof body.description === 'string' ? body.description : record.description,
+    });
+
+    return NextResponse.json({ success: true, media: updated });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ success: false, error: 'Erro ao guardar metadados' }, { status: 500 });
   }
 }
 

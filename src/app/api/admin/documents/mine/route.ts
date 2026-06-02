@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
-import { documentBelongsToUser } from '@/lib/document-ownership';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import {
+  backfillUserIdForDocuments,
+  listDocumentsForUser,
+} from '@/lib/aamihe-documents-store';
 
 export async function GET(request: Request) {
   try {
@@ -10,33 +12,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: session.error }, { status: session.status });
     }
 
-    const db = await getDashboardDb();
-    let dirty = false;
+    let documents = await listDocumentsForUser(session.user);
+    const backfilled = await backfillUserIdForDocuments(session.user, documents);
 
-    for (const doc of db.documents) {
-      if (
-        doc.category === 'conferencia' &&
-        !doc.user_id &&
-        documentBelongsToUser(doc, session.user)
-      ) {
-        doc.user_id = session.user.id;
-        dirty = true;
-      }
+    if (backfilled > 0) {
+      documents = await listDocumentsForUser(session.user);
     }
 
-    if (dirty) {
-      await saveDashboardDb(db);
-    }
-
-    const documents = db.documents
-      .filter(
-        (item) => item.category === 'conferencia' && documentBelongsToUser(item, session.user),
-      )
-      .sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
-
-    return NextResponse.json({ success: true, documents });
+    return NextResponse.json(
+      { success: true, documents },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao carregar documentos' }, { status: 500 });

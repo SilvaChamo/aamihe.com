@@ -45,10 +45,23 @@ export function isLocalMediaPath(url: string | undefined): boolean {
   );
 }
 
+export function isSupabaseStorageUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes('supabase.co/storage') ||
+    lower.includes('supabase.aamihe.com/storage') ||
+    /\/storage\/v1\/object\//i.test(url)
+  );
+}
+
 export function canDeleteMedia(item: { id: string; source?: string; url?: string }): boolean {
   if (item.id.startsWith('wp_') || item.id.startsWith('doc_media_')) return false;
-  if (item.id.startsWith('site_')) return isLocalMediaPath(item.url);
-  if (item.url?.includes('supabase.co/storage')) return true;
+  if (item.id.startsWith('site_')) {
+    if (isLocalMediaPath(item.url)) return true;
+    return isSupabaseStorageUrl(item.url);
+  }
+  if (isSupabaseStorageUrl(item.url)) return true;
   if (isLocalMediaPath(item.url)) return true;
   if (item.url?.includes('blob.vercel-storage.com')) return true;
   if (item.source === 'upload' || item.source === 'news') return true;

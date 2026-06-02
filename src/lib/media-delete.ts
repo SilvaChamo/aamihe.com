@@ -1,13 +1,11 @@
 import path from 'node:path';
 import { readdir, unlink } from 'node:fs/promises';
-import type { DashboardDb } from '@/lib/dashboard-db';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { canDeleteMedia, mediaUniqueBasename } from '@/lib/media-catalog-key';
+import { canDeleteMedia, isSupabaseStorageUrl, mediaUniqueBasename } from '@/lib/media-catalog-key';
 import { findMediaRecordById } from '@/lib/media-registry';
 import { deleteBlobFile, deleteLocalPublicFile, isVercelBlobUrl } from '@/lib/media-storage';
 import { isLocalMediaPath } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
-import { deleteSupabaseMedia, deleteSupabaseMediaRelated } from '@/lib/supabase-media';
+import { deleteSupabaseMedia, deleteSupabaseMediaRelated, getSupabaseMediaByUrl } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 
 export type MediaDeleteInput = {
@@ -15,12 +13,14 @@ export type MediaDeleteInput = {
   url?: string;
 };
 
-async function findRecordByUrl(url: string, db: DashboardDb): Promise<SiteMediaRecord | null> {
+async function findRecordByUrl(url: string): Promise<SiteMediaRecord | null> {
   const normalized = url.trim();
   if (!normalized) return null;
 
-  const inDb = db.media.find((m) => m.url === normalized);
-  if (inDb) return inDb;
+  if (isSupabaseConfigured()) {
+    const fromDb = await getSupabaseMediaByUrl(normalized);
+    if (fromDb) return fromDb;
+  }
 
   if (normalized.startsWith('/')) {
     const { collectAllSiteImages } = await import('@/lib/collect-site-images');
@@ -28,46 +28,21 @@ async function findRecordByUrl(url: string, db: DashboardDb): Promise<SiteMediaR
     return collected.find((m) => m.url === normalized) ?? null;
   }
 
-  if (isSupabaseConfigured()) {
-    const { getSupabaseAdmin, rowToMediaRecord } = await import('@/lib/supabase/server');
-    const admin = getSupabaseAdmin();
-    if (admin) {
-      const { data: row } = await admin.from('site_media').select('*').eq('url', normalized).maybeSingle();
-      if (row) return rowToMediaRecord(row);
-    }
-  }
-
   return null;
 }
 
-async function resolveMediaRecord(
-  input: MediaDeleteInput,
-  db: DashboardDb
-): Promise<SiteMediaRecord | null> {
+async function resolveMediaRecord(input: MediaDeleteInput): Promise<SiteMediaRecord | null> {
   if (input.url?.trim()) {
-    const byUrl = await findRecordByUrl(input.url.trim(), db);
+    const byUrl = await findRecordByUrl(input.url.trim());
     if (byUrl) return byUrl;
   }
 
-  const inDb = db.media.find((m) => m.id === input.id);
-  if (inDb) return inDb;
-
-  const byId = await findMediaRecordById(input.id, db);
+  const byId = await findMediaRecordById(input.id);
   if (byId) return byId;
-
-  if (isSupabaseConfigured()) {
-    const { getSupabaseAdmin, rowToMediaRecord } = await import('@/lib/supabase/server');
-    const admin = getSupabaseAdmin();
-    if (admin) {
-      const { data: row } = await admin.from('site_media').select('*').eq('id', input.id).maybeSingle();
-      if (row) return rowToMediaRecord(row);
-    }
-  }
 
   return null;
 }
 
-/** Apaga ficheiros em public/gallery com o mesmo nome base (evita reaparecer após eliminar Supabase). */
 export async function deleteGalleryFilesByBasename(urlOrBasename: string): Promise<number> {
   const key = urlOrBasename.includes('/')
     ? mediaUniqueBasename(urlOrBasename)
@@ -102,7 +77,6 @@ export async function deleteGalleryFilesByBasename(urlOrBasename: string): Promi
 
 export async function deleteMediaItem(
   input: MediaDeleteInput,
-  db?: DashboardDb
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   const { id } = input;
 
@@ -118,8 +92,7 @@ export async function deleteMediaItem(
     };
   }
 
-  const dashboard = db ?? (await getDashboardDb());
-  const record = await resolveMediaRecord(input, dashboard);
+  const record = await resolveMediaRecord(input);
 
   if (!record) {
     return { ok: false, error: 'Item não encontrado.', status: 404 };
@@ -151,14 +124,6 @@ export async function deleteMediaItem(
     await deleteGalleryFilesByBasename(basename);
   }
 
-  const basenameKey = basename.toLowerCase();
-  dashboard.media = dashboard.media.filter((m) => {
-    if (m.id === record.id || m.id === input.id || m.url === targetUrl) return false;
-    if (basenameKey && mediaUniqueBasename(m.url).toLowerCase() === basenameKey) return false;
-    return true;
-  });
-  await saveDashboardDb(dashboard);
-
   if (isSupabaseConfigured()) {
     await deleteSupabaseMediaRelated(targetUrl);
     if (input.id !== record.id) {
@@ -169,7 +134,7 @@ export async function deleteMediaItem(
     const removedBlob = isVercelBlobUrl(targetUrl);
     if (
       !supabaseOk &&
-      record.url.includes('supabase.co') &&
+      isSupabaseStorageUrl(record.url) &&
       !removedLocal &&
       !removedBlob
     ) {
@@ -185,7 +150,7 @@ export async function deleteMediaItem(
 }
 
 export async function deleteMediaItems(
-  items: MediaDeleteInput[]
+  items: MediaDeleteInput[],
 ): Promise<{ deleted: number; failed: { id: string; error: string }[] }> {
   const failed: { id: string; error: string }[] = [];
   let deleted = 0;

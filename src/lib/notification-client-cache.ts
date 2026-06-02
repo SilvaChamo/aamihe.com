@@ -59,6 +59,19 @@ export function patchNotificationRead(id: string): void {
   });
 }
 
+export function patchNotificationsReadForDocument(documentId: string): void {
+  const cache = readNotificationCache();
+  if (!cache) return;
+  const notifications = cache.notifications.map((item) =>
+    item.document_id === documentId ? { ...item, read: true } : item,
+  );
+  writeNotificationCache({
+    notifications,
+    unread: notifications.filter((item) => !item.read).length,
+    fetchedAt: Date.now(),
+  });
+}
+
 export function patchAllNotificationsRead(): void {
   const cache = readNotificationCache();
   if (!cache) return;

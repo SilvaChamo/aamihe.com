@@ -16,6 +16,17 @@
   font-size: 14px;
 }
 
+.conference-form-admin-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #f0c674;
+  background: #fff8e6;
+  color: #6b4e00;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .conference-form {
   display: grid;
   gap: 16px;

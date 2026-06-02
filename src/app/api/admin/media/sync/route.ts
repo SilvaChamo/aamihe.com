@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { buildMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
+import { buildMediaCatalog } from '@/lib/media-registry';
 import {
   collectUrlsFromReferenceHtml,
   getReferenceIndex,
@@ -11,7 +10,7 @@ import {
 } from '@/lib/reference-image-sync';
 import { mediaCatalogKey } from '@/lib/media-catalog-key';
 import { isSupabaseConfigured, getSupabaseAdmin, MEDIA_BUCKET } from '@/lib/supabase/server';
-import { upsertSupabaseMedia } from '@/lib/supabase-media';
+import { listSupabaseMedia, upsertSupabaseMedia } from '@/lib/supabase-media';
 import type { SiteMediaRecord } from '@/lib/site-media';
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
@@ -81,7 +80,7 @@ async function walkPublicImages(dir: string, prefix = ''): Promise<{ full: strin
 
 async function uploadLocalFileToSupabase(
   filePath: string,
-  relPath: string
+  relPath: string,
 ): Promise<SiteMediaRecord | null> {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
@@ -118,20 +117,26 @@ async function uploadLocalFileToSupabase(
     updated_at: new Date().toISOString(),
   };
 
-  return upsertSupabaseMedia({ ...record, storage_path: storagePathFinal, catalog_key: mediaCatalogKey(record.url) });
+  return upsertSupabaseMedia({
+    ...record,
+    storage_path: storagePathFinal,
+    catalog_key: mediaCatalogKey(record.url),
+  });
 }
 
 export async function POST() {
   try {
-    const db = await getDashboardDb();
     const restored: string[] = [];
 
-    for (const item of db.media) {
-      if (!item.url.startsWith('/')) continue;
-      const resolved = await resolveMissingPublicImage(item.url);
-      if (resolved !== item.url) {
-        item.url = resolved;
-        restored.push(resolved);
+    if (isSupabaseConfigured()) {
+      const localRows = await listSupabaseMedia({ all: true });
+      for (const item of localRows) {
+        if (!item.url.startsWith('/')) continue;
+        const resolved = await resolveMissingPublicImage(item.url);
+        if (resolved !== item.url) {
+          await upsertSupabaseMedia({ ...item, url: resolved });
+          restored.push(resolved);
+        }
       }
     }
 
@@ -176,7 +181,6 @@ export async function POST() {
         try {
           const saved = await uploadLocalFileToSupabase(file.full, file.rel);
           if (saved) {
-            upsertMediaRecord(db, saved);
             supabaseSynced += 1;
           } else {
             failed.push(file.rel);
@@ -187,21 +191,17 @@ export async function POST() {
         }
       }
 
-      for (const record of db.media.filter((r) => r.published && r.url.startsWith('/'))) {
+      const localRows = await listSupabaseMedia({ all: true });
+      for (const record of localRows.filter((r) => r.published && r.url.startsWith('/'))) {
         const filePath = path.join(publicRoot, record.url.replace(/^\//, ''));
         try {
           const saved = await uploadLocalFileToSupabase(filePath, record.url.replace(/^\//, ''));
-          if (saved) {
-            Object.assign(record, { url: saved.url, updated_at: new Date().toISOString() });
-            supabaseSynced += 1;
-          }
+          if (saved) supabaseSynced += 1;
         } catch {
           failed.push(record.url);
         }
       }
     }
-
-    await saveDashboardDb(db);
 
     let cleanupStats = null;
     if (isSupabaseConfigured()) {
@@ -209,7 +209,7 @@ export async function POST() {
       cleanupStats = await cleanupMediaCatalog();
     }
 
-    const totalInSupabase = isSupabaseConfigured() ? (await buildMediaCatalog(db)).length : 0;
+    const totalInSupabase = isSupabaseConfigured() ? (await buildMediaCatalog()).length : 0;
 
     return NextResponse.json({
       success: true,

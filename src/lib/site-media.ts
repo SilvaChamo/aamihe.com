@@ -16,6 +16,9 @@ export type SiteMediaRecord = {
   published: boolean;
   created_at: string;
   updated_at: string;
+  alt_text?: string;
+  caption?: string;
+  description?: string;
 };
 
 export type PublicMediaItem = {

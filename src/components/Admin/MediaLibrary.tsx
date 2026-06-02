@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { adminFetch } from '@/lib/admin-auth';
 import { uploadMediaFiles } from '@/lib/persist-client-media';
-import { dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
+import { canDeleteMedia, dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { 
   Trash2, 
   Copy, 
   ExternalLink, 
-  RefreshCw, 
   ImageIcon, 
   Upload, 
   X,
@@ -19,15 +18,15 @@ import {
   Filter,
   Check,
   Plus,
-  AlertCircle,
   FileDown,
   Eye,
   Edit3,
-  Video
+  Video,
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import { SkeletonMediaGrid } from '@/components/Admin/Skeleton';
+import { dispatchMediaUpdated } from '@/lib/media-events';
 import './MediaLibrary.css';
 
 interface MediaLibraryProps {
@@ -52,6 +51,9 @@ interface MediaFile {
     mimetype: string;
   } | null;
   created_at?: string;
+  alt_text?: string;
+  caption?: string;
+  description?: string;
 }
 
 const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
@@ -90,7 +92,12 @@ export default function MediaLibrary({
   const [processingImage, setProcessingImage] = useState(false);
   const [estimatedSize, setEstimatedSize] = useState<number | null>(null);
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
-  const [pendingBlob, setPendingBlob] = useState<{ blob: Blob; mimeType: string; extension: string } | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<{
+    width: number;
+    height: number;
+    format: 'original' | 'webp' | 'jpeg';
+  } | null>(null);
+  const [saveMode, setSaveMode] = useState<'replace' | 'new'>('replace');
   
   // Preview Modal State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -146,6 +153,9 @@ export default function MediaLibrary({
             mimetype: item.mime_type,
           },
           created_at: item.created_at,
+          alt_text: item.alt_text,
+          caption: item.caption,
+          description: item.description,
         }));
         setFiles(mapped);
       } else {
@@ -234,9 +244,9 @@ export default function MediaLibrary({
       url: file.url,
     });
 
-  const openDetails = async (file: MediaFile) => {
+  const openDetails = async (file: MediaFile, startEditing = false) => {
     setActiveFile(file);
-    setIsEditingImage(false);
+    setIsEditingImage(startEditing && fileDisplayKind(file) === 'imagens');
 
     if (fileDisplayKind(file) === 'imagens') {
       const img = new Image();
@@ -250,10 +260,10 @@ export default function MediaLibrary({
     
     // Set default metadata
     setMetadata({
-      alt_text: '',
+      alt_text: file.alt_text || '',
       title: file.name,
-      caption: '',
-      description: ''
+      caption: file.caption || '',
+      description: file.description || '',
     });
   };
 
@@ -267,14 +277,48 @@ export default function MediaLibrary({
     setPreviewImage(null);
   };
 
+  const closeAttachmentDetails = () => {
+    setActiveFile(null);
+    setIsEditingImage(false);
+  };
+
   const saveMetadata = async () => {
     if (!activeFile) return;
     setSavingMetadata(true);
     try {
-      // Simulate saving metadata
-      alert('Metadados guardados!');
+      const res = await fetch('/api/admin/media', {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeFile.id,
+          url: activeFile.url,
+          title: metadata.title,
+          alt_text: metadata.alt_text,
+          caption: metadata.caption,
+          description: metadata.description,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Erro ao guardar metadados');
+      }
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === activeFile.id && f.url === activeFile.url
+            ? {
+                ...f,
+                name: metadata.title || f.name,
+                alt_text: metadata.alt_text,
+                caption: metadata.caption,
+                description: metadata.description,
+              }
+            : f
+        )
+      );
+      dispatchMediaUpdated();
     } catch (err) {
-      console.error(err);
+      alert(err instanceof Error ? err.message : 'Erro ao guardar metadados');
     } finally {
       setSavingMetadata(false);
     }
@@ -282,12 +326,13 @@ export default function MediaLibrary({
 
   const requestDelete = async (items: MediaFile[]) => {
     if (items.length === 1) {
-      const res = await adminFetch(
-        `/api/admin/media?id=${encodeURIComponent(items[0].id)}&url=${encodeURIComponent(items[0].url)}`,
-        { method: 'DELETE' }
+      const item = items[0];
+      const res = await fetch(
+        `/api/admin/media?id=${encodeURIComponent(item.id)}&url=${encodeURIComponent(item.url)}`,
+        { method: 'DELETE', credentials: 'same-origin' }
       );
-      const data = await res.json();
-      if (!data.success) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
         throw new Error(data.error || 'Erro ao eliminar');
       }
       return;
@@ -318,13 +363,17 @@ export default function MediaLibrary({
   };
 
   const deleteSingle = async (file: MediaFile) => {
+    if (!canDeleteMedia(file)) {
+      alert('Este item do arquivo legado não pode ser eliminado aqui.');
+      return;
+    }
     if (!confirm('Eliminar este item permanentemente?')) return;
     setLoading(true);
     try {
       await requestDelete([file]);
       removeDeletedFromState([file]);
-      setActiveFile(null);
-      setIsEditingImage(false);
+      closeAttachmentDetails();
+      dispatchMediaUpdated();
       await loadImages();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao eliminar');
@@ -359,62 +408,62 @@ export default function MediaLibrary({
     }
   };
 
-  const applyImageEdits = async () => {
+  const applyImageEdits = () => {
     if (!activeFile) return;
-    setProcessingImage(true);
-    
-    try {
-      const img = new Image();
-      img.src = getPublicUrl(activeFile);
-      await new Promise((resolve, reject) => { 
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('Falha ao carregar imagem para edição.'));
-      });
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const finalWidth = editWidth || img.width;
-      const finalHeight = editHeight || img.height;
-      canvas.width = finalWidth;
-      canvas.height = finalHeight;
-      if (ctx) ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
-
-      const mimeType = editFormat === 'webp' ? 'image/webp' : editFormat === 'jpeg' ? 'image/jpeg' : activeFile.metadata?.mimetype || 'image/jpeg';
-      const extension = editFormat === 'webp' ? '.webp' : editFormat === 'jpeg' ? '.jpg' : '.' + activeFile.name.split('.').pop();
-      const blob: Blob = await new Promise((resolve) => {
-        canvas.toBlob((b) => resolve(b!), mimeType, 0.85);
-      });
-
-      setPendingBlob({ blob, mimeType, extension });
-      setIsSaveConfirmOpen(true);
-    } catch (err: any) {
-      alert('Erro: ' + err.message);
-    } finally {
-      setProcessingImage(false);
+    if (!editWidth || !editHeight) {
+      alert('Indique largura e altura válidas.');
+      return;
     }
+    setSaveMode('replace');
+    setPendingEdit({ width: editWidth, height: editHeight, format: editFormat });
+    setIsSaveConfirmOpen(true);
+  };
+
+  const closeSaveConfirm = () => {
+    setIsSaveConfirmOpen(false);
+    setPendingEdit(null);
+  };
+
+  const submitSaveConfirm = () => {
+    void confirmSave(saveMode === 'replace');
   };
 
   const confirmSave = async (replace: boolean) => {
-    if (!activeFile || !pendingBlob) return;
+    if (!activeFile || !pendingEdit) return;
     setProcessingImage(true);
-    
+
     try {
-      let fileName = activeFile.name;
-      
-      if (replace) {
-        // Keep original name
-      } else {
-        fileName = activeFile.name.replace(/\.[^/.]+$/, "") + `_edited_${Date.now()}${pendingBlob.extension}`;
+      const res = await fetch('/api/admin/media/edit', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeFile.id,
+          url: activeFile.url,
+          width: pendingEdit.width,
+          height: pendingEdit.height,
+          format: pendingEdit.format,
+          replace,
+          fileName: activeFile.name,
+          title: metadata.title,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        const msg = data.error || 'Erro ao guardar imagem';
+        throw new Error(
+          msg.includes('eliminar') ? 'Não foi possível guardar a imagem. Tente «Guardar como novo».' : msg
+        );
       }
 
-      // In a real app, you would upload to server here
-      alert(replace ? 'Imagem original substituída com sucesso!' : 'Imagem guardada como novo ficheiro!');
       setIsSaveConfirmOpen(false);
-      setPendingBlob(null);
+      setPendingEdit(null);
       setIsEditingImage(false);
-      loadImages();
-    } catch (err: any) {
-      alert('Erro ao guardar: ' + err.message);
+      closeAttachmentDetails();
+      dispatchMediaUpdated();
+      await loadImages();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao guardar');
     } finally {
       setProcessingImage(false);
     }
@@ -483,11 +532,6 @@ export default function MediaLibrary({
       month: '2-digit',
       year: 'numeric',
     });
-  };
-
-  const closeAttachmentDetails = () => {
-    setActiveFile(null);
-    setIsEditingImage(false);
   };
 
   const copyFileUrl = async (file: MediaFile) => {
@@ -650,6 +694,45 @@ export default function MediaLibrary({
                       <span className="media-select-text">Selecionar</span>
                     </div>
                   )}
+                  {!(isModal && onSelect) && (
+                    <div className="media-item-actions">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void openDetails(file, true);
+                        }}
+                        className="media-action-button edit"
+                        title="Editar"
+                      >
+                        <Edit3 className="media-action-icon" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPreview(file);
+                        }}
+                        className="media-action-button view"
+                        title="Ver"
+                      >
+                        <Eye className="media-action-icon" />
+                      </button>
+                      {canDeleteMedia(file) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void deleteSingle(file);
+                          }}
+                          className="media-action-button delete"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="media-action-icon" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -697,7 +780,7 @@ export default function MediaLibrary({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openDetails(file);
+                        void openDetails(file, true);
                       }}
                       className="media-action-button edit"
                       title="Editar"
@@ -715,17 +798,19 @@ export default function MediaLibrary({
                     >
                       <Eye className="media-action-icon" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteSingle(file);
-                      }}
-                      className="media-action-button delete"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="media-action-icon" />
-                    </button>
+                    {canDeleteMedia(file) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void deleteSingle(file);
+                        }}
+                        className="media-action-button delete"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="media-action-icon" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1042,52 +1127,66 @@ export default function MediaLibrary({
 
       {/* CUSTOM SAVE CONFIRMATION POPUP (ENTRECAMPOS STYLE) */}
       {isSaveConfirmOpen && (
-        <div className="media-save-confirm">
+        <div className="media-save-confirm" role="dialog" aria-modal="true" aria-labelledby="media-save-confirm-title">
           <div className="media-save-confirm-dialog">
-            <div className="media-save-confirm-content">
-              <div className="media-save-confirm-header">
-                <div className="media-save-confirm-icon">
-                  <AlertCircle className="media-alert-icon" />
-                </div>
-                <div>
-                  <h3 className="media-save-confirm-title">Como deseja guardar?</h3>
-                  <p className="media-save-confirm-subtitle">Escolha como aplicar as edições feitas na imagem.</p>
-                </div>
-              </div>
+            <h3 id="media-save-confirm-title" className="media-save-confirm-title">
+              Como deseja guardar?
+            </h3>
+            <p className="media-save-confirm-text">
+              Selecione uma opção abaixo e clique em Guardar para aplicar as alterações à imagem.
+            </p>
 
-              <div className="media-save-confirm-options">
-                <button 
-                  onClick={() => confirmSave(true)}
+            <div className="media-save-confirm-options" role="radiogroup" aria-labelledby="media-save-confirm-title">
+              <label className="media-save-confirm-choice">
+                <input
+                  type="radio"
+                  name="media-save-mode"
+                  className="media-save-confirm-checkbox"
+                  checked={saveMode === 'replace'}
                   disabled={processingImage}
-                  className="media-save-confirm-option"
-                >
-                  <div>
-                    <span className="media-save-confirm-option-title">Substituir Original</span>
-                    <span className="media-save-confirm-option-desc">O ficheiro antigo será removido e substituído por este.</span>
-                  </div>
-                  <RefreshCw className="media-save-confirm-option-icon" />
-                </button>
-
-                <button 
-                  onClick={() => confirmSave(false)}
+                  onChange={() => setSaveMode('replace')}
+                />
+                <span className="media-save-confirm-choice-label">
+                  <strong>Substituir original</strong>
+                  <span className="media-save-confirm-choice-desc">
+                    O ficheiro actual é substituído pela versão editada.
+                  </span>
+                </span>
+              </label>
+              <label className="media-save-confirm-choice">
+                <input
+                  type="radio"
+                  name="media-save-mode"
+                  className="media-save-confirm-checkbox"
+                  checked={saveMode === 'new'}
                   disabled={processingImage}
-                  className="media-save-confirm-option"
-                >
-                  <div>
-                    <span className="media-save-confirm-option-title">Guardar Como Novo</span>
-                    <span className="media-save-confirm-option-desc">Cria uma nova versão da imagem mantendo a original intacta.</span>
-                  </div>
-                  <FileDown className="media-save-confirm-option-icon" />
-                </button>
-              </div>
+                  onChange={() => setSaveMode('new')}
+                />
+                <span className="media-save-confirm-choice-label">
+                  <strong>Guardar como novo</strong>
+                  <span className="media-save-confirm-choice-desc">
+                    Cria um novo ficheiro e mantém o original intacto.
+                  </span>
+                </span>
+              </label>
             </div>
 
-            <div className="media-save-confirm-footer">
-              <button 
-                onClick={() => { setIsSaveConfirmOpen(false); setPendingBlob(null); }}
+            <div className="media-save-confirm-actions">
+              <button
+                type="button"
+                onClick={closeSaveConfirm}
+                disabled={processingImage}
                 className="media-save-confirm-cancel"
               >
                 Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={submitSaveConfirm}
+                disabled={processingImage}
+                className="media-save-confirm-submit"
+              >
+                {processingImage ? 'A guardar…' : 'Guardar'}
               </button>
             </div>
           </div>

@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev --port 3004",
     "build": "next build",
     "start": "next start",
     "import-noticias": "node scripts/import-news-to-supabase.mjs",
-    "migrate-users": "node scripts/migrate-aamihe-users-to-supabase.mjs",
+    "migrate-documents": "node scripts/migrate-documents-notifications-to-supabase.mjs",
+    "migrate-all-to-supabase": "node scripts/migrate-all-to-supabase-hetzner.mjs",
     "supabase-hetzner:migrate": "node scripts/migrate-aamihe-cloud-to-hetzner.mjs",
     "supabase-hetzner:migrate-storage": "node scripts/migrate-storage-cloud-to-hetzner.mjs",
     "test-email": "node scripts/test-email.mjs",
@@ -21,15 +22,14 @@
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.106.2",
-    "@vercel/blob": "^2.4.0",
     "lucide-react": "^1.16.0",
-    "next": "16.1.6",
+    "next": "16.2.7",
     "nodemailer": "^8.0.10",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -7,12 +7,11 @@ import {
   createDocumentRevisionNotification,
 } from '@/lib/subscriber-notifications';
 
-export async function notifyDocumentRevisionRequested(
+/** E-mail ao subscritor (pode ser lento — executar em segundo plano). */
+export async function sendDocumentRevisionEmail(
   doc: SiteDocumentRecord,
   comment: string,
 ): Promise<void> {
-  await createDocumentRevisionNotification(doc, comment);
-
   const email = String(doc.email || '').trim();
   if (!email) {
     throw new Error('Notificação no painel criada, mas o subscritor não tem e-mail associado.');
@@ -56,12 +55,19 @@ export async function notifyDocumentRevisionRequested(
   });
 }
 
-export async function notifyDocumentApproved(
+export async function notifyDocumentRevisionRequested(
+  doc: SiteDocumentRecord,
+  comment: string,
+): Promise<void> {
+  await createDocumentRevisionNotification(doc, comment);
+  await sendDocumentRevisionEmail(doc, comment);
+}
+
+/** E-mail ao subscritor (pode ser lento — executar em segundo plano). */
+export async function sendDocumentApprovedEmail(
   doc: SiteDocumentRecord,
   adminMessage?: string,
 ): Promise<void> {
-  await createDocumentApprovedNotification(doc, adminMessage);
-
   const email = String(doc.email || '').trim();
   if (!email) {
     throw new Error('Notificação no painel criada, mas o subscritor não tem e-mail associado.');
@@ -97,4 +103,12 @@ export async function notifyDocumentApproved(
       '<p>Com os melhores cumprimentos,<br />AAMIHE</p>',
     ].join('\n'),
   });
+}
+
+export async function notifyDocumentApproved(
+  doc: SiteDocumentRecord,
+  adminMessage?: string,
+): Promise<void> {
+  await createDocumentApprovedNotification(doc, adminMessage);
+  await sendDocumentApprovedEmail(doc, adminMessage);
 }

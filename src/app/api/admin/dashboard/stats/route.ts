@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { getDashboardDb } from '@/lib/dashboard-db';
+import { listDocuments } from '@/lib/aamihe-documents-store';
 import { loadSiteContentFromSupabase } from '@/lib/supabase-content';
 import { countSupabaseMediaByCategory } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import type { MediaCategory } from '@/lib/site-media';
 
 export const dynamic = 'force-dynamic';
-
-function countLocalMedia(db: Awaited<ReturnType<typeof getDashboardDb>>): Record<MediaCategory, number> {
-  const counts = { imagens: 0, videos: 0, documentos: 0 };
-  for (const item of db.media) {
-    if (!item.published) continue;
-    counts[item.category] += 1;
-  }
-  return counts;
-}
 
 export async function GET(request: Request) {
   try {
@@ -24,20 +15,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const db = await getDashboardDb();
-    const [remoteCounts, content] = await Promise.all([
+    const [remoteCounts, content, documents] = await Promise.all([
       isSupabaseConfigured() ? countSupabaseMediaByCategory() : Promise.resolve(null),
       loadSiteContentFromSupabase(),
+      listDocuments(),
     ]);
 
-    const localCounts = countLocalMedia(db);
-    const mediaCounts = remoteCounts ?? localCounts;
-
-    if (remoteCounts) {
-      for (const key of Object.keys(localCounts) as MediaCategory[]) {
-        mediaCounts[key] = Math.max(mediaCounts[key], localCounts[key]);
-      }
-    }
+    const mediaCounts: Record<MediaCategory, number> = remoteCounts ?? {
+      imagens: 0,
+      videos: 0,
+      documentos: 0,
+    };
 
     return NextResponse.json({
       success: true,
@@ -45,7 +33,7 @@ export async function GET(request: Request) {
         news: content?.news?.length ?? 0,
         media: mediaCounts.imagens,
         videos: mediaCounts.videos,
-        documents: db.documents.length,
+        documents: documents.length,
       },
     });
   } catch (error) {

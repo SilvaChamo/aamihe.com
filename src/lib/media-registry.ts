@@ -1,15 +1,19 @@
-import type { DashboardDb } from '@/lib/dashboard-db';
+import { listDocuments } from '@/lib/aamihe-documents-store';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { inferMediaCategory, inferMediaCategoryFromUrl } from '@/lib/site-media';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { collectAllSiteImages } from '@/lib/collect-site-images';
-import { dedupeMediaRecords } from '@/lib/media-catalog-key';
+import { dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
 import {
   repairDuplicateIds,
   resolveMediaRecordFiles,
   uniqueMediaIds,
 } from '@/lib/reference-image-sync';
-import { listSupabaseMedia } from '@/lib/supabase-media';
+import {
+  getSupabaseMediaById,
+  listSupabaseMedia,
+  upsertSupabaseMedia,
+} from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { randomUUID } from 'node:crypto';
 
@@ -32,38 +36,30 @@ function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[
     }));
 }
 
-/** Biblioteca admin: Supabase + uploads locais, sem duplicar ficheiros legados. */
-export async function buildAdminMediaCatalog(db: DashboardDb): Promise<SiteMediaRecord[]> {
-  const items: SiteMediaRecord[] = [];
-
-  if (isSupabaseConfigured()) {
-    items.push(...(await listSupabaseMedia()));
+/** Biblioteca admin — fonte: Supabase `site_media`. */
+export async function buildAdminMediaCatalog(): Promise<SiteMediaRecord[]> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase é obrigatório para a biblioteca multimédia.');
   }
 
-  for (const item of db.media.filter((m) => m.published)) {
-    items.push(item);
-  }
-
+  const items = await listSupabaseMedia({ all: true });
   return finalizeCatalog(items);
 }
 
-/** Galeria pública: inclui legado WordPress com deduplicação. */
-export async function buildMediaCatalog(db: DashboardDb): Promise<SiteMediaRecord[]> {
+/** Galeria pública: Supabase + legado WordPress (ficheiros) + documentos gerais publicados. */
+export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
   const items: SiteMediaRecord[] = [];
 
   if (isSupabaseConfigured()) {
     items.push(...(await listSupabaseMedia()));
-  }
-
-  for (const item of db.media.filter((m) => m.published)) {
-    items.push(item);
   }
 
   for (const item of await collectAllSiteImages()) {
     items.push(item);
   }
 
-  for (const item of documentMediaRecords(db.documents)) {
+  const publishedGeral = await listDocuments({ category: 'geral', published: true });
+  for (const item of documentMediaRecords(publishedGeral)) {
     items.push(item);
   }
 
@@ -78,21 +74,22 @@ async function finalizeCatalog(items: SiteMediaRecord[]): Promise<SiteMediaRecor
 
 function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
   return items.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 }
 
-export function upsertMediaRecord(
-  db: DashboardDb,
-  input: Omit<SiteMediaRecord, 'id' | 'created_at' | 'updated_at'> & { id?: string }
-): SiteMediaRecord {
-  const now = new Date().toISOString();
-  const existing = db.media.find((m) => m.url === input.url);
-  if (existing) {
-    Object.assign(existing, input, { updated_at: now });
-    return existing;
+export async function upsertMediaRecord(
+  input: Omit<SiteMediaRecord, 'id' | 'created_at' | 'updated_at'> & {
+    id?: string;
+    storage_path?: string | null;
+    catalog_key?: string;
+  },
+): Promise<SiteMediaRecord> {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase é obrigatório para guardar multimédia.');
   }
 
+  const now = new Date().toISOString();
   const record: SiteMediaRecord = {
     id: input.id ?? `media_${Date.now()}_${randomUUID().slice(0, 6)}`,
     site_slug: input.site_slug,
@@ -107,19 +104,29 @@ export function upsertMediaRecord(
     published: input.published ?? true,
     created_at: now,
     updated_at: now,
+    alt_text: input.alt_text,
+    caption: input.caption,
+    description: input.description,
   };
 
-  db.media.push(record);
-  return record;
+  const saved = await upsertSupabaseMedia({
+    ...record,
+    storage_path: input.storage_path ?? null,
+    catalog_key: input.catalog_key ?? mediaCatalogKey(record.url),
+  });
+
+  if (!saved) {
+    throw new Error('Não foi possível guardar o registo multimédia.');
+  }
+
+  return saved;
 }
 
-/** Resolve item do catálogo (DB, Supabase ou ficheiros em public/). */
-export async function findMediaRecordById(
-  id: string,
-  db: DashboardDb
-): Promise<SiteMediaRecord | null> {
-  const inDb = db.media.find((m) => m.id === id);
-  if (inDb) return inDb;
+export async function findMediaRecordById(id: string): Promise<SiteMediaRecord | null> {
+  if (isSupabaseConfigured()) {
+    const fromDb = await getSupabaseMediaById(id);
+    if (fromDb) return fromDb;
+  }
 
   if (id.startsWith('site_')) {
     const collected = await collectAllSiteImages();

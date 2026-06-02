@@ -295,7 +295,18 @@
 }
 
 .media-item-actions {
-  display: none;
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.media-item:hover .media-item-actions {
+  opacity: 1;
 }
 
 .media-action-button {
@@ -903,13 +914,12 @@
   background: #f9fafb;
 }
 
-/* Save Confirm Modal */
+/* Popup guardar imagem — minimalista */
 .media-save-confirm {
   position: fixed;
   inset: 0;
-  z-index: 10000;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  z-index: 11000;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -917,144 +927,122 @@
 }
 
 .media-save-confirm-dialog {
-  background: white;
+  background: #fff;
   width: 100%;
-  max-width: 448px;
-  border-radius: 12px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
-  border: 1px solid #ccd0d4;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.media-save-confirm-content {
-  padding: 24px;
-}
-
-.media-save-confirm-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.media-save-confirm-icon {
-  width: 48px;
-  height: 48px;
-  background: #fef3c7;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.media-alert-icon {
-  width: 24px;
-  height: 24px;
-  color: #d97706;
+  max-width: min(520px, 96vw);
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #dcdcde;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .media-save-confirm-title {
-  font-size: 20px;
-  font-weight: bold;
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
   color: #1d2327;
-  margin: 0 0 4px 0;
 }
 
-.media-save-confirm-subtitle {
-  font-size: 14px;
+.media-save-confirm-text {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
   color: #50575e;
-  margin: 0;
 }
 
 .media-save-confirm-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.media-save-confirm-option {
-  width: 100%;
+.media-save-confirm-choice {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border: 1px solid #ccd0d4;
-  border-radius: 8px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
   cursor: pointer;
-  background: white;
-  transition: all 0.2s;
-  text-align: left;
-  border: none;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.media-save-confirm-option:hover {
-  border-color: #2271b1;
-  background: #eff6ff;
+.media-save-confirm-choice:has(.media-save-confirm-checkbox:checked) {
+  border-color: #561713;
+  background: #f9f5f4;
 }
 
-.media-save-confirm-option:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.media-save-confirm-checkbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #561713;
+  cursor: pointer;
 }
 
-.media-save-confirm-option-title {
-  display: block;
-  font-weight: bold;
+.media-save-confirm-choice-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
   color: #1d2327;
 }
 
-.media-save-confirm-option:hover .media-save-confirm-option-title {
-  color: #2271b1;
+.media-save-confirm-choice-label strong {
+  font-weight: 600;
 }
 
-.media-save-confirm-option-desc {
+.media-save-confirm-choice-desc {
   font-size: 12px;
   color: #50575e;
+  line-height: 1.4;
 }
 
-.media-save-confirm-option-icon {
-  width: 20px;
-  height: 20px;
-  color: #ccd0d4;
-}
-
-.media-save-confirm-option:hover .media-save-confirm-option-icon {
-  color: #2271b1;
-}
-
-.media-save-confirm-footer {
-  background: #f6f7f7;
-  padding: 16px;
+.media-save-confirm-actions {
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #ccd0d4;
+  gap: 8px;
 }
 
 .media-save-confirm-cancel {
-  padding: 8px 24px;
-  font-size: 14px;
-  font-weight: bold;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #ccd0d4;
+  border-radius: 4px;
+  background: #fff;
   color: #50575e;
-  background: none;
-  border: none;
+  font-size: 13px;
   cursor: pointer;
 }
 
-.media-save-confirm-cancel:hover {
+.media-save-confirm-cancel:hover:not(:disabled) {
   color: #1d2327;
+  border-color: #8c8f94;
+}
+
+.media-save-confirm-submit {
+  height: 36px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 4px;
+  background: #561713;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.media-save-confirm-submit:hover:not(:disabled) {
+  background: #3d100e;
+}
+
+.media-save-confirm-submit:disabled,
+.media-save-confirm-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Preview Modal */
@@ -1231,7 +1219,7 @@
   padding: 0 16px;
   border: none;
   border-radius: 3px;
-  background: #2271b1;
+  background: #561713;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -1239,7 +1227,7 @@
 }
 
 .media-attachment-primary-btn:hover:not(:disabled) {
-  background: #135e96;
+  background: #3d100e;
 }
 
 .media-attachment-primary-btn:disabled {
@@ -1254,10 +1242,10 @@
   gap: 6px;
   height: 36px;
   padding: 0 16px;
-  border: 1px solid #2271b1;
+  border: 1px solid #561713;
   border-radius: 3px;
   background: #fff;
-  color: #2271b1;
+  color: #561713;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -1265,7 +1253,7 @@
 }
 
 .media-attachment-secondary-btn:hover {
-  background: #f0f6fc;
+  background: #f9f5f4;
 }
 
 /* Cartão «Ferramentas de Edição» (centro, com barra lateral visível) */
@@ -1545,7 +1533,7 @@
   padding: 0 20px;
   border: none;
   border-radius: 3px;
-  background: #2271b1;
+  background: #561713;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -1553,7 +1541,7 @@
 }
 
 .media-attachment-save-btn:hover:not(:disabled) {
-  background: #135e96;
+  background: #3d100e;
 }
 
 .media-attachment-save-btn:disabled {

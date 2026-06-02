@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
-import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
+import {
+  deleteDocumentById,
+  getDocumentById,
+  listDocuments,
+  updateDocument,
+} from '@/lib/aamihe-documents-store';
 import type { SiteDocumentCategory } from '@/lib/site-documents';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') as SiteDocumentCategory | null;
-    const db = await getDashboardDb();
-    let documents = db.documents;
-    if (category) {
-      documents = documents.filter((item) => item.category === category);
-    }
+    const documents = await listDocuments(category ? { category } : undefined);
     return NextResponse.json({ success: true, documents });
   } catch (error) {
     console.error(error);
@@ -22,25 +22,18 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const db = await getDashboardDb();
-    const index = db.documents.findIndex((d) => d.id === body.id);
-    if (index === -1) {
+    const existing = await getDocumentById(String(body.id || ''));
+    if (!existing) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado' }, { status: 404 });
     }
 
-    db.documents[index] = {
-      ...db.documents[index],
+    const document = await updateDocument(existing.id, {
       ...body,
       category: 'conferencia',
       updated_at: new Date().toISOString(),
-    };
-    await saveDashboardDb(db);
-    try {
-      await syncDocumentsToSupabase();
-    } catch (syncError) {
-      console.error('Falha ao sincronizar documentos (PUT /api/admin/documents):', syncError);
-    }
-    return NextResponse.json({ success: true, document: db.documents[index] });
+    });
+
+    return NextResponse.json({ success: true, document });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao actualizar documento' }, { status: 500 });
@@ -55,14 +48,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID em falta' }, { status: 400 });
     }
 
-    const db = await getDashboardDb();
-    db.documents = db.documents.filter((d) => d.id !== id);
-    await saveDashboardDb(db);
-    try {
-      await syncDocumentsToSupabase();
-    } catch (syncError) {
-      console.error('Falha ao sincronizar documentos (DELETE /api/admin/documents):', syncError);
-    }
+    await deleteDocumentById(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

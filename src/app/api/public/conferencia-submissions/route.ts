@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import { insertDocuments, nextSortOrder } from '@/lib/aamihe-documents-store';
 import { readSpamFields, validateSpamFields } from '@/lib/form-spam-guard';
 import { readLocaleFromFormData, type Locale } from '@/i18n/locale';
 import { conferenceApiErrors } from '@/i18n/messages';
@@ -18,7 +18,6 @@ import {
   isCompressibleImageMime,
 } from '@/lib/compress-image-buffer';
 import { notifySiteEmail, CONFERENCE_SUBMISSION_NOTIFY_EMAILS } from '@/lib/notify-email';
-import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 import { resolveSessionUser } from '@/lib/admin-session';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 
@@ -88,9 +87,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const db = await getDashboardDb();
     const now = new Date().toISOString();
-    let sortOrder = db.documents.length + 1;
+    let sortOrder = await nextSortOrder();
 
     const records: SiteDocumentRecord[] = await Promise.all(
       files.map(async (file) => {
@@ -134,15 +132,7 @@ export async function POST(request: Request) {
       }),
     );
 
-    db.documents.push(...records);
-    await saveDashboardDb(db);
-
-    try {
-      await syncDocumentsToSupabase();
-    } catch (syncError) {
-      // Não bloquear o utilizador se a sincronização externa falhar.
-      console.error('Falha ao sincronizar submissões para Supabase:', syncError);
-    }
+    await insertDocuments(records);
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
     const adminUrl = `${siteUrl}/admin/documentos-gerais`;

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/admin-session';
 import { documentBelongsToUser } from '@/lib/document-ownership';
-import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
+import {
+  deleteDocumentById,
+  getDocumentById,
+  updateDocument,
+} from '@/lib/aamihe-documents-store';
 import {
   getFileExtension,
   resolveConferenceMimeType,
@@ -14,7 +18,6 @@ import {
   compressImageBuffer,
   isCompressibleImageMime,
 } from '@/lib/compress-image-buffer';
-import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -26,8 +29,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const db = await getDashboardDb();
-    const document = db.documents.find((item) => item.id === id);
+    const document = await getDocumentById(id);
 
     if (!document || !documentBelongsToUser(document, session.user)) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado.' }, { status: 404 });
@@ -48,10 +50,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const db = await getDashboardDb();
-    const index = db.documents.findIndex((item) => item.id === id);
+    const current = await getDocumentById(id);
 
-    if (index === -1 || !documentBelongsToUser(db.documents[index], session.user)) {
+    if (!current || !documentBelongsToUser(current, session.user)) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado.' }, { status: 404 });
     }
 
@@ -60,17 +61,19 @@ export async function PATCH(request: Request, context: RouteContext) {
     const message = String(form.get('message') ?? '').trim();
     const file = form.get('file') as File | null;
 
-    const current = db.documents[index];
+    const patch: Parameters<typeof updateDocument>[1] = {
+      message: message || undefined,
+      updated_at: new Date().toISOString(),
+      review_status: 'submitted',
+      review_comment: undefined,
+      review_comment_at: undefined,
+      resubmitted_at: new Date().toISOString(),
+      published: false,
+      user_id: current.user_id || session.user.id,
+    };
 
     if (title) {
-      current.title_pt = title;
-    }
-
-    current.message = message || undefined;
-    current.updated_at = new Date().toISOString();
-
-    if (!current.user_id) {
-      current.user_id = session.user.id;
+      patch.title_pt = title;
     }
 
     if (file && file.size > 0) {
@@ -88,29 +91,16 @@ export async function PATCH(request: Request, context: RouteContext) {
         mimeType = compressed.mimeType;
         fileName = applyCompressedFileName(fileName, compressed.ext);
       }
-      current.file_url = await storeConferenceFile(buffer, fileName, mimeType);
-      current.file_type = getFileExtension(fileName);
-      current.mime_type = mimeType;
+      patch.file_url = await storeConferenceFile(buffer, fileName, mimeType);
+      patch.file_type = getFileExtension(fileName);
+      patch.mime_type = mimeType;
       if (!title) {
-        current.title_pt = titleFromFileName(fileName);
+        patch.title_pt = titleFromFileName(fileName);
       }
     }
 
-    current.review_status = 'submitted';
-    current.review_comment = undefined;
-    current.review_comment_at = undefined;
-    current.resubmitted_at = new Date().toISOString();
-    current.published = false;
-
-    db.documents[index] = current;
-    await saveDashboardDb(db);
-    try {
-      await syncDocumentsToSupabase();
-    } catch (syncError) {
-      console.error('Falha ao sincronizar documentos (PATCH mine/[id]):', syncError);
-    }
-
-    return NextResponse.json({ success: true, document: current });
+    const document = await updateDocument(id, patch);
+    return NextResponse.json({ success: true, document });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao actualizar documento.' }, { status: 500 });
@@ -125,21 +115,13 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const db = await getDashboardDb();
-    const document = db.documents.find((item) => item.id === id);
+    const document = await getDocumentById(id);
 
     if (!document || !documentBelongsToUser(document, session.user)) {
       return NextResponse.json({ success: false, error: 'Documento não encontrado.' }, { status: 404 });
     }
 
-    db.documents = db.documents.filter((item) => item.id !== id);
-    await saveDashboardDb(db);
-    try {
-      await syncDocumentsToSupabase();
-    } catch (syncError) {
-      console.error('Falha ao sincronizar documentos (DELETE mine/[id]):', syncError);
-    }
-
+    await deleteDocumentById(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
