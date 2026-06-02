@@ -25,7 +25,7 @@ function hasBlobStorage(): boolean {
 }
 
 const EMPTY_DB: DashboardDb = { documents: [], media: [], notifications: [] };
-const DASHBOARD_DB_CACHE_MS = 30_000;
+const DASHBOARD_DB_CACHE_MS = 5 * 60 * 1000;
 
 let dashboardDbCache: { data: DashboardDb; at: number } | null = null;
 let dashboardDbInflight: Promise<DashboardDb> | null = null;

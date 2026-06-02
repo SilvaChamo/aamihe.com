@@ -45,9 +45,7 @@ export default function DefinicoesNoticiasPage() {
         </div>
 
         {loading ? (
-          <div className="settings-loading">
-            <Loader2 className="spin" size={24} /> A carregar definições...
-          </div>
+          <p className="settings-loading-hint">A carregar…</p>
         ) : (
           <div className="settings-layout-stack">
             <div className="settings-panel">

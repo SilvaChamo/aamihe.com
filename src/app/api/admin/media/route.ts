@@ -9,6 +9,11 @@ import type { MediaCategory } from '@/lib/site-media';
 import { inferUploadMimeType } from '@/lib/infer-upload-mime';
 import { inferMediaCategory } from '@/lib/site-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
+import {
+  applyCompressedFileName,
+  compressImageBuffer,
+  isCompressibleImageMime,
+} from '@/lib/compress-image-buffer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -71,13 +76,36 @@ async function registerImageUrl(url: string, subcategory: string, title: string)
   return record;
 }
 
+async function prepareImageBuffer(
+  buffer: Buffer,
+  mimeType: string,
+  originalName: string,
+): Promise<{ buffer: Buffer; mimeType: string; name: string }> {
+  if (!isCompressibleImageMime(mimeType)) {
+    return { buffer, mimeType, name: originalName };
+  }
+  const compressed = await compressImageBuffer(buffer, mimeType, originalName);
+  return {
+    buffer: Buffer.from(compressed.buffer),
+    mimeType: compressed.mimeType,
+    name: applyCompressedFileName(originalName, compressed.ext),
+  };
+}
+
 async function processUpload(file: File, subcategory: string, title?: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const mimeType = inferUploadMimeType(file);
-  const category = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name)
+  let buffer: Buffer = Buffer.from(await file.arrayBuffer());
+  let mimeType = inferUploadMimeType(file);
+  let fileName = title || file.name;
+  if (mimeType.startsWith('image/')) {
+    const prepared = await prepareImageBuffer(buffer, mimeType, fileName);
+    buffer = prepared.buffer;
+    mimeType = prepared.mimeType;
+    fileName = prepared.name;
+  }
+  const category = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(fileName)
     ? 'imagens'
     : inferMediaCategory(mimeType);
-  const record = await uploadFileToStore(buffer, title || file.name, mimeType, category, subcategory);
+  const record = await uploadFileToStore(buffer, fileName, mimeType, category, subcategory);
 
   const db = await getDashboardDb();
   upsertMediaRecord(db, record);
@@ -130,9 +158,15 @@ export async function POST(request: Request) {
       if (!match) {
         return NextResponse.json({ success: false, error: 'Formato inválido' }, { status: 400 });
       }
-      const buffer = Buffer.from(match[2], 'base64');
-      const mimeType = match[1];
-      const title = String(form.get('title') || 'imagem');
+      let buffer: Buffer = Buffer.from(match[2], 'base64');
+      let mimeType = match[1];
+      let title = String(form.get('title') || 'imagem');
+      if (mimeType.startsWith('image/')) {
+        const prepared = await prepareImageBuffer(buffer, mimeType, title);
+        buffer = prepared.buffer;
+        mimeType = prepared.mimeType;
+        title = prepared.name;
+      }
       const record = await uploadFileToStore(buffer, title, mimeType, 'imagens', subcategory);
       const db = await getDashboardDb();
       upsertMediaRecord(db, record);

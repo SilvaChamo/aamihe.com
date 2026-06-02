@@ -1,8 +1,9 @@
 import type { SubscriberNotification } from '@/lib/subscriber-notifications';
+import { CLIENT_CACHE_TTL_MS, isCacheEntryFresh } from '@/lib/client-cache';
 
 const CACHE_KEY = 'aamihe_notifications_v1';
-/** Cache válido — evita pedidos repetidos ao abrir o painel. */
-export const NOTIFICATION_CACHE_TTL_MS = 3 * 60 * 1000;
+/** Cache válido — evita pedidos repetidos ao abrir o painel (24 h). */
+export const NOTIFICATION_CACHE_TTL_MS = CLIENT_CACHE_TTL_MS;
 
 export type NotificationCachePayload = {
   notifications: SubscriberNotification[];
@@ -76,5 +77,5 @@ export function readCachedUnreadCount(): number {
 export function isNotificationCacheFresh(): boolean {
   const cache = readNotificationCache();
   if (!cache) return false;
-  return Date.now() - cache.fetchedAt < NOTIFICATION_CACHE_TTL_MS;
+  return isCacheEntryFresh(cache.fetchedAt);
 }

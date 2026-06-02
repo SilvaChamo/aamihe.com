@@ -6,6 +6,7 @@ import { Activity, FileUp, Settings, UserCircle } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import SubscriberConferenceExitDialog from '@/components/Admin/SubscriberConferenceExitDialog';
+import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import './DashboardContent.css';
 
 type OwnDocument = {
@@ -52,7 +53,11 @@ export default function SubscriberWelcomeContent() {
   }));
 
   if (sessionLoading) {
-    return <div className="dashboard-container"><p className="dashboard-no-activity">A carregar…</p></div>;
+    return (
+      <div className="admin-main-content" aria-busy="true" aria-label="A carregar">
+        <AdminPanelLoading variant="dashboard" />
+      </div>
+    );
   }
 
   return (

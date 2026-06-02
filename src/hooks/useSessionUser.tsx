@@ -1,10 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { adminFetch, getSessionProfile, setSessionProfile } from '@/lib/admin-auth';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  adminFetch,
+  getSessionProfile,
+  isSessionProfileCacheFresh,
+  setSessionProfile,
+} from '@/lib/admin-auth';
 import { isSubscriberRole, type UserProfile } from '@/lib/user-types';
 
-type SessionState = {
+export type SessionState = {
   user: UserProfile | null;
   isAdminSecret: boolean;
   loading: boolean;
@@ -12,7 +24,10 @@ type SessionState = {
   isStaff: boolean;
 };
 
-export function useSessionUser(): SessionState {
+const SessionUserContext = createContext<SessionState | null>(null);
+
+/** Uma única verificação de sessão para todo o painel (evita 3–4× /api/admin/users/me). */
+export function SessionUserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => getSessionProfile());
   const [isAdminSecret, setIsAdminSecret] = useState(false);
   const [loading, setLoading] = useState(() => {
@@ -21,6 +36,11 @@ export function useSessionUser(): SessionState {
   });
 
   useEffect(() => {
+    if (isSessionProfileCacheFresh()) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     const hadCachedProfile = Boolean(getSessionProfile());
 
@@ -55,8 +75,21 @@ export function useSessionUser(): SessionState {
     };
   }, []);
 
-  const isSubscriber = !isAdminSecret && !!user && isSubscriberRole(user.role);
-  const isStaff = isAdminSecret || (!!user && !isSubscriberRole(user.role));
+  const value = useMemo<SessionState>(() => {
+    const isSubscriber = !isAdminSecret && !!user && isSubscriberRole(user.role);
+    const isStaff = isAdminSecret || (!!user && !isSubscriberRole(user.role));
+    return { user, isAdminSecret, loading, isSubscriber, isStaff };
+  }, [user, isAdminSecret, loading]);
 
-  return { user, isAdminSecret, loading, isSubscriber, isStaff };
+  return (
+    <SessionUserContext.Provider value={value}>{children}</SessionUserContext.Provider>
+  );
+}
+
+export function useSessionUser(): SessionState {
+  const ctx = useContext(SessionUserContext);
+  if (!ctx) {
+    throw new Error('useSessionUser deve ser usado dentro de SessionUserProvider');
+  }
+  return ctx;
 }

@@ -662,26 +662,6 @@
   margin-top: 2px;
 }
 
-/* Skeleton */
-.wp-skeleton-pulse {
-  animation: wp-skeleton-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes wp-skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
-.wp-skeleton-bar {
-  height: 14px;
-  background: #dcdcde;
-  border-radius: 3px;
-}
-
-.wp-skeleton-row td {
-  padding: 12px 10px;
-}
-
 /* Perfil de utilizador */
 .wp-profile-page {
   max-width: 900px;

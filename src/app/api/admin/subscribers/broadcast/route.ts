@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { getEmailSendQuota, RECOMMENDED_DAILY_EMAIL_LIMIT } from '@/lib/email-send-quota';
-import { listSenderAccounts } from '@/lib/sender-accounts';
+import { RECOMMENDED_DAILY_EMAIL_LIMIT } from '@/lib/email-send-quota';
 import { getEmailProviderStatus } from '@/lib/notify-email';
-import { broadcastToSubscribers, collectSubscriberEmails } from '@/lib/subscriber-broadcast';
+import { broadcastToSubscribers, loadBroadcastPageData } from '@/lib/subscriber-broadcast';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,9 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const emails = await collectSubscriberEmails();
-    const quota = await getEmailSendQuota();
-    const senders = await listSenderAccounts();
+    const { emails, quota, senders } = await loadBroadcastPageData();
     const emailProvider = getEmailProviderStatus();
     return NextResponse.json({
       success: true,

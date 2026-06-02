@@ -37,7 +37,7 @@ export default function EmailSendPage() {
   const [quota, setQuota] = useState<EmailQuota | null>(null);
   const [senders, setSenders] = useState<SenderAccount[]>([]);
   const [senderId, setSenderId] = useState('');
-  const [loadingCount, setLoadingCount] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [subject, setSubject] = useState('');
   const [preheader, setPreheader] = useState('');
   const [preheaderOpen, setPreheaderOpen] = useState(false);
@@ -53,13 +53,25 @@ export default function EmailSendPage() {
 
   const overQuota = quota != null && count != null && count > quota.remainingToday;
   const noQuotaLeft = quota != null && quota.remainingToday <= 0;
-  const disabled =
-    sending || loadingCount || count === 0 || overQuota || noQuotaLeft || !emailConfigured;
+  const statsPending = statsLoading && count === null;
+  const sendDisabled =
+    sending ||
+    statsPending ||
+    count === 0 ||
+    overQuota ||
+    noQuotaLeft ||
+    !emailConfigured;
+  const fieldsDisabled = sending || !emailConfigured;
 
   const loadStats = useCallback(async () => {
-    setLoadingCount(true);
+    setStatsLoading(true);
+    setError('');
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25_000);
     try {
-      const res = await adminFetch('/api/admin/subscribers/broadcast');
+      const res = await adminFetch('/api/admin/subscribers/broadcast', {
+        signal: controller.signal,
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Erro ao carregar destinatários');
@@ -77,9 +89,16 @@ export default function EmailSendPage() {
       setSenders([]);
       setEmailConfigured(false);
       setEmailHint('');
-      setError(err instanceof Error ? err.message : 'Erro ao carregar destinatários');
+      const message =
+        err instanceof Error && err.name === 'AbortError'
+          ? 'O carregamento demorou demasiado. Pode redigir o e-mail; tente atualizar a página para ver destinatários.'
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao carregar destinatários';
+      setError(message);
     } finally {
-      setLoadingCount(false);
+      window.clearTimeout(timeout);
+      setStatsLoading(false);
     }
   }, []);
 
@@ -146,7 +165,7 @@ export default function EmailSendPage() {
       className="email-sender-select"
       value={senderId}
       onChange={(e) => setSenderId(e.target.value)}
-      disabled={disabled || senders.length === 0}
+      disabled={sendDisabled || senders.length === 0}
       aria-label="Remetente"
     >
       {senders.length === 0 ? (
@@ -162,7 +181,7 @@ export default function EmailSendPage() {
   );
 
   const normalSendButton = (
-    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={disabled}>
+    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={sendDisabled}>
       {sending ? (
         <>
           <Loader2 size={14} className="wp-spin" style={{ marginRight: 6 }} />
@@ -175,7 +194,7 @@ export default function EmailSendPage() {
   );
 
   const marketingSendButton = (
-    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={disabled}>
+    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={sendDisabled}>
       {sending ? (
         <>
           <Loader2 size={14} className="wp-spin" style={{ marginRight: 6 }} />
@@ -187,7 +206,7 @@ export default function EmailSendPage() {
     </button>
   );
 
-  if (loadingCount) {
+  if (statsPending) {
     return (
       <div className="news-form-container email-send-page" key={pathname}>
         <PanelPageHeaderSkeleton withAction={false} />
@@ -199,7 +218,7 @@ export default function EmailSendPage() {
     <div className="news-form-container email-send-page" key={pathname}>
       <form onSubmit={handleSubmit} className="news-form-layout email-send-layout">
         <div className="news-form-main email-send-form-main">
-          {!loadingCount && !emailConfigured && emailHint ? (
+          {!statsPending && !emailConfigured && emailHint ? (
             <p className="wp-notice-error">{emailHint}</p>
           ) : null}
           {error ? <p className="wp-notice-error">{error}</p> : null}
@@ -225,7 +244,7 @@ export default function EmailSendPage() {
                   type="button"
                   className="email-preheader-toggle"
                   onClick={() => setPreheaderOpen((open) => !open)}
-                  disabled={disabled}
+                  disabled={fieldsDisabled}
                   aria-expanded={preheaderOpen}
                 >
                   Pré-cabeçalho (opcional)
@@ -252,7 +271,7 @@ export default function EmailSendPage() {
                       className="news-form-title-input email-normal-subject"
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
-                      disabled={disabled}
+                      disabled={fieldsDisabled}
                       required
                     />
                   </div>
@@ -273,7 +292,7 @@ export default function EmailSendPage() {
                           placeholder="Texto curto visível na caixa de entrada, antes de abrir o e-mail…"
                           value={preheader}
                           onChange={(e) => setPreheader(e.target.value)}
-                          disabled={disabled}
+                          disabled={fieldsDisabled}
                           maxLength={120}
                         />
                         <p className="news-form-locale-hint" style={{ marginTop: 8 }}>
@@ -297,7 +316,7 @@ export default function EmailSendPage() {
                   className="news-form-title-input email-normal-subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  disabled={disabled}
+                  disabled={fieldsDisabled}
                   required
                 />
               </div>
@@ -309,7 +328,7 @@ export default function EmailSendPage() {
             onChange={setHtml}
             preheader={isMarketing ? preheader : ''}
             subject={subject}
-            disabled={disabled}
+            disabled={fieldsDisabled}
             placeholder="Escreva o corpo do e-mail aqui…"
             previewVariant={isMarketing ? 'marketing' : 'plain'}
           />
@@ -317,7 +336,7 @@ export default function EmailSendPage() {
         </div>
 
         <div className="news-form-sidebar email-send-sidebar">
-          <div className="email-send-mode-panel-body">
+          <div className="email-send-mode-panel-body" style={statsPending ? { visibility: 'hidden' } : undefined}>
             <div className="email-send-mode-tabs">
               <Link
                 href={normalHref}
@@ -336,7 +355,7 @@ export default function EmailSendPage() {
             </div>
           </div>
 
-          {!isMarketing ? (
+          {!isMarketing && !statsPending ? (
             <div className="news-form-panel">
               <div className="news-form-panel-header">
                 <h2>Destinatários</h2>
@@ -349,7 +368,7 @@ export default function EmailSendPage() {
                     <span>
                       Total:{' '}
                       <strong>
-                        {loadingCount ? '…' : count}{' '}
+                        {statsPending ? '…' : count}{' '}
                         {count === 1 ? 'subscritor' : 'subscritores'}
                       </strong>
                     </span>
@@ -362,6 +381,7 @@ export default function EmailSendPage() {
             </div>
           ) : null}
 
+          {!statsPending ? (
           <div className="news-form-panel">
             <div className="news-form-panel-header">
               <h2>Limite diário</h2>
@@ -374,7 +394,7 @@ export default function EmailSendPage() {
                   <span>
                     Hoje:{' '}
                     <strong>
-                      {loadingCount
+                      {statsPending
                         ? '…'
                         : `${quota?.sentToday ?? 0} / ${quota?.dailyLimit ?? 50} enviados`}
                     </strong>
@@ -383,7 +403,7 @@ export default function EmailSendPage() {
                 <div className="news-form-meta-row">
                   <Send size={16} />
                   <span>
-                    Restantes: <strong>{loadingCount ? '…' : quota?.remainingToday ?? 0}</strong>
+                    Restantes: <strong>{statsPending ? '…' : quota?.remainingToday ?? 0}</strong>
                   </span>
                 </div>
                 <p className="news-form-locale-hint" style={{ margin: '8px 0 0' }}>
@@ -393,6 +413,7 @@ export default function EmailSendPage() {
               </div>
             </div>
           </div>
+          ) : null}
         </div>
       </form>
     </div>

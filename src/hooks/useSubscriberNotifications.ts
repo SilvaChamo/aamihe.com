@@ -71,10 +71,10 @@ export function useSubscriberNotifications(): UseSubscriberNotificationsResult {
 
   useEffect(() => {
     applyCache();
-    if (cacheIsFresh) {
-      void refresh(true);
-    } else {
+    if (!cacheIsFresh) {
       void refresh(false);
+    } else {
+      setReady(true);
     }
     return subscribeNotificationCache(applyCache);
   }, [applyCache, cacheIsFresh, refresh]);

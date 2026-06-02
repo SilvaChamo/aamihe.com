@@ -644,7 +644,7 @@ function UserFormLayout({
 
         <div className="wp-form-actions">
           <button type="submit" className="wp-btn wp-btn-primary" disabled={saving}>
-            {saving && <Loader2 size={16} className="wp-skeleton-pulse" />}
+            {saving && <Loader2 size={16} className="spin" />}
             {submitLabel}
           </button>
           <Link href={cancelHref} className="wp-btn">

@@ -12,6 +12,11 @@ import {
   titleFromFileName,
 } from '@/lib/conference-document-files';
 import { storeConferenceFile } from '@/lib/conference-document-storage';
+import {
+  applyCompressedFileName,
+  compressImageBuffer,
+  isCompressibleImageMime,
+} from '@/lib/compress-image-buffer';
 import { notifySiteEmail, CONFERENCE_SUBMISSION_NOTIFY_EMAILS } from '@/lib/notify-email';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 import { resolveSessionUser } from '@/lib/admin-session';
@@ -89,15 +94,22 @@ export async function POST(request: Request) {
 
     const records: SiteDocumentRecord[] = await Promise.all(
       files.map(async (file) => {
-        const mimeType = resolveConferenceMimeType(file)!;
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const fileUrl = await storeConferenceFile(buffer, file.name, mimeType);
-        const ext = getFileExtension(file.name);
+        let mimeType = resolveConferenceMimeType(file)!;
+        let buffer = Buffer.from(await file.arrayBuffer());
+        let fileName = file.name;
+        if (isCompressibleImageMime(mimeType)) {
+          const compressed = await compressImageBuffer(buffer, mimeType, fileName);
+          buffer = Buffer.from(compressed.buffer);
+          mimeType = compressed.mimeType;
+          fileName = applyCompressedFileName(fileName, compressed.ext);
+        }
+        const fileUrl = await storeConferenceFile(buffer, fileName, mimeType);
+        const ext = getFileExtension(fileName);
 
         const record: SiteDocumentRecord = {
           id: `doc_${randomUUID().slice(0, 8)}`,
           site_slug: 'aamihe',
-          title_pt: titleFromFileName(file.name),
+          title_pt: titleFromFileName(fileName),
           title_en: null,
           title_fr: null,
           file_url: fileUrl,

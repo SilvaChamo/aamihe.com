@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { compressImageBuffer, isCompressibleImageMime } from '@/lib/compress-image-buffer';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,7 +14,7 @@ async function ensureBucketExists(bucket: string) {
 
   const { error: createError } = await supabaseAdmin.storage.createBucket(bucket, {
     public: true,
-    fileSizeLimit: '5MB',
+    fileSizeLimit: '1MB',
   });
 
   if (createError && !/already exists/i.test(createError.message)) {
@@ -33,12 +34,21 @@ export async function POST(req: NextRequest) {
 
     await ensureBucketExists(bucket);
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const fileExt = file.name.split('.').pop() || 'jpg';
+    let buffer = Buffer.from(await file.arrayBuffer());
+    let contentType = file.type || 'image/jpeg';
+    if (isCompressibleImageMime(contentType)) {
+      const compressed = await compressImageBuffer(buffer, contentType, file.name);
+      buffer = Buffer.from(compressed.buffer);
+      contentType = compressed.mimeType;
+    } else if (buffer.length > 1024 * 1024) {
+      return NextResponse.json({ error: 'Ficheiro demasiado grande (máx. 1 MB).' }, { status: 400 });
+    }
+
+    const fileExt = contentType === 'image/jpeg' ? 'jpg' : file.name.split('.').pop() || 'jpg';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
 
     const { error } = await supabaseAdmin.storage.from(bucket).upload(fileName, buffer, {
-      contentType: file.type,
+      contentType,
       upsert: true,
     });
 

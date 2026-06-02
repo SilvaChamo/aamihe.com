@@ -1,4 +1,5 @@
 import { listUsers } from '@/lib/users';
+import type { UserListItem } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
 
 export type SenderAccount = {
@@ -22,7 +23,7 @@ function isAamiheEmail(email: string) {
   return email.trim().toLowerCase().endsWith('@aamihe.com');
 }
 
-export async function listSenderAccounts(): Promise<SenderAccount[]> {
+export async function listSenderAccounts(cachedUsers?: UserListItem[]): Promise<SenderAccount[]> {
   const seen = new Set<string>();
   const accounts: SenderAccount[] = [];
 
@@ -50,7 +51,7 @@ export async function listSenderAccounts(): Promise<SenderAccount[]> {
     });
   }
 
-  const users = await listUsers();
+  const users = cachedUsers ?? (await listUsers());
   for (const user of users) {
     if (isSubscriberRole(user.role)) continue;
     if (!isAamiheEmail(user.email)) continue;

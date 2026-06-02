@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { adminFetch } from '@/lib/admin-auth';
 import {
   isNotificationCacheFresh,
@@ -12,7 +11,6 @@ import {
 } from '@/lib/notification-client-cache';
 
 export function useNotificationUnread(enabled = true) {
-  const pathname = usePathname();
   const [unread, setUnread] = useState(readCachedUnreadCount);
 
   const syncFromCache = useCallback(() => {
@@ -64,7 +62,7 @@ export function useNotificationUnread(enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [pathname, enabled]);
+  }, [enabled]);
 
   return unread;
 }

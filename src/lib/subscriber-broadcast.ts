@@ -1,22 +1,27 @@
+import type { DashboardDb } from '@/lib/dashboard-db';
 import { getDashboardDb } from '@/lib/dashboard-db';
 import { htmlToPlainText, wrapMarketingEmailHtml, wrapPlainEmailHtml } from '@/lib/email-template';
 import { listSenderAccounts, resolveSenderFrom } from '@/lib/sender-accounts';
-import { assertEmailSendQuota, recordEmailSends } from '@/lib/email-send-quota';
+import {
+  assertEmailSendQuota,
+  getEmailSendQuotaFromDb,
+  recordEmailSends,
+  type EmailSendQuota,
+} from '@/lib/email-send-quota';
 import { notifySiteEmail } from '@/lib/notify-email';
 import { listUsers } from '@/lib/users';
+import type { UserListItem } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
 
-export async function collectSubscriberEmails(): Promise<string[]> {
+export function collectSubscriberEmailsFrom(users: UserListItem[], db: DashboardDb): string[] {
   const emails = new Set<string>();
 
-  const users = await listUsers();
   for (const user of users) {
     if (isSubscriberRole(user.role) && user.email?.trim()) {
       emails.add(user.email.trim().toLowerCase());
     }
   }
 
-  const db = await getDashboardDb();
   for (const doc of db.documents) {
     if (doc.category !== 'conferencia') continue;
     const email = String(doc.email || '').trim().toLowerCase();
@@ -24,6 +29,24 @@ export async function collectSubscriberEmails(): Promise<string[]> {
   }
 
   return Array.from(emails);
+}
+
+export async function collectSubscriberEmails(): Promise<string[]> {
+  const [users, db] = await Promise.all([listUsers(), getDashboardDb()]);
+  return collectSubscriberEmailsFrom(users, db);
+}
+
+/** Uma leitura do dashboard + utilizadores (evita vários GET ao Blob na mesma página). */
+export async function loadBroadcastPageData(): Promise<{
+  emails: string[];
+  quota: EmailSendQuota;
+  senders: Awaited<ReturnType<typeof listSenderAccounts>>;
+}> {
+  const [users, db] = await Promise.all([listUsers(), getDashboardDb()]);
+  const emails = collectSubscriberEmailsFrom(users, db);
+  const quota = getEmailSendQuotaFromDb(db);
+  const senders = await listSenderAccounts(users);
+  return { emails, quota, senders };
 }
 
 type BroadcastInput = {

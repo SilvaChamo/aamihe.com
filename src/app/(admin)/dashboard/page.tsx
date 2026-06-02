@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import DashboardContent from '@/components/Admin/DashboardContent';
 import SubscriberWelcomeContent from '@/components/Admin/SubscriberWelcomeContent';
 import { useSessionUser } from '@/hooks/useSessionUser';
@@ -11,7 +12,11 @@ function DashboardPageInner() {
   const { loading, isSubscriber } = useSessionUser();
 
   if (loading) {
-    return <div className="p-6 text-gray-500 text-sm">A carregar…</div>;
+    return (
+      <div className="admin-main-content" aria-busy="true" aria-label="A carregar">
+        <AdminPanelLoading variant="dashboard" />
+      </div>
+    );
   }
 
   if (base === '/dashboard' && isSubscriber) {
@@ -23,7 +28,13 @@ function DashboardPageInner() {
 
 export default function AdminDashboardPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-gray-500 text-sm">A carregar…</div>}>
+    <Suspense
+      fallback={
+        <div className="admin-main-content" aria-busy="true" aria-label="A carregar">
+          <AdminPanelLoading variant="dashboard" />
+        </div>
+      }
+    >
       <DashboardPageInner />
     </Suspense>
   );

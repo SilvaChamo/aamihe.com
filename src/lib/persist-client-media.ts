@@ -1,6 +1,19 @@
 'use client';
 
+import { compressUploadImage } from '@/lib/compress-image';
 import { dispatchMediaUpdated } from '@/lib/media-events';
+
+async function prepareUploadFiles(files: File[]): Promise<File[]> {
+  const prepared: File[] = [];
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      prepared.push(await compressUploadImage(file));
+    } else {
+      prepared.push(file);
+    }
+  }
+  return prepared;
+}
 
 export async function persistNewsImage(image: string, title = 'Imagem de notícia'): Promise<string> {
   if (!image) return image;
@@ -42,11 +55,12 @@ export async function uploadMediaFile(file: File, subcategory = 'Upload'): Promi
 export async function uploadMediaFiles(files: File[], subcategory = 'Upload'): Promise<string[]> {
   if (files.length === 0) return [];
 
+  const prepared = await prepareUploadFiles(files);
   const form = new FormData();
-  files.forEach((file) => form.append('files', file));
+  prepared.forEach((file) => form.append('files', file));
   form.append('subcategory', subcategory);
-  if (files.length === 1) {
-    form.append('title', files[0].name);
+  if (prepared.length === 1) {
+    form.append('title', prepared[0].name);
   }
 
   const res = await fetch('/api/admin/media', { method: 'POST', body: form });

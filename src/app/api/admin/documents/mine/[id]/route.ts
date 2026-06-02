@@ -9,6 +9,11 @@ import {
   validateConferenceFile,
 } from '@/lib/conference-document-files';
 import { storeConferenceFile } from '@/lib/conference-document-storage';
+import {
+  applyCompressedFileName,
+  compressImageBuffer,
+  isCompressibleImageMime,
+} from '@/lib/compress-image-buffer';
 import { syncDocumentsToSupabase } from '@/lib/sync-site-documents';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -74,13 +79,20 @@ export async function PATCH(request: Request, context: RouteContext) {
         return NextResponse.json({ success: false, error: check.error }, { status: 400 });
       }
 
-      const mimeType = resolveConferenceMimeType(file)!;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      current.file_url = await storeConferenceFile(buffer, file.name, mimeType);
-      current.file_type = getFileExtension(file.name);
+      let mimeType = resolveConferenceMimeType(file)!;
+      let buffer = Buffer.from(await file.arrayBuffer());
+      let fileName = file.name;
+      if (isCompressibleImageMime(mimeType)) {
+        const compressed = await compressImageBuffer(buffer, mimeType, fileName);
+        buffer = Buffer.from(compressed.buffer);
+        mimeType = compressed.mimeType;
+        fileName = applyCompressedFileName(fileName, compressed.ext);
+      }
+      current.file_url = await storeConferenceFile(buffer, fileName, mimeType);
+      current.file_type = getFileExtension(fileName);
       current.mime_type = mimeType;
       if (!title) {
-        current.title_pt = titleFromFileName(file.name);
+        current.title_pt = titleFromFileName(fileName);
       }
     }
 

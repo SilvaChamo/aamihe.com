@@ -1,3 +1,4 @@
+import type { DashboardDb } from '@/lib/dashboard-db';
 import { getDashboardDb, saveDashboardDb } from '@/lib/dashboard-db';
 
 /** Limite diário recomendado para domínios em aquecimento (Gmail / reputação de IP). */
@@ -31,10 +32,10 @@ export type EmailSendQuota = {
   dateKey: string;
 };
 
-export async function getEmailSendQuota(): Promise<EmailSendQuota> {
+export function getEmailSendQuotaFromDb(db: DashboardDb): EmailSendQuota {
   const dailyLimit = getDailyLimit();
   const dateKey = todayKey();
-  const days = await readSendDays();
+  const days = db.emailSendLog?.days || {};
   const sentToday = days[dateKey] || 0;
 
   return {
@@ -43,6 +44,11 @@ export async function getEmailSendQuota(): Promise<EmailSendQuota> {
     remainingToday: Math.max(0, dailyLimit - sentToday),
     dateKey,
   };
+}
+
+export async function getEmailSendQuota(): Promise<EmailSendQuota> {
+  const db = await getDashboardDb();
+  return getEmailSendQuotaFromDb(db);
 }
 
 export async function assertEmailSendQuota(requested: number): Promise<EmailSendQuota> {
