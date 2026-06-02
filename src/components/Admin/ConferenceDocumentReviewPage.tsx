@@ -10,9 +10,11 @@ import {
   getDocumentReviewStatus,
   getStatusBadgeClass,
 } from '@/lib/document-review-status';
+import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import {
   getFileTypeLabel,
   isPdfPreviewable,
+  isWordPreviewable,
 } from '@/lib/conference-document-files';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import '@/app/(admin)/admin/documentos-gerais/documentos-conferencia.css';
@@ -132,6 +134,8 @@ export default function ConferenceDocumentReviewPage({
   const status = getDocumentReviewStatus(document);
   const badgeClass = getStatusBadgeClass(document, 'admin');
   const canPreviewPdf = isPdfPreviewable(document.file_url, document.mime_type);
+  const canPreviewWord = isWordPreviewable(document.file_url, document.mime_type);
+  const canEmbedPreview = canPreviewPdf || canPreviewWord;
 
   return (
     <div className="docs-admin-page">
@@ -147,20 +151,22 @@ export default function ConferenceDocumentReviewPage({
 
       <div className="docs-review-layout">
         <div className="docs-review-reader">
-          {canPreviewPdf ? (
-            <iframe
-              src={`${document.file_url}#toolbar=1&navpanes=0&view=FitH`}
+          {canEmbedPreview ? (
+            <DocumentFilePreview
+              url={document.file_url}
               title={document.title_pt}
+              mimeType={document.mime_type}
+              layout="reader"
+              lazy={false}
             />
           ) : (
             <div className="docs-review-file-fallback">
               <p>
-                Pré-visualização no painel indisponível para ficheiros{' '}
-                <strong>{getFileTypeLabel(document.file_url)}</strong>. Abra ou descarregue o
-                ficheiro para rever o conteúdo.
+                Pré-visualização indisponível para ficheiros{' '}
+                <strong>{getFileTypeLabel(document.file_url)}</strong>.
               </p>
               <a href={document.file_url} target="_blank" rel="noopener noreferrer" className="docs-admin-add">
-                Abrir documento
+                Descarregar documento
               </a>
             </div>
           )}

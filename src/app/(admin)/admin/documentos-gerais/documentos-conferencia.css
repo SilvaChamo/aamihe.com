@@ -293,6 +293,21 @@
   height: 100%;
 }
 
+.docs-preview-reader {
+  position: relative;
+  width: 100%;
+  min-height: 72vh;
+}
+
+.docs-preview-reader .docs-preview-thumb-skeleton {
+  min-height: 72vh;
+}
+
+.docs-preview-reader .docs-preview-thumb-frame {
+  height: 72vh;
+  pointer-events: auto;
+}
+
 .docs-preview-thumb-skeleton {
   position: absolute;
   inset: 0;
