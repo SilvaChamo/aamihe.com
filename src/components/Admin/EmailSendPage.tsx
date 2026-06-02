@@ -8,7 +8,6 @@ import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
 import { htmlToPlainText } from '@/lib/email-template';
 import EmailComposer from './EmailComposer';
-import { PanelPageHeaderSkeleton } from '@/components/Admin/PanelSkeleton';
 import './NewsForm.css';
 import './admin-wp.css';
 import './EmailSendPage.css';
@@ -27,6 +26,160 @@ type SenderAccount = {
   label: string;
   from: string;
 };
+
+export function EmailSendPageSkeleton({ isMarketing }: { isMarketing: boolean }) {
+  return (
+    <div
+      className="news-form-container email-send-page email-send-page--skeleton"
+      aria-busy="true"
+      aria-label="A carregar"
+    >
+      <div className="news-form-layout email-send-layout">
+        <div className="news-form-main email-send-form-main">
+          <div className="email-send-page-head">
+            <div className="email-send-header-row">
+              <div
+                className="wp-skeleton-pulse"
+                style={{ height: 26, width: 240, background: '#dcdcde', borderRadius: 6 }}
+                aria-hidden
+              />
+            </div>
+
+            {isMarketing ? (
+              <div className="email-send-subtitle-row email-send-intro">
+                <div
+                  className="wp-skeleton-pulse"
+                  style={{
+                    height: 14,
+                    width: '72%',
+                    background: '#dcdcde',
+                    borderRadius: 3,
+                  }}
+                  aria-hidden
+                />
+                <div
+                  className="wp-skeleton-pulse"
+                  style={{ height: 18, width: 190, background: '#dcdcde', borderRadius: 4 }}
+                  aria-hidden
+                />
+              </div>
+            ) : (
+              <p className="news-form-locale-hint email-send-intro">
+                <span
+                  className="wp-skeleton-pulse"
+                  style={{
+                    height: 14,
+                    width: '75%',
+                    background: '#dcdcde',
+                    borderRadius: 3,
+                    display: 'inline-block',
+                  }}
+                  aria-hidden
+                />
+              </p>
+            )}
+          </div>
+
+          {isMarketing ? (
+            <div className="email-marketing-form-block">
+              <div className="email-normal-top-row">
+                <div
+                  className="wp-skeleton-pulse"
+                  style={{ height: 40, width: 120, background: '#dcdcde', borderRadius: 6 }}
+                  aria-hidden
+                />
+                <div className="email-normal-fields-col">
+                  <div
+                    className="wp-skeleton-pulse email-sender-select"
+                    style={{ height: 36, background: '#dcdcde', borderRadius: 6, margin: 0 }}
+                    aria-hidden
+                  />
+                  <div
+                    className="wp-skeleton-pulse news-form-title-input email-normal-subject"
+                    style={{ height: 36, background: '#dcdcde', borderRadius: 6, margin: 0 }}
+                    aria-hidden
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="email-normal-top-row">
+              <div
+                className="wp-skeleton-pulse"
+                style={{ height: 40, width: 120, background: '#dcdcde', borderRadius: 6 }}
+                aria-hidden
+              />
+              <div className="email-normal-fields-col">
+                <div
+                  className="wp-skeleton-pulse email-sender-select"
+                  style={{ height: 36, background: '#dcdcde', borderRadius: 6, margin: 0 }}
+                  aria-hidden
+                />
+                <div
+                  className="wp-skeleton-pulse news-form-title-input email-normal-subject"
+                  style={{ height: 36, background: '#dcdcde', borderRadius: 6, margin: 0 }}
+                  aria-hidden
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="email-composer" aria-hidden="true">
+            <div className="email-composer-tabs">
+              <div className="wp-skeleton-pulse" style={{ height: 40, width: 82, background: '#dcdcde' }} />
+              <div className="wp-skeleton-pulse" style={{ height: 40, width: 68, background: '#dcdcde' }} />
+              <div className="wp-skeleton-pulse" style={{ height: 40, width: 140, background: '#dcdcde' }} />
+            </div>
+            <div className="email-composer-toolbar">
+              <div className="wp-skeleton-pulse" style={{ height: 32, width: 170, background: '#dcdcde', borderRadius: 4 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 28, width: 32, background: '#dcdcde', borderRadius: 4 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 28, width: 32, background: '#dcdcde', borderRadius: 4, marginLeft: 4 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 28, width: 32, background: '#dcdcde', borderRadius: 4, marginLeft: 4 }} />
+            </div>
+            <div className="email-composer-body">
+              <div
+                className="email-composer-editor wp-skeleton-pulse"
+                style={{ minHeight: 420, background: '#f3f4f6', borderRadius: 0 }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="news-form-sidebar email-send-sidebar">
+          <div className="email-send-mode-panel-body">
+            <div className="email-send-mode-tabs" aria-hidden="true">
+              <div className="wp-skeleton-pulse" style={{ height: 44, width: 140, background: '#dcdcde', borderRadius: 6 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 44, width: 150, background: '#dcdcde', borderRadius: 6 }} />
+            </div>
+          </div>
+
+          {!isMarketing ? (
+            <div className="news-form-panel" aria-hidden="true" style={{ marginTop: 14 }}>
+              <div className="news-form-panel-header">
+                <div className="wp-skeleton-pulse" style={{ height: 14, width: 110, background: '#dcdcde', borderRadius: 3 }} />
+              </div>
+              <div className="news-form-panel-body">
+                <div className="wp-skeleton-pulse" style={{ height: 12, width: '85%', background: '#e8e8e8', borderRadius: 3, marginBottom: 10 }} />
+                <div className="wp-skeleton-pulse" style={{ height: 12, width: '70%', background: '#e8e8e8', borderRadius: 3 }} />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="news-form-panel" aria-hidden="true" style={{ marginTop: 14 }}>
+            <div className="news-form-panel-header">
+              <div className="wp-skeleton-pulse" style={{ height: 14, width: 105, background: '#dcdcde', borderRadius: 3 }} />
+            </div>
+            <div className="news-form-panel-body">
+              <div className="wp-skeleton-pulse" style={{ height: 12, width: '90%', background: '#e8e8e8', borderRadius: 3, marginBottom: 10 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 12, width: '78%', background: '#e8e8e8', borderRadius: 3, marginBottom: 10 }} />
+              <div className="wp-skeleton-pulse" style={{ height: 12, width: '92%', background: '#e8e8e8', borderRadius: 3 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EmailSendPage() {
   const base = useAdminBase();
@@ -207,11 +360,7 @@ export default function EmailSendPage() {
   );
 
   if (statsPending) {
-    return (
-      <div className="news-form-container email-send-page" key={pathname}>
-        <PanelPageHeaderSkeleton withAction={false} />
-      </div>
-    );
+    return <EmailSendPageSkeleton isMarketing={isMarketing} />;
   }
 
   return (

@@ -4,6 +4,7 @@ import React from 'react';
 import { Newspaper, Save, Settings, CheckCircle, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import '../definicoes.css';
+import '@/components/Admin/panel-skeleton.css';
 
 const DEFAULTS = {
   postsPerPage: 10,
@@ -45,7 +46,24 @@ export default function DefinicoesNoticiasPage() {
         </div>
 
         {loading ? (
-          <p className="settings-loading-hint">A carregar…</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="settings-panel wp-skeleton-pulse" style={{ minHeight: i === 0 ? 210 : 280 }}>
+                <div className="settings-panel-header">
+                  <div className="panel-skeleton-title" />
+                </div>
+                <div className="settings-panel-body" style={{ display: 'grid', gap: 12 }}>
+                  {Array.from({ length: i === 0 ? 4 : 5 }).map((__, row) => (
+                    <div
+                      key={row}
+                      className="panel-skeleton-line"
+                      style={{ width: row % 2 === 0 ? '92%' : '78%', marginBottom: 0 }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="settings-layout-stack">
             <div className="settings-panel">

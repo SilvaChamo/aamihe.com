@@ -251,6 +251,34 @@
   flex-direction: column;
 }
 
+.email-send-page--skeleton {
+  --email-divider-color: #eef0f2;
+}
+
+.email-send-page--skeleton .news-form-panel,
+.email-send-page--skeleton .email-send-mode-tabs,
+.email-send-page--skeleton .email-composer {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.email-send-page--skeleton .email-send-sidebar {
+  border-left-color: transparent;
+}
+
+.email-send-page--skeleton .email-send-mode-panel-body::after {
+  background: transparent;
+}
+
+.email-send-page--skeleton .email-sender-select,
+.email-send-page--skeleton .news-form-title-input,
+.email-send-page--skeleton .email-composer-tabs,
+.email-send-page--skeleton .email-composer-toolbar,
+.email-send-page--skeleton .news-form-panel-header {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 .email-send-page .email-send-layout {
   flex: 1;
   min-height: calc(100vh - var(--admin-topbar-height) - 48px);

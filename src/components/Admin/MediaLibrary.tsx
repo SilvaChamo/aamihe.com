@@ -106,7 +106,20 @@ export default function MediaLibrary({
   const [savingMetadata, setSavingMetadata] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    updateViewport();
+
+    const onChange = () => updateViewport();
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+  }, []);
 
   const loadImages = async (filter: 'all' | MediaCategory = typeFilter) => {
     setLoading(true);
@@ -564,7 +577,11 @@ export default function MediaLibrary({
         {/* Grid Principal */}
         <div className="media-grid-container">
           {loading && files.length === 0 ? (
-            <SkeletonMediaGrid count={12} />
+            isMobileViewport ? (
+              <p className="media-loading-hint">A carregar…</p>
+            ) : (
+              <SkeletonMediaGrid count={8} />
+            )
           ) : viewMode === 'grid' ? (
             <div className={`media-grid ${activeFile && !isBulkMode ? 'with-sidebar' : ''}`}>
               {paginatedFiles.map((file) => (

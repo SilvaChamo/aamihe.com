@@ -61,7 +61,6 @@
 .panel-skeleton-doc-card {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #dcdcde;
   background: #f6f7f7;
 }
 
@@ -105,7 +104,6 @@
 }
 
 .panel-skeleton-admin-card {
-  border: 1px solid #dcdcde;
   border-radius: 8px;
   padding: 16px;
   background: #fff;
@@ -136,7 +134,6 @@
 }
 
 .panel-skeleton-stat {
-  border: 1px solid #dcdcde;
   border-radius: 8px;
   padding: 16px;
   background: #fff;
@@ -171,7 +168,6 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 0;
-  border-bottom: 1px solid #ececec;
 }
 
 .panel-skeleton-activity-date {

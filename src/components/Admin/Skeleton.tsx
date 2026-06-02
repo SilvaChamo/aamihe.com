@@ -74,9 +74,11 @@ export function SkeletonContent() {
 
 export function SkeletonMediaGrid({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+    <div className="media-grid" aria-hidden="true">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="aspect-square bg-gray-200 animate-pulse" />
+        <div key={i} className="media-item media-item--skeleton wp-skeleton-pulse">
+          <div className="media-item-skeleton-thumb" />
+        </div>
       ))}
     </div>
   );

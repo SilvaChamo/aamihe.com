@@ -676,9 +676,53 @@
   color: #646970;
 }
 
+.wp-loading-center--full {
+  min-height: calc(100vh - var(--admin-topbar-height, 46px));
+  justify-content: center;
+}
+
+.wp-site-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #e5e7eb;
+  border-top-color: #561713;
+  border-right-color: #00a651;
+  animation: wp-spin 0.8s linear infinite;
+}
+
+.wp-site-loading-label {
+  margin: 0;
+  font-size: 13px;
+  color: #50575e;
+}
+
 .wp-spin {
   animation: wp-spin 0.8s linear infinite;
   color: #2271b1;
+}
+
+.wp-skeleton-pulse {
+  animation: wp-skeleton-pulse 1.2s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes wp-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-skeleton-pulse,
+  .wp-spin {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .wp-skeleton-pulse {
+    animation: none;
+  }
 }
 
 @keyframes wp-spin {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Eye, FileText, Pencil, Plus, Trash2 } from 'lucide-react';
 import { adminFetch } from '@/lib/admin-auth';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
+import { PanelDocumentsGridSkeleton } from '@/components/Admin/PanelSkeleton';
 import { getFileTypeLabel } from '@/lib/conference-document-files';
 import {
   getDocumentReviewStatus,
@@ -82,7 +83,9 @@ export default function SubscriberDocumentsPage() {
       </div>
 
       <div className="docs-admin-container">
-        {!ready ? null : documents.length === 0 ? (
+        {!ready ? (
+          <PanelDocumentsGridSkeleton count={6} />
+        ) : documents.length === 0 ? (
           <div className="docs-admin-empty-state">
             <FileText size={40} />
             <h2>Nenhuma submissão encontrada</h2>

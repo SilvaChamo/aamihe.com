@@ -317,6 +317,19 @@
   transition: all 0.2s;
 }
 
+.media-item--skeleton {
+  border-color: #e5e7eb;
+  box-shadow: none;
+  background: #f3f4f6;
+  cursor: default;
+}
+
+.media-item-skeleton-thumb {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #eef0f2 0%, #e5e7eb 100%);
+}
+
 .media-item:hover {
   border-color: #561713;
 }

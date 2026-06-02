@@ -119,61 +119,86 @@ export default function SiteStatsPage() {
       </div>
 
       {loading ? (
-        <PanelStatsSkeleton count={4} />
-      ) : (
-      <div className="site-stats-grid">
-        <Link href={`${base}/noticias`} className="site-stats-card">
-          <div className="site-stats-icon"><Newspaper size={18} /></div>
-          <div className="site-stats-value">{loading ? '...' : stats.news}</div>
-          <div className="site-stats-label">{tx.news}</div>
-        </Link>
+        <>
+          <PanelStatsSkeleton count={4} />
 
-        <Link href={`${base}/media`} className="site-stats-card">
-          <div className="site-stats-icon"><ImageIcon size={18} /></div>
-          <div className="site-stats-value">{loading ? '...' : stats.media}</div>
-          <div className="site-stats-label">{tx.media}</div>
-        </Link>
+          <div className="site-stats-analytics">
+            <div className="site-stats-analytics-header">
+              <div
+                className="wp-skeleton-pulse"
+                style={{ height: 16, width: 190, background: '#dcdcde', borderRadius: 6 }}
+                aria-hidden
+              />
+              <div
+                className="wp-skeleton-pulse"
+                style={{ height: 14, width: 160, background: '#dcdcde', borderRadius: 6 }}
+                aria-hidden
+              />
+            </div>
 
-        <Link href={`${base}/utilizadores`} className="site-stats-card">
-          <div className="site-stats-icon"><Users size={18} /></div>
-          <div className="site-stats-value">{loading ? '...' : stats.users}</div>
-          <div className="site-stats-label">{tx.users}</div>
-        </Link>
-
-        <Link href={`${base}/documentos-gerais`} className="site-stats-card">
-          <div className="site-stats-icon"><FileUp size={18} /></div>
-          <div className="site-stats-value">{loading ? '...' : stats.conferenceSubmissions}</div>
-          <div className="site-stats-label">{tx.conf}</div>
-        </Link>
-      </div>
-      )}
-
-      <div className="site-stats-analytics">
-        <div className="site-stats-analytics-header">
-          <h2>{tx.ga}</h2>
-          {analyticsDashboardUrl ? (
-            <a href={analyticsDashboardUrl} target="_blank" rel="noreferrer">
-              {tx.openFull}
-            </a>
-          ) : (
-            <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noreferrer">
-              {tx.openGa}
-            </a>
-          )}
-        </div>
-
-        {analyticsDashboardUrl ? (
-          <iframe
-            title="Google Analytics Dashboard"
-            src={analyticsDashboardUrl}
-            className="site-stats-analytics-frame"
-          />
-        ) : (
-          <div className="site-stats-analytics-empty">
-            {tx.empty}
+            <div
+              className="site-stats-analytics-frame wp-skeleton-pulse"
+              style={{ background: '#f3f4f6' }}
+              aria-hidden
+            />
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <>
+          <div className="site-stats-grid">
+            <Link href={`${base}/noticias`} className="site-stats-card">
+              <div className="site-stats-icon"><Newspaper size={18} /></div>
+              <div className="site-stats-value">{stats.news}</div>
+              <div className="site-stats-label">{tx.news}</div>
+            </Link>
+
+            <Link href={`${base}/media`} className="site-stats-card">
+              <div className="site-stats-icon"><ImageIcon size={18} /></div>
+              <div className="site-stats-value">{stats.media}</div>
+              <div className="site-stats-label">{tx.media}</div>
+            </Link>
+
+            <Link href={`${base}/utilizadores`} className="site-stats-card">
+              <div className="site-stats-icon"><Users size={18} /></div>
+              <div className="site-stats-value">{stats.users}</div>
+              <div className="site-stats-label">{tx.users}</div>
+            </Link>
+
+            <Link href={`${base}/documentos-gerais`} className="site-stats-card">
+              <div className="site-stats-icon"><FileUp size={18} /></div>
+              <div className="site-stats-value">{stats.conferenceSubmissions}</div>
+              <div className="site-stats-label">{tx.conf}</div>
+            </Link>
+          </div>
+
+          <div className="site-stats-analytics">
+            <div className="site-stats-analytics-header">
+              <h2>{tx.ga}</h2>
+              {analyticsDashboardUrl ? (
+                <a href={analyticsDashboardUrl} target="_blank" rel="noreferrer">
+                  {tx.openFull}
+                </a>
+              ) : (
+                <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noreferrer">
+                  {tx.openGa}
+                </a>
+              )}
+            </div>
+
+            {analyticsDashboardUrl ? (
+              <iframe
+                title="Google Analytics Dashboard"
+                src={analyticsDashboardUrl}
+                className="site-stats-analytics-frame"
+              />
+            ) : (
+              <div className="site-stats-analytics-empty">
+                {tx.empty}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
