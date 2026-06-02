@@ -21,6 +21,8 @@ import {
   FileDown,
   Edit3,
   Video,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
@@ -217,6 +219,22 @@ export default function MediaLibrary({
     return filteredFiles.slice(0, visibleCount);
   }, [filteredFiles, visibleCount]);
 
+  const previewGalleryImages = useMemo(
+    () =>
+      filteredFiles.filter(
+        (f) =>
+          resolveMediaCategory({
+            category: f.category,
+            mime_type: f.metadata?.mimetype,
+            url: f.url,
+          }) === 'imagens',
+      ),
+    [filteredFiles],
+  );
+
+  const isSameMediaFile = (a: MediaFile, b: MediaFile) =>
+    a.id === b.id || mediaCatalogKey(a.url) === mediaCatalogKey(b.url);
+
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) newSelected.delete(id);
@@ -274,6 +292,17 @@ export default function MediaLibrary({
   const closePreview = () => {
     setIsPreviewOpen(false);
     setPreviewImage(null);
+  };
+
+  const previewImageIndex = previewImage
+    ? previewGalleryImages.findIndex((f) => isSameMediaFile(f, previewImage))
+    : -1;
+
+  const shiftPreviewImage = (delta: number) => {
+    if (!previewImage || previewGalleryImages.length < 2) return;
+    const idx = previewImageIndex >= 0 ? previewImageIndex : 0;
+    const next = previewGalleryImages[idx + delta];
+    if (next) setPreviewImage(next);
   };
 
   const openEditFromPreview = (file: MediaFile) => {
@@ -394,12 +423,14 @@ export default function MediaLibrary({
       return;
     }
     if (!confirm('Eliminar este item permanentemente?')) return;
+    const closeEditor = activeFile ? isSameMediaFile(activeFile, file) : false;
+    const closePreviewModal = previewImage ? isSameMediaFile(previewImage, file) : false;
     setLoading(true);
     try {
       await requestDelete([file]);
       removeDeletedFromState([file]);
-      if (activeFile?.id === file.id) closeAttachmentDetails();
-      if (previewImage?.id === file.id) closePreview();
+      if (closeEditor) closeAttachmentDetails();
+      if (closePreviewModal) closePreview();
       dispatchMediaUpdated();
       await loadImages();
     } catch (err) {
@@ -1112,11 +1143,34 @@ export default function MediaLibrary({
             <button type="button" onClick={closePreview} className="media-preview-close" aria-label="Fechar">
               <X className="media-close-icon" />
             </button>
-            <img
-              src={getPublicUrl(previewImage)}
-              className="media-preview-full-image"
-              alt={previewImage.name}
-            />
+            <div className="media-preview-stage">
+              <button
+                type="button"
+                className="media-preview-nav media-preview-nav--prev"
+                aria-label="Imagem anterior"
+                disabled={previewImageIndex <= 0}
+                onClick={() => shiftPreviewImage(-1)}
+              >
+                <ChevronLeft size={28} />
+              </button>
+              <img
+                src={getPublicUrl(previewImage)}
+                className="media-preview-full-image"
+                alt={previewImage.name}
+              />
+              <button
+                type="button"
+                className="media-preview-nav media-preview-nav--next"
+                aria-label="Imagem seguinte"
+                disabled={
+                  previewImageIndex < 0 ||
+                  previewImageIndex >= previewGalleryImages.length - 1
+                }
+                onClick={() => shiftPreviewImage(1)}
+              >
+                <ChevronRight size={28} />
+              </button>
+            </div>
             <div className="media-preview-toolbar">
               <div className="media-preview-info">
                 <h3 className="media-preview-title">{previewImage.name}</h3>

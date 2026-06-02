@@ -1,23 +1,28 @@
 .media-library {
-  background: #fff;
-  border: 1px solid #ccd0d4;
-  border-radius: 6px;
+  background: transparent;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
 }
 
 .media-library.modal {
   height: 100%;
 }
 
-/* Toolbar — fundo claro como na captura da biblioteca */
-.media-toolbar {
+/* Barra de menu — só na página Biblioteca (/admin/media), não no modal de notícias */
+.media-page .media-library:not(.modal) > .media-toolbar {
   background: #fff;
   color: #1d2327;
   border: 1px solid #ccd0d4;
   border-bottom: 1px solid #dcdcde;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.media-toolbar {
+  background: transparent;
+  color: #1d2327;
+  border-bottom: 1px solid #ccd0d4;
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
@@ -26,8 +31,6 @@
   gap: 12px;
   flex-shrink: 0;
   z-index: 10;
-  border-radius: 6px 6px 0 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 @media (min-width: 768px) {
@@ -308,13 +311,21 @@
 
 .media-item-actions {
   position: absolute;
-  inset: auto 8px 8px 8px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
   display: flex;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: 4px;
+  padding: 4px 2px 2px;
+  z-index: 2;
   opacity: 0;
-  transition: opacity 0.2s;
   pointer-events: none;
+  transition: opacity 0.2s ease;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
 }
 
 .media-item:hover .media-item-actions {
@@ -324,26 +335,27 @@
 
 .media-action-button {
   flex: 0 0 auto;
-  width: clamp(26px, 22%, 34px);
-  height: clamp(26px, 22%, 34px);
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  min-height: 26px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(29, 35, 39, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-  transition: background 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease;
 }
 
 .media-action-button:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: scale(1.04);
+  background: rgba(86, 23, 19, 0.9);
 }
 
 .media-action-button--danger:hover {
@@ -1105,8 +1117,45 @@
   color: #fff;
 }
 
+.media-preview-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: min(1100px, 100%);
+}
+
+.media-preview-nav {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.media-preview-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.media-preview-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .media-preview-full-image {
-  max-width: 100%;
+  flex: 1 1 auto;
+  max-width: calc(100% - 112px);
   max-height: calc(80vh - 72px);
   object-fit: contain;
   border-radius: 8px;
@@ -1117,7 +1166,8 @@
   width: 100%;
   max-width: min(960px, 100%);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -1144,8 +1194,11 @@
 
 .media-preview-actions {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .media-glass-button {

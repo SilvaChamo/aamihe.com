@@ -190,15 +190,30 @@
 .news-form-image-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   align-items: flex-start;
+}
+
+.news-form-image-trigger {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.news-form-image-trigger:focus-visible {
+  outline: 2px solid #561713;
+  outline-offset: 2px;
 }
 
 .news-form-image-preview {
   width: 100%;
   height: auto;
   border: 1px solid #ccd0d4;
-  cursor: pointer;
   display: block;
 }
 

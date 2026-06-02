@@ -278,7 +278,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Override some MediaLibrary styles when in modal */
+/* Override some MediaLibrary styles when in modal (popup notícias) */
 .media-library.modal {
   height: 100%;
   display: flex;
@@ -288,6 +288,47 @@
 .media-library.modal .media-content {
   flex: 1;
   overflow: hidden;
+}
+
+.media-library.modal .media-toolbar {
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #f8fafc;
+}
+
+.media-library.modal .media-grid-container {
+  padding: 16px 20px 24px;
+}
+
+.media-library.modal .media-grid {
+  gap: 14px;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .media-library.modal .media-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .media-library.modal .media-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .media-library.modal .media-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+.media-library.modal .media-item {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .media-library.modal.has-detail-sidebar {

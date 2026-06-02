@@ -9,8 +9,7 @@ import { buildNewsSavePayload, readNewsFieldsForLocale } from '@/lib/news-i18n';
 import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
-import { isImageFile } from '@/lib/is-image-file';
-import { persistNewsImage, uploadMediaFile } from '@/lib/persist-client-media';
+import { persistNewsImage } from '@/lib/persist-client-media';
 import './NewsForm.css';
 
 interface NewsFormProps {
@@ -27,9 +26,6 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
   const [loading, setLoading] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const initializedRef = useRef<number | 'new' | null>(null);
-  const featuredImageInputRef = useRef<HTMLInputElement>(null);
-  const [imageUploading, setImageUploading] = useState(false);
-
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -74,30 +70,8 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
     setFormData((prev) => ({ ...prev, image: url }));
   };
 
-  const openFilePicker = () => {
-    featuredImageInputRef.current?.click();
-  };
-
-  const handleFeaturedImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-
-    if (!isImageFile(file)) {
-      alert('Seleccione um ficheiro de imagem (JPG, PNG, WebP, etc.).');
-      return;
-    }
-
-    setImageUploading(true);
-    try {
-      const url = await uploadMediaFile(file, 'Notícias');
-      applyFeaturedImage(url);
-    } catch (err) {
-      console.error(err);
-      alert(err instanceof Error ? err.message : 'Erro ao carregar imagem.');
-    } finally {
-      setImageUploading(false);
-    }
+  const openFeaturedImagePicker = () => {
+    setIsMediaModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,14 +106,6 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
   return (
     <div className="news-form-container">
-      <input
-        ref={featuredImageInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp,image/*,.jpg,.jpeg,.png,.gif,.webp"
-        className="news-form-file-input"
-        onChange={handleFeaturedImageUpload}
-      />
-
       <div className="news-form-header">
         <h1>{isEdit ? 'Editar notícia' : 'Adicionar nova notícia'}</h1>
         <p className="news-form-locale-hint">
@@ -194,11 +160,18 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
             <div className="news-form-panel-body">
               {formData.image ? (
                 <div className="news-form-image-block">
-                  <img
-                    src={formData.image}
-                    alt="Preview"
-                    className="news-form-image-preview"
-                  />
+                  <button
+                    type="button"
+                    className="news-form-image-trigger"
+                    onClick={openFeaturedImagePicker}
+                    aria-label="Imagem de destaque"
+                  >
+                    <img
+                      src={formData.image}
+                      alt=""
+                      className="news-form-image-preview"
+                    />
+                  </button>
                   <button
                     type="button"
                     className="news-form-link news-form-link-danger"
@@ -208,11 +181,9 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                   </button>
                 </div>
               ) : (
-                <>
-                  <button type="button" className="news-form-link" onClick={() => setIsMediaModalOpen(true)}>
-                    Imagem de destaque
-                  </button>
-                </>
+                <button type="button" className="news-form-link" onClick={openFeaturedImagePicker}>
+                  Imagem de destaque
+                </button>
               )}
             </div>
           </div>
