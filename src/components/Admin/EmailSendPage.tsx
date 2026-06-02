@@ -192,6 +192,11 @@ export default function EmailSendPage() {
   const [senderId, setSenderId] = useState('');
   const [statsLoading, setStatsLoading] = useState(true);
   const [subject, setSubject] = useState('');
+  const [toEmail, setToEmail] = useState('');
+  const [ccEmail, setCcEmail] = useState('');
+  const [bccEmail, setBccEmail] = useState('');
+  const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
   const [preheader, setPreheader] = useState('');
   const [preheaderOpen, setPreheaderOpen] = useState(false);
   const [html, setHtml] = useState('');
@@ -207,17 +212,17 @@ export default function EmailSendPage() {
   const overQuota = quota != null && count != null && count > quota.remainingToday;
   const noQuotaLeft = quota != null && quota.remainingToday <= 0;
   const statsPending = statsLoading && count === null;
-  const sendDisabled =
-    sending ||
-    statsPending ||
-    count === 0 ||
-    overQuota ||
-    noQuotaLeft ||
-    !emailConfigured;
+  const sendDisabled = isMarketing
+    ? sending ||
+      statsPending ||
+      count === 0 ||
+      overQuota ||
+      noQuotaLeft ||
+      !emailConfigured
+    : sending || noQuotaLeft || !emailConfigured;
   const fieldsDisabled = sending || !emailConfigured;
 
   const loadStats = useCallback(async () => {
-    setStatsLoading(true);
     setError('');
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 25_000);
@@ -273,14 +278,20 @@ export default function EmailSendPage() {
       return;
     }
 
-    if (overQuota || noQuotaLeft) {
-      setError(
-        `Limite diário: restam ${quota?.remainingToday ?? 0} envios hoje (${quota?.sentToday ?? 0}/${quota?.dailyLimit ?? 50}).`,
-      );
-      return;
+    if (isMarketing) {
+      if (overQuota || noQuotaLeft) {
+        setError(
+          `Limite diário: restam ${quota?.remainingToday ?? 0} envios hoje (${quota?.sentToday ?? 0}/${quota?.dailyLimit ?? 50}).`,
+        );
+        return;
+      }
+      if (!confirm(`Enviar este e-mail para ${count ?? 0} subscritor(es)?`)) return;
+    } else {
+      if (!toEmail.trim()) {
+        setError('Indique o e-mail do destinatário.');
+        return;
+      }
     }
-
-    if (!confirm(`Enviar este e-mail para ${count ?? 0} subscritor(es)?`)) return;
 
     setSending(true);
     try {
@@ -294,13 +305,29 @@ export default function EmailSendPage() {
           message: plainText,
           senderId,
           mode: isMarketing ? 'marketing' : 'normal',
+          ...(isMarketing
+            ? {}
+            : {
+                to: toEmail.trim(),
+                cc: showCc ? ccEmail.trim() : '',
+                bcc: showBcc ? bccEmail.trim() : '',
+              }),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao enviar e-mails');
 
-      setSuccess(`E-mail enviado para ${data.sent} destinatário(s).`);
+      setSuccess(
+        isMarketing
+          ? `E-mail enviado para ${data.sent} destinatário(s).`
+          : 'E-mail enviado com sucesso.',
+      );
       setSubject('');
+      setToEmail('');
+      setCcEmail('');
+      setBccEmail('');
+      setShowCc(false);
+      setShowBcc(false);
       setPreheader('');
       setPreheaderOpen(false);
       setHtml('');
@@ -318,10 +345,12 @@ export default function EmailSendPage() {
       className="email-sender-select"
       value={senderId}
       onChange={(e) => setSenderId(e.target.value)}
-      disabled={sendDisabled || senders.length === 0}
+      disabled={fieldsDisabled}
       aria-label="Remetente"
     >
-      {senders.length === 0 ? (
+      {statsLoading && senders.length === 0 ? (
+        <option value="">A carregar contas…</option>
+      ) : senders.length === 0 ? (
         <option value="">Sem contas disponíveis</option>
       ) : (
         senders.map((s) => (
@@ -334,11 +363,16 @@ export default function EmailSendPage() {
   );
 
   const normalSendButton = (
-    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={sendDisabled}>
+    <button
+      type="submit"
+      className={`news-form-submit email-normal-send-btn${sending ? ' email-normal-send-btn--sending' : ''}`}
+      disabled={sendDisabled}
+      aria-busy={sending}
+    >
       {sending ? (
         <>
-          <Loader2 size={14} className="wp-spin" style={{ marginRight: 6 }} />
-          A enviar…
+          <Loader2 size={18} className="wp-spin email-normal-send-spinner" aria-hidden />
+          <span>A enviar…</span>
         </>
       ) : (
         'ENVIAR'
@@ -358,10 +392,6 @@ export default function EmailSendPage() {
       )}
     </button>
   );
-
-  if (statsPending) {
-    return <EmailSendPageSkeleton isMarketing={isMarketing} />;
-  }
 
   return (
     <div className="news-form-container email-send-page" key={pathname}>
@@ -401,7 +431,7 @@ export default function EmailSendPage() {
               </div>
             ) : (
               <p className="news-form-locale-hint email-send-intro">
-                E-mail simples para todos os subscritores.
+                E-mail individual para um destinatário (Para, Cc ou Bcc).
               </p>
             )}
           </div>
@@ -456,18 +486,93 @@ export default function EmailSendPage() {
           ) : (
             <div className="email-normal-top-row">
               {normalSendButton}
-              <div className="email-normal-fields-col">
-                {senderSelectField}
-                <input
-                  id="email-subject"
-                  type="text"
-                  placeholder="Assunto do e-mail"
-                  className="news-form-title-input email-normal-subject"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  disabled={fieldsDisabled}
-                  required
-                />
+              <div className="email-outlook-fields">
+                <div className="email-outlook-row">
+                  <span className="email-outlook-label">De</span>
+                  <div className="email-outlook-control">{senderSelectField}</div>
+                </div>
+                <div className="email-outlook-row email-outlook-row--to">
+                  <span className="email-outlook-label">Para</span>
+                  <div className="email-outlook-control">
+                    <input
+                      id="email-to"
+                      type="email"
+                      placeholder="destinatario@exemplo.com"
+                      className="email-outlook-input"
+                      value={toEmail}
+                      onChange={(e) => setToEmail(e.target.value)}
+                      disabled={fieldsDisabled}
+                      required
+                    />
+                  </div>
+                  <div className="email-outlook-extra-links">
+                    <button
+                      type="button"
+                      className={`email-outlook-link${showCc ? ' is-active' : ''}`}
+                      onClick={() => setShowCc((open) => !open)}
+                      disabled={fieldsDisabled}
+                      aria-expanded={showCc}
+                    >
+                      Cc
+                    </button>
+                    <button
+                      type="button"
+                      className={`email-outlook-link${showBcc ? ' is-active' : ''}`}
+                      onClick={() => setShowBcc((open) => !open)}
+                      disabled={fieldsDisabled}
+                      aria-expanded={showBcc}
+                    >
+                      Bcc
+                    </button>
+                  </div>
+                </div>
+                {showCc ? (
+                  <div className="email-outlook-row">
+                    <span className="email-outlook-label">Cc</span>
+                    <div className="email-outlook-control">
+                      <input
+                        id="email-cc"
+                        type="text"
+                        placeholder="cc@exemplo.com"
+                        className="email-outlook-input"
+                        value={ccEmail}
+                        onChange={(e) => setCcEmail(e.target.value)}
+                        disabled={fieldsDisabled}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+                {showBcc ? (
+                  <div className="email-outlook-row">
+                    <span className="email-outlook-label">Bcc</span>
+                    <div className="email-outlook-control">
+                      <input
+                        id="email-bcc"
+                        type="text"
+                        placeholder="bcc@exemplo.com"
+                        className="email-outlook-input"
+                        value={bccEmail}
+                        onChange={(e) => setBccEmail(e.target.value)}
+                        disabled={fieldsDisabled}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+                <div className="email-outlook-row">
+                  <span className="email-outlook-label">Assunto</span>
+                  <div className="email-outlook-control">
+                    <input
+                      id="email-subject"
+                      type="text"
+                      placeholder="Assunto do e-mail"
+                      className="email-outlook-input"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      disabled={fieldsDisabled}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -485,7 +590,7 @@ export default function EmailSendPage() {
         </div>
 
         <div className="news-form-sidebar email-send-sidebar">
-          <div className="email-send-mode-panel-body" style={statsPending ? { visibility: 'hidden' } : undefined}>
+          <div className="email-send-mode-panel-body">
             <div className="email-send-mode-tabs">
               <Link
                 href={normalHref}
@@ -504,7 +609,7 @@ export default function EmailSendPage() {
             </div>
           </div>
 
-          {!isMarketing && !statsPending ? (
+          {isMarketing ? (
             <div className="news-form-panel">
               <div className="news-form-panel-header">
                 <h2>Destinatários</h2>
@@ -518,7 +623,7 @@ export default function EmailSendPage() {
                       Total:{' '}
                       <strong>
                         {statsPending ? '…' : count}{' '}
-                        {count === 1 ? 'subscritor' : 'subscritores'}
+                        {!statsPending && (count === 1 ? 'subscritor' : 'subscritores')}
                       </strong>
                     </span>
                   </div>
@@ -530,7 +635,6 @@ export default function EmailSendPage() {
             </div>
           ) : null}
 
-          {!statsPending ? (
           <div className="news-form-panel">
             <div className="news-form-panel-header">
               <h2>Limite diário</h2>
@@ -562,7 +666,6 @@ export default function EmailSendPage() {
               </div>
             </div>
           </div>
-          ) : null}
         </div>
       </form>
     </div>

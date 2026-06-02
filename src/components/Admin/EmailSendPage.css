@@ -1,14 +1,15 @@
 /* Medidas fixas — carregar depois de NewsForm.css e admin-wp.css */
 .email-send-page {
   --email-title-desc-gap: 7px;
-  --email-desc-fields-gap: 20px;
-  --email-composer-gap: 20px;
-  --email-preheader-gap: 20px;
-  --email-fields-gap: 10px;
-  --email-divider-color: #c3c4c7;
+  --email-desc-fields-gap: 12px;
+  --email-composer-gap: 12px;
+  --email-preheader-gap: 8px;
+  --email-fields-gap: 0;
+  --email-field-font-size: 14px;
+  --email-divider-color: #dcdcde;
   --email-sidebar-padding: 20px;
-  --email-sidebar-buttons-gap: 16px;
-  --email-container-padding: 24px;
+  --email-sidebar-buttons-gap: 12px;
+  --email-container-padding: 12px;
 }
 
 .email-send-header-row {
@@ -144,12 +145,99 @@
   margin-top: var(--email-preheader-gap);
 }
 
+.email-send-page .email-preheader-panel {
+  border: none;
+  border-top: 1px solid #eef0f2;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.email-send-page .email-preheader-panel .news-form-panel-header {
+  border-bottom-color: #eef0f2;
+  padding: 8px 12px;
+}
+
+.email-send-page .email-preheader-panel .news-form-panel-body {
+  padding: 8px 12px 10px;
+}
+
 .email-send-form-main {
   gap: 0;
 }
 
 .email-send-form-main > .email-composer {
   margin-top: var(--email-composer-gap);
+}
+
+/* Remetente + assunto (marketing): bloco contínuo com o botão ENVIAR */
+.email-marketing-form-block .email-normal-top-row {
+  gap: 0;
+}
+
+.email-marketing-form-block .email-normal-fields-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.email-marketing-form-block .email-sender-select,
+.email-marketing-form-block .email-normal-subject {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #eef0f2;
+  box-shadow: none;
+  height: 36px;
+}
+
+.email-marketing-form-block .email-normal-fields-col > :last-child {
+  border-bottom: none;
+}
+
+.email-marketing-form-block .email-sender-select:focus,
+.email-marketing-form-block .email-sender-select:focus-visible,
+.email-marketing-form-block .email-normal-subject:focus,
+.email-marketing-form-block .email-normal-subject:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-bottom-color: #eef0f2;
+}
+
+/* Campos de remetente/destinatário/assunto — bloco separado do editor */
+.email-send-page .email-marketing-form-block,
+.email-send-page .email-normal-top-row:has(.email-outlook-fields) {
+  border: 1px solid #dcdcde;
+}
+
+.email-send-page .email-marketing-form-block .email-normal-top-row {
+  border: none;
+}
+
+.email-send-page .email-composer {
+  border: 1px solid #dcdcde;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.email-send-page .email-composer-tabs {
+  background: #fafafa;
+  border-bottom-color: #eef0f2;
+}
+
+.email-send-page .email-composer-toolbar {
+  background: #fafafa;
+  border-bottom-color: #eef0f2;
+}
+
+.email-send-page .email-composer-status {
+  background: #fafafa;
+  border-top-color: #eef0f2;
+}
+
+.email-send-page .news-form-panel {
+  border-color: #eef0f2;
+  box-shadow: none;
 }
 
 .email-preheader-panel-body {
@@ -176,12 +264,141 @@
   align-items: stretch;
 }
 
-.email-normal-fields-col {
+.email-normal-top-row:has(.email-outlook-fields) {
+  gap: 0;
+}
+
+.email-outlook-fields {
   flex: 1;
   min-width: 0;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: none;
+}
+
+.email-outlook-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--email-fields-gap);
+  align-items: center;
+  min-height: 36px;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.email-outlook-row:last-child {
+  border-bottom: none;
+}
+
+.email-outlook-row--to {
+  position: relative;
+}
+
+.email-outlook-label {
+  flex: 0 0 72px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #50575e;
+}
+
+.email-outlook-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.email-outlook-input,
+.email-outlook-control .email-sender-select {
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 0;
+  font-size: var(--email-field-font-size);
+  font-weight: 400;
+  line-height: 1.35;
+  font-family: inherit;
+  color: #1d2327;
+  background: transparent;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+
+/* Remetente (select nativo) — igual aos inputs De/Para/Assunto */
+.email-send-page select.email-sender-select {
+  font-size: var(--email-field-font-size);
+  font-weight: 400;
+  line-height: 1.35;
+  font-family: inherit;
+  color: #1d2327;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2350575e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  padding-right: 28px;
+}
+
+.admin-shell .email-send-page select.email-sender-select {
+  font-size: var(--email-field-font-size);
+}
+
+.email-send-page .email-outlook-input,
+.email-send-page .email-marketing-form-block .email-normal-subject,
+.email-send-page .email-marketing-form-block .news-form-title-input.email-normal-subject {
+  font-size: var(--email-field-font-size);
+  font-weight: 400;
+  line-height: 1.35;
+  font-family: inherit;
+  color: #1d2327;
+}
+
+.email-outlook-control .email-sender-select:focus,
+.email-outlook-control .email-sender-select:focus-visible,
+.email-outlook-input:focus,
+.email-outlook-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border: none;
+}
+
+.email-normal-top-row:has(.email-outlook-fields) .email-normal-send-btn:focus,
+.email-normal-top-row:has(.email-outlook-fields) .email-normal-send-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.email-outlook-extra-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.email-outlook-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #561713;
+  cursor: pointer;
+}
+
+.email-outlook-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.email-outlook-link.is-active {
+  text-decoration: underline;
+}
+
+.email-outlook-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .email-normal-send-btn {
@@ -191,16 +408,31 @@
   height: auto;
   margin: 0;
   padding: 5px 18px;
-  border-radius: 6px;
+  border-radius: 0;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: #00a651;
+}
+
+.email-normal-send-btn--sending {
+  min-width: 120px;
+}
+
+.email-normal-send-spinner {
+  flex-shrink: 0;
 }
 
 .email-normal-send-btn:hover:not(:disabled) {
   background: #008c45;
+}
+
+.email-send-page .email-sender-select {
+  font-size: var(--email-field-font-size);
+  line-height: 1.35;
+  font-family: inherit;
 }
 
 .email-normal-subject {
@@ -208,7 +440,13 @@
   height: 36px;
   margin: 0;
   padding: 5px 10px;
-  font-size: 14px;
+  font-size: var(--email-field-font-size);
+  line-height: 1.35;
+}
+
+.email-send-page .email-marketing-form-block .news-form-title-input.email-normal-subject {
+  font-size: var(--email-field-font-size);
+  line-height: 1.35;
 }
 
 .email-marketing-form-block {
@@ -222,11 +460,23 @@
   padding: 5px 10px;
   border: 1px solid #8c8f94;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: var(--email-field-font-size);
+  font-weight: 400;
+  line-height: 1.35;
+  font-family: inherit;
   background: #fff;
   color: #1d2327;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
   box-sizing: border-box;
+}
+
+.email-send-page .email-marketing-form-block .email-sender-select:focus,
+.email-send-page .email-marketing-form-block .email-sender-select:focus-visible,
+.email-send-page .email-outlook-control .email-sender-select:focus,
+.email-send-page .email-outlook-control .email-sender-select:focus-visible {
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
 }
 
 .email-sender-select:focus {
@@ -244,7 +494,7 @@
 }
 
 .email-send-page.news-form-container {
-  padding-top: 0;
+  padding: 0 24px 24px 12px;
   min-height: calc(100vh - var(--admin-topbar-height));
   box-sizing: border-box;
   display: flex;

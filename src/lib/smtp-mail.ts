@@ -5,6 +5,8 @@ import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 export type SmtpMailInput = {
   from: string;
   to: string[];
+  cc?: string[];
+  bcc?: string[];
   subject: string;
   text: string;
   html?: string;
@@ -131,6 +133,8 @@ export async function sendSmtpMail(input: SmtpMailInput): Promise<string> {
   const info = await transport.sendMail({
     from: input.from,
     to: input.to,
+    cc: input.cc?.length ? input.cc : undefined,
+    bcc: input.bcc?.length ? input.bcc : undefined,
     subject: input.subject,
     text: input.text,
     html: input.html ?? input.text.replace(/\n/g, '<br />'),

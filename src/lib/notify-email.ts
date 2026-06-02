@@ -19,11 +19,24 @@ export class EmailSendError extends Error {
 
 type NotifyEmailInput = {
   to?: string | string[];
+  cc?: string | string[];
+  bcc?: string | string[];
   from?: string;
   subject: string;
   text: string;
   html?: string;
 };
+
+function normalizeRecipients(value?: string | string[]): string[] {
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry).trim()).filter(Boolean);
+  }
+  if (!value) return [];
+  return String(value)
+    .split(/[,;]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
 
 export type EmailProviderStatus = {
   configured: boolean;
@@ -56,9 +69,14 @@ function smtpErrorMessage(error: unknown): string {
 }
 
 export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
-  const to = Array.isArray(input.to)
-    ? input.to.map((entry) => String(entry).trim()).filter(Boolean)
-    : [String(input.to || process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO).trim()].filter(Boolean);
+  let to = normalizeRecipients(input.to);
+  if (!to.length) {
+    const fallback = String(process.env.SITE_NOTIFY_EMAIL || DEFAULT_TO).trim();
+    if (fallback) to = [fallback];
+  }
+
+  const cc = normalizeRecipients(input.cc);
+  const bcc = normalizeRecipients(input.bcc);
 
   if (!to.length) {
     throw new EmailSendError('Nenhum destinatário indicado.');
@@ -78,6 +96,8 @@ export async function notifySiteEmail(input: NotifyEmailInput): Promise<void> {
     const messageId = await sendSmtpMail({
       from,
       to,
+      cc,
+      bcc,
       subject: input.subject,
       text: input.text,
       html: input.html,

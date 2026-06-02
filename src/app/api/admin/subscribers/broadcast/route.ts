@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
 import { RECOMMENDED_DAILY_EMAIL_LIMIT } from '@/lib/email-send-quota';
 import { getEmailProviderStatus } from '@/lib/notify-email';
-import { broadcastToSubscribers, loadBroadcastPageData } from '@/lib/subscriber-broadcast';
+import { broadcastToSubscribers, loadBroadcastPageData, sendNormalEmail } from '@/lib/subscriber-broadcast';
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,10 +48,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assunto e conteúdo são obrigatórios.' }, { status: 400 });
     }
 
+    if (mode === 'normal') {
+      const sent = await sendNormalEmail({
+        subject,
+        html,
+        preheader,
+        message,
+        senderId,
+        to: String(body.to || ''),
+        cc: String(body.cc || ''),
+        bcc: String(body.bcc || ''),
+        mode,
+      });
+      return NextResponse.json({ success: true, sent });
+    }
+
     const sent = await broadcastToSubscribers({
       subject,
       html,
-      preheader: mode === 'normal' ? preheader : '',
+      preheader,
       message,
       senderId,
       mode,

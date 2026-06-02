@@ -53,7 +53,59 @@ type BroadcastInput = {
   message?: string;
   senderId?: string;
   mode?: 'marketing' | 'normal';
+  to?: string;
+  cc?: string;
+  bcc?: string;
 };
+
+function parseEmailField(value: string): string[] {
+  return value
+    .split(/[,;]+/)
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export async function sendNormalEmail(input: BroadcastInput): Promise<number> {
+  const toList = parseEmailField(String(input.to || ''));
+  if (!toList.length) {
+    throw new Error('Indique o e-mail do destinatário.');
+  }
+  if (!toList.every(isValidEmail)) {
+    throw new Error('E-mail de destinatário inválido.');
+  }
+
+  const ccList = parseEmailField(String(input.cc || ''));
+  const bccList = parseEmailField(String(input.bcc || ''));
+  if (![...ccList, ...bccList].every(isValidEmail)) {
+    throw new Error('E-mail Cc ou Bcc inválido.');
+  }
+
+  await assertEmailSendQuota(1);
+
+  const bodyHtml = input.html.trim();
+  const text = input.message?.trim() || htmlToPlainText(bodyHtml);
+  const fullHtml = wrapPlainEmailHtml(bodyHtml, input.preheader);
+
+  const senders = await listSenderAccounts();
+  const from = resolveSenderFrom(senders, input.senderId);
+
+  await notifySiteEmail({
+    to: toList,
+    cc: ccList,
+    bcc: bccList,
+    from,
+    subject: input.subject.trim(),
+    text,
+    html: fullHtml,
+  });
+
+  await recordEmailSends(1);
+  return 1;
+}
 
 export async function broadcastToSubscribers(input: BroadcastInput): Promise<number> {
   const emails = await collectSubscriberEmails();
