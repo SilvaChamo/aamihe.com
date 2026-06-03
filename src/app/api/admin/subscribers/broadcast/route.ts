@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { emails, quota, senders } = await loadBroadcastPageData();
+    const light = request.nextUrl.searchParams.get('light') === '1';
+    const { emails, quota, senders } = await loadBroadcastPageData({
+      countRecipients: !light,
+    });
     const emailProvider = getEmailProviderStatus();
     return NextResponse.json({
       success: true,

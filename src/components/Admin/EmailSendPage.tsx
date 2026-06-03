@@ -226,8 +226,11 @@ export default function EmailSendPage() {
     setError('');
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 25_000);
+    const statsUrl = isMarketing
+      ? '/api/admin/subscribers/broadcast'
+      : '/api/admin/subscribers/broadcast?light=1';
     try {
-      const res = await adminFetch('/api/admin/subscribers/broadcast', {
+      const res = await adminFetch(statsUrl, {
         signal: controller.signal,
       });
       const data = await res.json();
@@ -250,15 +253,18 @@ export default function EmailSendPage() {
       const message =
         err instanceof Error && err.name === 'AbortError'
           ? 'O carregamento demorou demasiado. Pode redigir o e-mail; tente atualizar a página para ver destinatários.'
-          : err instanceof Error
-            ? err.message
-            : 'Erro ao carregar destinatários';
+          : err instanceof TypeError ||
+              (err instanceof Error && err.message === 'Failed to fetch')
+            ? 'Ligação ao servidor falhou. Verifique a rede e atualize a página.'
+            : err instanceof Error
+              ? err.message
+              : 'Erro ao carregar destinatários';
       setError(message);
     } finally {
       window.clearTimeout(timeout);
       setStatsLoading(false);
     }
-  }, []);
+  }, [isMarketing]);
 
   useEffect(() => {
     loadStats();
@@ -333,7 +339,13 @@ export default function EmailSendPage() {
       setHtml('');
       await loadStats();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar e-mails');
+      setError(
+        err instanceof TypeError || (err instanceof Error && err.message === 'Failed to fetch')
+          ? 'Ligação ao servidor falhou. Tente novamente.'
+          : err instanceof Error
+            ? err.message
+            : 'Erro ao enviar e-mails',
+      );
     } finally {
       setSending(false);
     }

@@ -35,14 +35,18 @@ export async function collectSubscriberEmails(): Promise<string[]> {
   return collectSubscriberEmailsFrom(users);
 }
 
-export async function loadBroadcastPageData(): Promise<{
+export async function loadBroadcastPageData(options?: { countRecipients?: boolean }): Promise<{
   emails: string[];
   quota: EmailSendQuota;
   senders: Awaited<ReturnType<typeof listSenderAccounts>>;
 }> {
+  const countRecipients = options?.countRecipients !== false;
   const [users, quota] = await Promise.all([listUsers(), getEmailSendQuota()]);
-  const emails = await collectSubscriberEmailsFrom(users);
   const senders = await listSenderAccounts(users);
+  if (!countRecipients) {
+    return { emails: [], quota, senders };
+  }
+  const emails = await collectSubscriberEmailsFrom(users);
   return { emails, quota, senders };
 }
 
