@@ -9,8 +9,8 @@ export const sobreOQueFazemosCopy = {
   pt: {
     eyebrow: 'O que fazemos',
     title: 'Serviços da AAMIHE',
-    showMore: 'Há mais conteúdo',
-    showLess: 'Ocultar conteúdo',
+    showMore: 'Ver logótipos dos parceiros',
+    showLess: 'Ocultar logótipos',
     text:
       'A AAMIHE promove a relação, o intercâmbio e a cooperação entre instituições de ensino superior metodistas em África, recolhendo e divulgando informações sobre ensino, investigação e serviços. Apoia o desenvolvimento curricular, a pós-graduação, a investigação e a garantia de qualidade, respondendo às necessidades curriculares e educativas das universidades metodistas e coordenando os meios para as satisfazer. Organiza fóruns de divulgação, intercâmbio e diálogo político, promovendo a igualdade de género e a igualdade social nas políticas de ensino superior. Mantém vínculos com a comunidade metodista internacional de ensino superior, em cooperação com:',
     partnersTitle: 'Parceiros internacionais',
@@ -18,8 +18,8 @@ export const sobreOQueFazemosCopy = {
   en: {
     eyebrow: 'What we do',
     title: 'AAMIHE services',
-    showMore: 'More content available',
-    showLess: 'Hide content',
+    showMore: 'View partner logos',
+    showLess: 'Hide logos',
     text:
       'AAMIHE fosters relationships, exchange and cooperation among Methodist higher education institutions in Africa, collecting and sharing information on teaching, research and services. It supports curriculum development, postgraduate education, research and quality assurance, responding to the curricular and educational needs of Methodist universities and coordinating the means to meet them. It organizes forums for dissemination, exchange and policy dialogue, promoting gender equality and social equality in higher education policies. It maintains links with the international Methodist higher education community through cooperation with:',
     partnersTitle: 'International partners',
@@ -27,8 +27,8 @@ export const sobreOQueFazemosCopy = {
   fr: {
     eyebrow: 'Ce que nous faisons',
     title: 'Services de l’AAMIHE',
-    showMore: 'Plus de contenu',
-    showLess: 'Masquer le contenu',
+    showMore: 'Voir les logos des partenaires',
+    showLess: 'Masquer les logos',
     text:
       "L'AAMIHE promeut la relation, l'échange et la coopération entre les institutions d'enseignement supérieur méthodistes en Afrique, en recueillant et diffusant des informations sur l'enseignement, la recherche et les services. Elle soutient le développement curriculaire, les études post-universitaires, la recherche et l'assurance qualité, en répondant aux besoins curriculaires et éducatifs des universités méthodistes et en coordonnant les moyens pour y répondre. Elle organise des forums de diffusion, d'échange et de dialogue politique, en promouvant l'égalité de genre et l'égalité sociale dans les politiques d'enseignement supérieur. Elle entretient des liens avec la communauté méthodiste internationale de l'enseignement supérieur, en coopération avec :",
     partnersTitle: 'Partenaires internationaux',
@@ -75,7 +75,7 @@ function ChevronDownIcon() {
 export default function SobreOQueFazemos() {
   const { locale } = useLanguage();
   const t = sobreOQueFazemosCopy[locale];
-  const [moreOpen, setMoreOpen] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
   const moreId = useId();
 
   return (
@@ -90,9 +90,7 @@ export default function SobreOQueFazemos() {
           {t.title}
         </h2>
 
-        <div className={styles.body}>
-          <p className={styles.paragraph}>{t.text}</p>
-        </div>
+        <p className={styles.paragraph}>{t.text}</p>
 
         <div className={styles.expandArea}>
           <div

@@ -8,13 +8,58 @@
   box-sizing: border-box;
 }
 
-.introCard {
+.introCardFrame {
+  --intro-accent: #cca876;
+  --intro-accent-fade: rgba(204, 168, 118, 0.35);
+  --intro-radius: 16px;
+  --intro-border: 3px;
+  --intro-inner-radius: calc(var(--intro-radius) - var(--intro-border));
+  position: relative;
   width: 100%;
-  padding: clamp(40px, 5vw, 56px) 40px;
-  border-radius: 10px;
+  border-radius: var(--intro-radius);
+  padding: var(--intro-border) var(--intro-border) 0;
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Contorno único com border real — cantos pintados pelo motor do browser */
+.introCardFrame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  border-radius: inherit;
+  border: var(--intro-border) solid var(--intro-accent);
+  border-bottom: none;
+  pointer-events: none;
+  /* Degradê no fim das laterais: 72% / 88% / 100% dentro da metade superior */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 36%,
+    rgba(0, 0, 0, 0.35) 44%,
+    transparent 50%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 36%,
+    rgba(0, 0, 0, 0.35) 44%,
+    transparent 50%
+  );
+}
+
+.introCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: clamp(40px, 5vw, 56px) 40px;
+  border-radius:
+    var(--intro-inner-radius) var(--intro-inner-radius) var(--intro-radius) var(--intro-radius);
+  overflow: hidden;
+  box-sizing: border-box;
   background-color: #3d120f;
   background-image:
     linear-gradient(
@@ -26,8 +71,9 @@
     url('/Imagens/sobre-historia-bg.png');
   background-size: auto, cover;
   background-position: center, center;
-  background-repeat: no-repeat, no-repeat;
+  background-repeat: no-repeat;
   position: relative;
+  isolation: isolate;
 }
 
 .introCard::before {
@@ -38,6 +84,7 @@
   z-index: 0;
   width: min(520px, 55vw);
   height: min(520px, 55vw);
+  border-radius: 50%;
   background: radial-gradient(circle, rgba(204, 168, 118, 0.14) 0%, transparent 68%);
   pointer-events: none;
 }
@@ -106,20 +153,21 @@
   animation: chevronBounce 1.6s ease-in-out infinite;
 }
 
-.expandToggle:hover .expandToggleCircle,
-.expandToggle:focus-visible .expandToggleCircle {
+.expandToggle:hover .expandToggleCircle {
   border-color: #cca876;
+}
+
+.expandToggle:focus {
+  outline: none;
+}
+
+.expandToggle:focus-visible {
+  outline: none;
 }
 
 .expandToggleOpen .expandToggleCircle {
   transform: rotate(180deg);
   animation: none;
-}
-
-.expandToggle:focus-visible {
-  outline: 2px solid #cca876;
-  outline-offset: 4px;
-  border-radius: 50%;
 }
 
 @keyframes chevronBounce {
@@ -169,7 +217,7 @@
   justify-content: center;
   margin-top: 0;
   padding: 12px 28px;
-  background: var(--site-action);
+  background: var(--site-action-hover);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -181,7 +229,7 @@
 }
 
 .introCta:hover {
-  background: var(--site-action-hover);
+  background: var(--primary);
   color: #fff;
 }
 

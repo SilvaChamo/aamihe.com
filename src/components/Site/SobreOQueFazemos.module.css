@@ -52,7 +52,7 @@
 }
 
 .paragraph {
-  margin: 0 0 16px;
+  margin: 4px 0 16px;
   font-size: 15px;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.92);
@@ -68,6 +68,7 @@
   align-items: center;
   width: 100%;
   max-width: var(--partners-track);
+  margin-top: 20px;
   margin-inline: auto;
 }
 

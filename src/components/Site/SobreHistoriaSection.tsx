@@ -4,8 +4,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import styles from './SobreHistoriaSection.module.css';
 
-const PDF_ICON_URL =
-  'https://supabase.aamihe.com/storage/v1/object/public/aamihe-media/legacy/ref/Documentos%20gerais_files/PDF-1-1.png.webp';
+const PDF_ICON_URL = '/images/pdf-icon.webp';
 
 export const sobreHistoriaSectionCopy = {
   pt: {
@@ -81,8 +80,12 @@ export default function SobreHistoriaSection() {
   const t = sobreHistoriaSectionCopy[locale];
 
   return (
-    <section className={styles.section} aria-labelledby="sobre-estatutos-titulo">
-      <div id="sobre-estatutos" className={styles.statutesPanel}>
+    <section
+      id="sobre-estatutos"
+      className={styles.section}
+      aria-labelledby="sobre-estatutos-titulo"
+    >
+      <div className={styles.statutesPanel}>
         <div className={styles.statutesInner}>
           <div className={styles.statutesHeader}>
             <h2 id="sobre-estatutos-titulo" className={styles.statutesTitle}>

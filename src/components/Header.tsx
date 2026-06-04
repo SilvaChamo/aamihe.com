@@ -26,6 +26,7 @@ const translations = {
   pt: {
     homeAria: 'Ir para a página inicial',
     sobre: 'SOBRE-NÓS',
+    quemSomos: 'Quem somos',
     sobreSections: [
       { id: 'sobre-historia' as SobreSectionId, label: 'História' },
       { id: 'organograma' as SobreSectionId, label: 'Liderança' },
@@ -46,6 +47,7 @@ const translations = {
   fr: {
     homeAria: "Aller à la page d'accueil",
     sobre: 'À PROPOS',
+    quemSomos: 'Qui sommes-nous',
     sobreSections: [
       { id: 'sobre-historia' as SobreSectionId, label: 'Histoire' },
       { id: 'organograma' as SobreSectionId, label: 'Direction' },
@@ -66,6 +68,7 @@ const translations = {
   en: {
     homeAria: 'Go to homepage',
     sobre: 'ABOUT US',
+    quemSomos: 'Who we are',
     sobreSections: [
       { id: 'sobre-historia' as SobreSectionId, label: 'History' },
       { id: 'organograma' as SobreSectionId, label: 'Leadership' },
@@ -320,13 +323,22 @@ export default function Header() {
             </Link>
 
             <div className="nav-dropdown">
-              <Link
-                href="/sobre-nos"
-                className={`nav-link ${pathname === '/sobre-nos' ? 'active' : ''}`}
+              <span
+                className={`nav-link nav-link--dropdown-trigger ${pathname === '/sobre-nos' ? 'active' : ''}`}
+                aria-haspopup="menu"
               >
                 {t.sobre}
-              </Link>
+              </span>
               <ul className="nav-dropdown-menu" role="menu" aria-label={t.sobre}>
+                <li role="none">
+                  <Link
+                    href="/sobre-nos"
+                    className={`nav-dropdown-item ${pathname === '/sobre-nos' ? 'nav-dropdown-item--active' : ''}`}
+                    role="menuitem"
+                  >
+                    {t.quemSomos}
+                  </Link>
+                </li>
                 {t.sobreSections.map((section) => (
                   <li key={section.id} role="none">
                     <Link

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useId, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
 import SobreMissaoVisaoCards from '@/components/Site/SobreMissaoVisaoCards';
 import styles from './SobreHistoriaIntro.module.css';
 
@@ -77,8 +78,9 @@ export default function SobreHistoriaIntro() {
   return (
     <section id="sobre-historia" className={styles.section} aria-labelledby="sobre-historia-titulo">
       <div className="container">
-        <div className={styles.introCard}>
-          <div className={styles.introContent}>
+        <div className={styles.introCardFrame}>
+          <div className={styles.introCard}>
+            <div className={styles.introContent}>
             <span className={`site-eyebrow ${styles.eyebrow}`}>
               <span className="site-eyebrow-dash" aria-hidden="true" />
               {t.eyebrow}
@@ -114,9 +116,21 @@ export default function SobreHistoriaIntro() {
                 </span>
               </button>
 
-              <Link href="#sobre-estatutos" className={styles.introCta}>
+              <Link
+                href="/sobre-nos#sobre-estatutos"
+                className={styles.introCta}
+                onClick={(e) => {
+                  const onSobreNos =
+                    typeof window !== 'undefined' &&
+                    window.location.pathname.replace(/\/$/, '') === '/sobre-nos';
+                  if (!onSobreNos) return;
+                  e.preventDefault();
+                  scrollBelowSiteHeader('sobre-estatutos');
+                }}
+              >
                 {t.ctaStatutes}
               </Link>
+            </div>
             </div>
           </div>
         </div>

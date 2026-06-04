@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FileText, Play } from 'lucide-react';
+import { Play } from 'lucide-react';
+import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import OptimizedImage from '@/components/ui/OptimizedImage';
@@ -214,8 +215,13 @@ export default function GalleryGrid() {
                         <Play size={28} />
                       </div>
                     ) : (
-                      <div className="gallery-item-placeholder document">
-                        <FileText size={28} />
+                      <div className="gallery-item-doc-preview">
+                        <DocumentFilePreview
+                          url={item.url}
+                          title={item.title}
+                          mimeType={item.mime_type}
+                          layout="card"
+                        />
                       </div>
                     )}
                   </div>
