@@ -51,16 +51,28 @@ export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
   const items: SiteMediaRecord[] = [];
 
   if (isSupabaseConfigured()) {
-    items.push(...(await listSupabaseMedia()));
+    try {
+      items.push(...(await listSupabaseMedia()));
+    } catch (err) {
+      console.warn('Supabase media list skipped:', err);
+    }
   }
 
-  for (const item of await collectAllSiteImages()) {
-    items.push(item);
+  try {
+    for (const item of await collectAllSiteImages()) {
+      items.push(item);
+    }
+  } catch (err) {
+    console.warn('Public site images scan skipped:', err);
   }
 
-  const publishedGeral = await listDocuments({ category: 'geral', published: true });
-  for (const item of documentMediaRecords(publishedGeral)) {
-    items.push(item);
+  try {
+    const publishedGeral = await listDocuments({ category: 'geral', published: true });
+    for (const item of documentMediaRecords(publishedGeral)) {
+      items.push(item);
+    }
+  } catch (err) {
+    console.warn('Published documents for gallery skipped:', err);
   }
 
   return finalizeCatalog(items);

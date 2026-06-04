@@ -25,7 +25,12 @@ async function bootstrapIfEmpty(news: NewsItem[], categories: NewsCategory[]) {
 export async function GET() {
   try {
     const fromSupabase = await loadSiteContentFromSupabase();
-    const documents = await listDocuments();
+    let documents: Awaited<ReturnType<typeof listDocuments>> = [];
+    try {
+      documents = await listDocuments();
+    } catch (docErr) {
+      console.warn('Documents list skipped:', docErr);
+    }
 
     let news = fromSupabase?.news?.length ? fromSupabase.news : [];
     let categories = fromSupabase?.categories?.length ? fromSupabase.categories : NEWS_CATEGORIES;
@@ -34,7 +39,7 @@ export async function GET() {
     news = boot.news;
     categories = boot.categories;
 
-    if (news.length === 0 && !isSupabaseConfigured()) {
+    if (news.length === 0) {
       news = newsCatalog;
     }
 
@@ -48,7 +53,15 @@ export async function GET() {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ success: false, error: 'Erro ao carregar conteúdo' }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      supabase: false,
+      bootstrapped: false,
+      news: newsCatalog,
+      categories: NEWS_CATEGORIES,
+      documents: [],
+      fallback: true,
+    });
   }
 }
 

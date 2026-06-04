@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import OptimizedImage from '@/components/ui/OptimizedImage';
 import { useLanguage } from '@/context/LanguageContext';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import './NewsSection.css';
@@ -29,7 +30,14 @@ export default function NewsSection() {
           {displayedNews.map((item) => (
             <div key={item.id} className="news-card">
               <div className="news-card-image">
-                <img src={item.image} alt={item.title} className="news-card-photo" />
+                <OptimizedImage
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="news-card-photo"
+                  sizes="(max-width: 768px) 100vw, 280px"
+                  quality={75}
+                />
                 <span className="news-card-category">{item.category}</span>
               </div>
               <div className="news-card-content">

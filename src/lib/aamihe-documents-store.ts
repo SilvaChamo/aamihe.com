@@ -42,6 +42,10 @@ function admin() {
   return client;
 }
 
+function hasDocumentsAdmin(): boolean {
+  return Boolean(getSupabaseAdmin() && isSupabaseConfigured());
+}
+
 function rowToRecord(row: DocumentRow): SiteDocumentRecord {
   return {
     id: row.id,
@@ -110,22 +114,31 @@ export async function listDocuments(options?: {
   category?: SiteDocumentCategory;
   published?: boolean;
 }): Promise<SiteDocumentRecord[]> {
-  let query = admin().from(TABLE).select('*');
-
-  if (options?.category) {
-    query = query.eq('category', options.category);
-  }
-  if (options?.published !== undefined) {
-    query = query.eq('published', options.published);
+  if (!hasDocumentsAdmin()) {
+    return [];
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false });
-  if (error) {
-    console.error('[aamihe_documents] list:', error.message);
-    throw new Error('Não foi possível carregar documentos.');
-  }
+  try {
+    let query = admin().from(TABLE).select('*');
 
-  return ((data ?? []) as DocumentRow[]).map(rowToRecord);
+    if (options?.category) {
+      query = query.eq('category', options.category);
+    }
+    if (options?.published !== undefined) {
+      query = query.eq('published', options.published);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) {
+      console.error('[aamihe_documents] list:', error.message);
+      return [];
+    }
+
+    return ((data ?? []) as DocumentRow[]).map(rowToRecord);
+  } catch (err) {
+    console.error('[aamihe_documents] list failed:', err);
+    return [];
+  }
 }
 
 export async function listDocumentsForUser(user: UserProfile): Promise<SiteDocumentRecord[]> {

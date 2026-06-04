@@ -9,6 +9,7 @@ import React, {
   useState,
 } from 'react';
 import { NewsItem } from '@/data/news';
+import { newsCatalog } from '@/data/news-catalog';
 import { NEWS_CATEGORIES, NewsCategory, slugifyCategory } from '@/data/news-categories';
 
 interface NewsContextType {
@@ -80,6 +81,8 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         setCategories(data.categories);
       } catch (err) {
         console.error('Erro ao carregar notícias', err);
+        setNews(newsCatalog);
+        setCategories(NEWS_CATEGORIES);
       } finally {
         setLoading(false);
       }
