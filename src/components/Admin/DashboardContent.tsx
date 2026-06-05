@@ -189,6 +189,11 @@ export default function DashboardContent() {
                     <Activity /> {t.stats}
                   </Link>
                 </li>
+                <li>
+                  <Link href={`${base}/definicoes`} className="dashboard-list-item">
+                    <Settings /> {t.siteConfig}
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -203,11 +208,6 @@ export default function DashboardContent() {
                 <li>
                   <Link href={`${base}/media`} className="dashboard-list-item">
                     <Plus /> Biblioteca multimédia
-                  </Link>
-                </li>
-                <li>
-                  <Link href={`${base}/definicoes`} className="dashboard-list-item">
-                    <Settings /> {t.siteConfig}
                   </Link>
                 </li>
               </ul>

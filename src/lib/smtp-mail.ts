@@ -108,6 +108,7 @@ function createTransporter(): Mail {
     host,
     port,
     secure,
+    requireTLS: !secure && port === 587,
     connectionTimeout: 12_000,
     greetingTimeout: 12_000,
     socketTimeout: 20_000,
