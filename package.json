@@ -15,6 +15,7 @@
     "import-noticias": "node scripts/import-news-to-supabase.mjs",
     "import-gallery": "node scripts/import-wordpress-gallery.mjs",
     "sync-gallery-metadata": "npx tsx scripts/run-sync-gallery-metadata.ts",
+    "sync-gallery": "npm run sync-gallery-metadata",
     "migrate-documents": "node scripts/migrate-documents-notifications-to-supabase.mjs",
     "migrate-all-to-supabase": "node scripts/migrate-all-to-supabase-hetzner.mjs",
     "supabase-hetzner:migrate": "node scripts/migrate-aamihe-cloud-to-hetzner.mjs",

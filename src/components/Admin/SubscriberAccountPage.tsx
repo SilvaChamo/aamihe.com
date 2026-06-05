@@ -5,6 +5,7 @@ import { Mail, Globe, Edit2, Loader2 } from 'lucide-react';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import { displayNameTypeLabel, resolveUserDisplayName } from '@/lib/user-types';
 import { getGravatarUrl } from '@/lib/gravatar';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import './admin-wp.css';
 
 function displayName(user: {
@@ -40,6 +41,7 @@ export default function SubscriberAccountPage() {
   }
 
   const fullName = displayName(user);
+  const avatarSrc = resolveAvatarUrl(user.avatar);
 
   return (
     <div className="wp-admin-page wp-profile-page">
@@ -57,8 +59,8 @@ export default function SubscriberAccountPage() {
 
       <div className="wp-profile-card">
         <div className="wp-profile-header">
-          {user.avatar ? (
-            <img src={user.avatar} className="wp-profile-avatar" alt="" />
+          {avatarSrc ? (
+            <img src={avatarSrc} className="wp-profile-avatar" alt="" />
           ) : (
             <img src={getGravatarUrl(user.email, 150)} className="wp-profile-avatar" alt="" />
           )}

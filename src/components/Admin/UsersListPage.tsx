@@ -6,6 +6,7 @@ import { useAdminBase } from '@/lib/admin-base';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { adminFetch } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import './admin-wp.css';
 
 interface UserItem {
@@ -205,7 +206,7 @@ export default function UsersListPage() {
                   <td className="username-cell">
                     <div className="wp-user-cell">
                       <img
-                        src={user.avatar || getGravatarUrl(user.email, 80)}
+                        src={resolveAvatarUrl(user.avatar) || getGravatarUrl(user.email, 80)}
                         alt=""
                         className="wp-avatar"
                       />

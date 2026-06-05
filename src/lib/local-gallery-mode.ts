@@ -24,6 +24,12 @@ export function supabaseOrPathToGalleryUrl(url: string): string | null {
       const pathname = new URL(trimmed).pathname;
       const legacy = pathname.match(/\/legacy\/gallery\/(.+)$/i);
       if (legacy) return `/gallery/${decodeURIComponent(legacy[1])}`;
+
+      // Avatares, PDFs e outros buckets Supabase — manter URL completa (não /gallery/).
+      if (/\/storage\/v1\/object\/public\//i.test(pathname)) {
+        return null;
+      }
+
       filename = decodeURIComponent(pathname.split('/').pop() || '');
     } catch {
       return null;

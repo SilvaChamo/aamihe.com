@@ -5,16 +5,11 @@ import {
   type UserProfile,
   type UserRole,
 } from '@/lib/user-types';
-import { rewriteSupabaseStorageUrl } from '@/lib/supabase-asset-url';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 function normalizeAvatarUrl(url: string | null | undefined): string | null {
-  const trimmed = url?.trim();
-  if (!trimmed) return null;
-  if (trimmed.includes('/storage/v1/object/public/')) {
-    return rewriteSupabaseStorageUrl(trimmed);
-  }
-  return trimmed;
+  return resolveAvatarUrl(url);
 }
 
 export { USER_ROLES, type UserRole, type UserListItem, type UserProfile, isSubscriberRole } from '@/lib/user-types';

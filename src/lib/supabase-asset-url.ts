@@ -33,6 +33,16 @@ export function getSupabasePublicOrigin(): string {
   return url ? url.replace(/\/$/, '') : '';
 }
 
+/** Avatares (bucket avatars) — URL Supabase directa, sem rewrite para /gallery/. */
+export function resolveAvatarUrl(url: string | null | undefined): string | null {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('data:')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  return trimmed;
+}
+
+/** Reescreve só URLs legadas de galeria; avatares e documentos ficam intactos. */
 export function rewriteSupabaseStorageUrl(url: string): string {
   return supabaseOrPathToGalleryUrl(url) ?? url;
 }

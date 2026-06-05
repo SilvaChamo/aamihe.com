@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
-import { rewriteSupabaseStorageUrl } from '@/lib/supabase-asset-url';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
@@ -188,7 +188,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const accountAvatar =
     !sessionLoading && user?.avatar
-      ? rewriteSupabaseStorageUrl(user.avatar)
+      ? resolveAvatarUrl(user.avatar)
       : !sessionLoading && user?.email
         ? getGravatarUrl(user.email, 80)
         : null;

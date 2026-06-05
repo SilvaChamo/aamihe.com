@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Mail, Globe, FileText, Edit2, Loader2 } from 'lucide-react';
 import { useAdminBase } from '@/lib/admin-base';
 import { getGravatarUrl } from '@/lib/gravatar';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import './admin-wp.css';
 
 interface UserProfile {
@@ -100,8 +101,8 @@ export default function UserViewPage() {
 
       <div className="wp-profile-card">
         <div className="wp-profile-header">
-          {user.avatar ? (
-            <img src={user.avatar} className="wp-profile-avatar" alt="" />
+          {resolveAvatarUrl(user.avatar) ? (
+            <img src={resolveAvatarUrl(user.avatar)!} className="wp-profile-avatar" alt="" />
           ) : user.isAdmin ? (
             <div className="wp-profile-avatar wp-profile-avatar--admin">
               <span>
