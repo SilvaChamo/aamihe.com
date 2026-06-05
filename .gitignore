@@ -36,3 +36,4 @@ scripts/server/connection.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+aamihe.WordPress.*.xml
