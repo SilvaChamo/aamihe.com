@@ -4,6 +4,7 @@ import { loadSiteContentFromSupabase, saveSiteContentToSupabase } from '@/lib/su
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { newsCatalog } from '@/data/news-catalog';
 import { NEWS_CATEGORIES } from '@/data/news-categories';
+import { resolveNewsItemImages } from '@/lib/resolve-news-images';
 import type { NewsItem } from '@/data/news';
 import type { NewsCategory } from '@/data/news-categories';
 
@@ -12,8 +13,9 @@ async function bootstrapIfEmpty(news: NewsItem[], categories: NewsCategory[]) {
     return { news, categories, bootstrapped: false };
   }
 
+  const resolvedNews = await resolveNewsItemImages(newsCatalog);
   const payload = {
-    news: newsCatalog,
+    news: resolvedNews,
     categories: categories.length ? categories : NEWS_CATEGORIES,
     documents: [] as never[],
   };
@@ -43,6 +45,8 @@ export async function GET() {
       news = newsCatalog;
     }
 
+    news = await resolveNewsItemImages(news);
+
     return NextResponse.json({
       success: true,
       supabase: isSupabaseConfigured(),
@@ -53,11 +57,12 @@ export async function GET() {
     });
   } catch (error) {
     console.error(error);
+    const fallbackNews = await resolveNewsItemImages(newsCatalog);
     return NextResponse.json({
       success: true,
       supabase: false,
       bootstrapped: false,
-      news: newsCatalog,
+      news: fallbackNews,
       categories: NEWS_CATEGORIES,
       documents: [],
       fallback: true,

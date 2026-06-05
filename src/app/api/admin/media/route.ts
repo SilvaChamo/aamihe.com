@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { deleteMediaItem } from '@/lib/media-delete';
 import { buildAdminMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
-import { ensureGalleryFile } from '@/lib/media-storage';
 import { uploadFileToStore } from '@/lib/supabase-media';
 import type { MediaCategory } from '@/lib/site-media';
 import { inferUploadMimeType } from '@/lib/infer-upload-mime';
@@ -49,15 +48,14 @@ function mediaSource(subcategory: string): 'news' | 'upload' {
 }
 
 async function registerImageUrl(url: string, subcategory: string, title: string) {
-  let publicUrl = url;
-  if (subcategory === 'Notícias' && url.startsWith('/')) {
-    publicUrl = await ensureGalleryFile(url, title);
+  if (url.startsWith('/')) {
+    throw new Error('URLs locais não são suportados. Use upload para o Supabase Storage.');
   }
 
   return upsertMediaRecord({
     site_slug: 'aamihe',
-    title: title || titleFromUrl(publicUrl),
-    url: publicUrl,
+    title: title || titleFromUrl(url),
+    url,
     category: 'imagens',
     subcategory,
     mime_type: mimeFromUrl(publicUrl),

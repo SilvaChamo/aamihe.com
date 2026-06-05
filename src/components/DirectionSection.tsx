@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useEffect, useState } from 'react';
+import { siteGalleryImage } from '@/lib/site-gallery-image';
 import './DirectionSection.css';
 
 const boardMembers = [
@@ -177,7 +178,7 @@ export default function DirectionSection() {
                 <div key={index} className="member-slide">
                   <div className="member-card-inner">
                     <div className="member-image-wrapper">
-                      <img src={member.image} alt={member.name} className="member-photo" />
+                      <img src={siteGalleryImage(member.image)} alt={member.name} className="member-photo" />
                     </div>
                     <div className="member-details">
                       <h3 className="member-name">{member.name}</h3>

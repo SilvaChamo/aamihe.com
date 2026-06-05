@@ -1,101 +1,140 @@
-import { access, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import {
-  dedupeMediaRecords,
   mediaCatalogKey,
-  mediaUniqueBasename,
   mediaQualityScore,
+  mediaUniqueBasename,
 } from '@/lib/media-catalog-key';
+import {
+  localPathFromUrl,
+  sanitizeStorageRel,
+  stableMediaId,
+  uploadLocalFileToSupabase,
+} from '@/lib/media-local-upload';
+import {
+  resolveMediaDisplayUrl,
+  storageFileExists,
+  supabasePublicUrlFromStoragePath,
+  type MediaRecordWithStorage,
+} from '@/lib/resolve-media-url';
 import { deleteSupabaseMedia, upsertSupabaseMedia } from '@/lib/supabase-media';
+import { storagePathFromMediaUrl } from '@/lib/supabase-media';
 import { getSupabaseAdmin, isSupabaseConfigured, rowToMediaRecord } from '@/lib/supabase/server';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import type { SupabaseMediaRow } from '@/lib/supabase/server';
+import { publicFileExists } from '@/lib/reference-image-sync';
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const SKIP = /(?:^|\/)(pt_PT|fr_FR|en_GB)\.png$|Logo-Small|cropped-Logo|favicon/i;
 
-function stableMediaId(basename: string): string {
-  return `media_${createHash('sha1').update(basename).digest('hex').slice(0, 12)}`;
-}
+async function walkPublicImages(): Promise<Map<string, { absolute: string; rel: string }>> {
+  const byKey = new Map<string, { absolute: string; rel: string }>();
+  const publicRoot = path.join(process.cwd(), 'public');
 
-async function walkPublicSubdir(publicSubdir: string): Promise<Map<string, string>> {
-  const byBasename = new Map<string, string>();
-  const absoluteDir = path.join(process.cwd(), 'public', publicSubdir);
-  const urlBase = `/${publicSubdir.replace(/\\/g, '/')}`;
-
-  async function walk(currentDir: string, relInside: string) {
+  async function walk(dir: string, prefix: string) {
     let entries;
     try {
-      entries = await readdir(currentDir, { withFileTypes: true });
+      entries = await readdir(dir, { withFileTypes: true });
     } catch {
       return;
     }
-
     for (const entry of entries) {
-      const rel = relInside ? `${relInside}/${entry.name}` : entry.name;
-      const full = path.join(currentDir, entry.name);
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         await walk(full, rel);
         continue;
       }
       const ext = path.extname(entry.name).toLowerCase();
-      if (!IMAGE_EXT.has(ext)) continue;
-      const url = `${urlBase}/${rel}`.replace(/\/+/g, '/');
-      const key = mediaUniqueBasename(url);
+      if (!IMAGE_EXT.has(ext) || SKIP.test(rel)) continue;
+      const key = mediaUniqueBasename(`/${rel.replace(/\\/g, '/')}`);
       if (!key) continue;
-      byBasename.set(key, url);
+      const existing = byKey.get(key);
+      const stub = (relPath: string): SiteMediaRecord =>
+        ({ id: 'site_local', url: `/${relPath}` }) as SiteMediaRecord;
+      const score = mediaQualityScore(stub(rel));
+      const prevScore = existing ? mediaQualityScore(stub(existing.rel)) : -1;
+      if (!existing || score > prevScore) {
+        byKey.set(key, { absolute: full, rel });
+      }
     }
   }
 
-  await walk(absoluteDir, '');
-  return byBasename;
+  await walk(publicRoot, '');
+  return byKey;
 }
 
-export async function indexLocalMediaUrls(): Promise<Map<string, string>> {
-  const gallery = await walkPublicSubdir('gallery');
-  const uploads = await walkPublicSubdir('uploads/imagens');
-  const merged = new Map<string, string>(uploads);
-  for (const [key, url] of gallery) merged.set(key, url);
-  return merged;
+/** Uma chave por ficheiro — basename normalizado (local e Supabase). */
+function imageGroupKey(url: string, catalogKey?: string | null): string {
+  const fromUrl = mediaUniqueBasename(url);
+  if (fromUrl) return fromUrl;
+  const stored = catalogKey?.trim().toLowerCase();
+  if (stored && !stored.startsWith('/storage/')) return stored;
+  return mediaCatalogKey(url).toLowerCase();
 }
 
-function titleFromUrl(url: string): string {
-  return path
-    .basename(url)
-    .replace(/\.[^.]+$/, '')
-    .replace(/[-_]/g, ' ')
-    .trim();
+function catalogKeyForRow(row: SupabaseMediaRow): string {
+  return imageGroupKey(row.url, row.catalog_key);
 }
 
-function buildKeeper(
-  basename: string,
-  localUrl: string | undefined,
-  candidates: SiteMediaRecord[],
-): SiteMediaRecord {
-  const url = localUrl ?? candidates[0]?.url ?? '';
-  const best = [...candidates].sort((a, b) => mediaQualityScore(b) - mediaQualityScore(a))[0];
-  const subcategory = localUrl?.startsWith('/uploads/')
-    ? 'Notícias'
-    : localUrl?.startsWith('/gallery/')
-      ? localUrl.includes('news-')
-        ? 'Notícias'
-        : 'Galeria'
-      : best?.subcategory || 'Galeria';
+async function keeperFromExisting(candidates: SupabaseMediaRow[]): Promise<SiteMediaRecord | null> {
+  const sorted = [...candidates].sort(
+    (a, b) => mediaQualityScore(rowToMediaRecord(b)) - mediaQualityScore(rowToMediaRecord(a)),
+  );
 
-  return {
-    id: stableMediaId(basename),
-    site_slug: 'aamihe',
-    title: best?.title || titleFromUrl(url),
-    url,
-    category: 'imagens',
-    subcategory,
-    mime_type: best?.mime_type || 'image/jpeg',
-    size: best?.size,
-    source: best?.source === 'news' ? 'news' : 'upload',
-    published: true,
-    created_at: best?.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  for (const candidate of sorted) {
+    const storagePath = candidate.storage_path?.trim();
+    if (storagePath && (await storageFileExists(storagePath))) {
+      const url = supabasePublicUrlFromStoragePath(storagePath);
+      if (!url) continue;
+      return {
+        ...rowToMediaRecord(candidate),
+        id: stableMediaId(imageGroupKey(candidate.url, candidate.catalog_key)),
+        url,
+        storage_path: storagePath,
+        catalog_key: imageGroupKey(candidate.url, candidate.catalog_key),
+      };
+    }
+
+    const fromUrl = storagePathFromMediaUrl(candidate.url);
+    if (fromUrl && (await storageFileExists(fromUrl))) {
+      const url = supabasePublicUrlFromStoragePath(fromUrl);
+      if (!url) continue;
+      return {
+        ...rowToMediaRecord(candidate),
+        id: stableMediaId(imageGroupKey(candidate.url, candidate.catalog_key)),
+        url,
+        storage_path: fromUrl,
+        catalog_key: imageGroupKey(candidate.url, candidate.catalog_key),
+      };
+    }
+  }
+
+  const best = sorted[0];
+  if (!best) return null;
+
+  const local = localPathFromUrl(best.url);
+  if (local && (await publicFileExists(best.url))) {
+    const uploaded = await uploadLocalFileToSupabase(local.absolute, local.rel);
+    if (uploaded) return uploaded;
+  }
+
+  const display = await resolveMediaDisplayUrl(rowToMediaRecord(best) as MediaRecordWithStorage);
+  if (display?.startsWith('http')) {
+    const storage_path =
+      best.storage_path?.trim() ||
+      storagePathFromMediaUrl(display) ||
+      sanitizeStorageRel(mediaUniqueBasename(display));
+    return {
+      ...rowToMediaRecord(best),
+      id: stableMediaId(imageGroupKey(best.url, best.catalog_key)),
+      url: display,
+      storage_path,
+      catalog_key: imageGroupKey(best.url, best.catalog_key),
+    };
+  }
+
+  return null;
 }
 
 export type MediaCatalogCleanupResult = {
@@ -103,14 +142,19 @@ export type MediaCatalogCleanupResult = {
   supabaseAfter: number;
   deletedFromSupabase: number;
   localFilesIndexed: number;
+  uploadedToStorage: number;
   dryRun: boolean;
 };
 
+/**
+ * Uma imagem = uma entrada em site_media com URL do Supabase Storage.
+ * Remove duplicados, órfãos e URLs locais/antigas sem ficheiro.
+ */
 export async function cleanupMediaCatalog(options?: {
   dryRun?: boolean;
 }): Promise<MediaCatalogCleanupResult> {
   const dryRun = options?.dryRun ?? false;
-  const localByBasename = await indexLocalMediaUrls();
+  const localByKey = await walkPublicImages();
 
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase é obrigatório para limpeza do catálogo multimédia.');
@@ -125,58 +169,78 @@ export async function cleanupMediaCatalog(options?: {
   const allRows = (rows || []) as SupabaseMediaRow[];
   const supabaseBefore = allRows.length;
 
-  const byBasename = new Map<string, SiteMediaRecord[]>();
-  for (const row of allRows) {
-    const record = rowToMediaRecord(row);
-    const key = mediaUniqueBasename(record.url);
+  const imageRows = allRows.filter((r) => r.category === 'imagens');
+  const otherRows = allRows.filter((r) => r.category !== 'imagens');
+
+  const rowsByKey = new Map<string, SupabaseMediaRow[]>();
+  for (const row of imageRows) {
+    const key = catalogKeyForRow(row);
     if (!key) continue;
-    const list = byBasename.get(key) || [];
-    list.push(record);
-    byBasename.set(key, list);
+    const list = rowsByKey.get(key) || [];
+    list.push(row);
+    rowsByKey.set(key, list);
   }
 
   const keepers: SiteMediaRecord[] = [];
-  const keeperIds = new Set<string>();
+  let uploadedToStorage = 0;
 
-  for (const [basename, localUrl] of localByBasename) {
-    const candidates = byBasename.get(basename) || [];
-    const keeper = buildKeeper(basename, localUrl, candidates);
-    keepers.push(keeper);
-    keeperIds.add(keeper.id);
-    byBasename.delete(basename);
+  const allKeys = new Set<string>([...localByKey.keys(), ...rowsByKey.keys()]);
+
+  for (const key of allKeys) {
+    const local = localByKey.get(key);
+    const candidates = rowsByKey.get(key) || [];
+
+    let keeper: SiteMediaRecord | null = null;
+
+    if (candidates.length > 0) {
+      keeper = await keeperFromExisting(candidates);
+    }
+
+    if (!keeper && local) {
+      const uploaded = await uploadLocalFileToSupabase(local.absolute, local.rel);
+      if (uploaded) {
+        keeper = uploaded;
+        uploadedToStorage += 1;
+      }
+    }
+
+    if (keeper) keepers.push(keeper);
+
+    rowsByKey.delete(key);
   }
 
-  for (const [basename, candidates] of byBasename) {
-    const cloudOnly = candidates.filter((c) => c.url.includes('supabase'));
-    if (cloudOnly.length === 0) continue;
-    const keeper = buildKeeper(basename, undefined, cloudOnly);
-    keepers.push(keeper);
-    keeperIds.add(keeper.id);
+  const otherByUrl = new Map<string, SupabaseMediaRow>();
+  for (const row of otherRows) {
+    const k = row.url.trim().toLowerCase();
+    if (!otherByUrl.has(k)) otherByUrl.set(k, row);
+  }
+  for (const row of otherByUrl.values()) {
+    keepers.push(rowToMediaRecord(row));
   }
 
-  const finalKeepers = dedupeMediaRecords(keepers);
-  const deleteIds = allRows.map((r) => r.id).filter((id) => !keeperIds.has(id));
+  const keepIds = new Set(keepers.map((k) => k.id));
+  const deleteIds = allRows.map((r) => r.id).filter((id) => !keepIds.has(id));
 
   if (!dryRun) {
     for (const id of deleteIds) {
       await deleteSupabaseMedia(id);
     }
 
-    for (const record of finalKeepers) {
-      const row = allRows.find((r) => r.id === record.id);
+    for (const record of keepers) {
       await upsertSupabaseMedia({
         ...record,
-        catalog_key: mediaCatalogKey(record.url),
-        storage_path: row?.storage_path ?? null,
+        catalog_key: record.catalog_key ?? imageGroupKey(record.url, record.catalog_key),
+        storage_path: record.storage_path ?? storagePathFromMediaUrl(record.url),
       });
     }
   }
 
   return {
     supabaseBefore,
-    supabaseAfter: finalKeepers.length,
+    supabaseAfter: keepers.length,
     deletedFromSupabase: deleteIds.length,
-    localFilesIndexed: localByBasename.size,
+    localFilesIndexed: localByKey.size,
+    uploadedToStorage,
     dryRun,
   };
 }

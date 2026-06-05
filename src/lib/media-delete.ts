@@ -22,12 +22,6 @@ async function findRecordByUrl(url: string): Promise<SiteMediaRecord | null> {
     if (fromDb) return fromDb;
   }
 
-  if (normalized.startsWith('/')) {
-    const { collectAllSiteImages } = await import('@/lib/collect-site-images');
-    const collected = await collectAllSiteImages();
-    return collected.find((m) => m.url === normalized) ?? null;
-  }
-
   return null;
 }
 

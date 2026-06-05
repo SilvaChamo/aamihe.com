@@ -50,6 +50,19 @@ async function pushContentToServer(news: NewsItem[], categories: NewsCategory[])
   }
 }
 
+async function loadResolvedCatalogFallback(): Promise<NewsItem[]> {
+  try {
+    const res = await fetch('/api/public/news');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.news) && data.news.length > 0) {
+      return data.news;
+    }
+  } catch {
+    /* ignora */
+  }
+  return newsCatalog;
+}
+
 async function loadContentFromServer(): Promise<{ news: NewsItem[]; categories: NewsCategory[] }> {
   const res = await fetch('/api/admin/content');
   const data = await res.json();
@@ -81,7 +94,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         setCategories(data.categories);
       } catch (err) {
         console.error('Erro ao carregar notícias', err);
-        setNews(newsCatalog);
+        setNews(await loadResolvedCatalogFallback());
         setCategories(NEWS_CATEGORIES);
       } finally {
         setLoading(false);

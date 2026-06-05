@@ -55,6 +55,8 @@ export function rowToMediaRecord(row: SupabaseMediaRow): SiteMediaRecord {
     source: row.source as SiteMediaRecord['source'],
     source_id: row.source_id ?? undefined,
     published: row.published,
+    catalog_key: row.catalog_key,
+    storage_path: row.storage_path,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

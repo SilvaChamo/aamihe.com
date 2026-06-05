@@ -16,6 +16,8 @@ export type SiteMediaRecord = {
   published: boolean;
   created_at: string;
   updated_at: string;
+  catalog_key?: string;
+  storage_path?: string | null;
   alt_text?: string;
   caption?: string;
   description?: string;

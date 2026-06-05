@@ -5,7 +5,17 @@ import {
   type UserProfile,
   type UserRole,
 } from '@/lib/user-types';
+import { rewriteSupabaseStorageUrl } from '@/lib/supabase-asset-url';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
+
+function normalizeAvatarUrl(url: string | null | undefined): string | null {
+  const trimmed = url?.trim();
+  if (!trimmed) return null;
+  if (trimmed.includes('/storage/v1/object/public/')) {
+    return rewriteSupabaseStorageUrl(trimmed);
+  }
+  return trimmed;
+}
 
 export { USER_ROLES, type UserRole, type UserListItem, type UserProfile, isSubscriberRole } from '@/lib/user-types';
 
@@ -58,7 +68,7 @@ function rowToListItem(row: ProfileRow): UserListItem {
     alcunha: row.alcunha,
     displayNameType: row.display_name_type,
     articles: 0,
-    avatar: row.avatar_url || null,
+    avatar: normalizeAvatarUrl(row.avatar_url),
     isAdmin: row.role === 'Administrador',
   };
 }
@@ -75,7 +85,7 @@ export function rowToProfile(row: ProfileRow): UserProfile {
     role: row.role,
     bio: row.bio,
     website: row.website,
-    avatar: row.avatar_url || null,
+    avatar: normalizeAvatarUrl(row.avatar_url),
     isAdmin: row.role === 'Administrador',
     telefone: row.telefone,
     profissao: row.profissao,

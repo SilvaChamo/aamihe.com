@@ -2,13 +2,9 @@ import { listDocuments } from '@/lib/aamihe-documents-store';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { inferMediaCategory, inferMediaCategoryFromUrl } from '@/lib/site-media';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
-import { collectAllSiteImages } from '@/lib/collect-site-images';
-import { dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
-import {
-  repairDuplicateIds,
-  resolveMediaRecordFiles,
-  uniqueMediaIds,
-} from '@/lib/reference-image-sync';
+import { mediaCatalogKey } from '@/lib/media-catalog-key';
+import { dedupeMediaByCatalogKey, type MediaRecordWithStorage } from '@/lib/resolve-media-url';
+import { normalizeSupabaseMediaRecords } from '@/lib/supabase-media-url';
 import {
   getSupabaseMediaById,
   listSupabaseMedia,
@@ -42,29 +38,17 @@ export async function buildAdminMediaCatalog(): Promise<SiteMediaRecord[]> {
     throw new Error('Supabase é obrigatório para a biblioteca multimédia.');
   }
 
-  const items = await listSupabaseMedia({ all: true });
-  return finalizeCatalog(items);
+  const items = (await listSupabaseMedia({ all: true })) as MediaRecordWithStorage[];
+  return finalizeAdminCatalog(items);
 }
 
-/** Galeria pública: Supabase + legado WordPress (ficheiros) + documentos gerais publicados. */
+/** Galeria pública: Supabase (imagens/vídeos) + PDFs gerais publicados. */
 export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
-  const items: SiteMediaRecord[] = [];
-
-  if (isSupabaseConfigured()) {
-    try {
-      items.push(...(await listSupabaseMedia()));
-    } catch (err) {
-      console.warn('Supabase media list skipped:', err);
-    }
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase é obrigatório para a galeria multimédia.');
   }
 
-  try {
-    for (const item of await collectAllSiteImages()) {
-      items.push(item);
-    }
-  } catch (err) {
-    console.warn('Public site images scan skipped:', err);
-  }
+  const items: SiteMediaRecord[] = [...(await listSupabaseMedia())];
 
   try {
     const publishedGeral = await listDocuments({ category: 'geral', published: true });
@@ -78,10 +62,15 @@ export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
   return finalizeCatalog(items);
 }
 
-async function finalizeCatalog(items: SiteMediaRecord[]): Promise<SiteMediaRecord[]> {
-  const deduped = dedupeMediaRecords(repairDuplicateIds(uniqueMediaIds(items)));
-  const resolved = await resolveMediaRecordFiles(deduped);
-  return sortMediaCatalog(dedupeMediaRecords(resolved));
+function finalizeAdminCatalog(items: MediaRecordWithStorage[]): SiteMediaRecord[] {
+  const normalized = normalizeSupabaseMediaRecords(items);
+  const deduped = dedupeMediaByCatalogKey(normalized);
+  return sortMediaCatalog(deduped);
+}
+
+function finalizeCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
+  const normalized = normalizeSupabaseMediaRecords(items);
+  return sortMediaCatalog(dedupeMediaByCatalogKey(normalized as MediaRecordWithStorage[]));
 }
 
 function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
@@ -138,11 +127,6 @@ export async function findMediaRecordById(id: string): Promise<SiteMediaRecord |
   if (isSupabaseConfigured()) {
     const fromDb = await getSupabaseMediaById(id);
     if (fromDb) return fromDb;
-  }
-
-  if (id.startsWith('site_')) {
-    const collected = await collectAllSiteImages();
-    return collected.find((m) => m.id === id) ?? null;
   }
 
   return null;

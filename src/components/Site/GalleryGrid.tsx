@@ -208,7 +208,7 @@ export default function GalleryGrid() {
                         fill
                         className="gallery-item-image"
                         sizes={GALLERY_IMAGE_SIZES}
-                        quality={72}
+                        quality={85}
                       />
                     ) : kind === 'videos' ? (
                       <div className="gallery-item-placeholder video">
