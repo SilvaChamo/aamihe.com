@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { buildMediaCatalog } from '@/lib/media-registry';
 import type { MediaCategory } from '@/lib/site-media';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

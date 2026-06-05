@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import { siteGalleryImage } from '@/lib/site-gallery-image';
 import './BlogLayout.css';
 
 type BlogEntryCardProps = {
@@ -18,7 +19,7 @@ export default function BlogEntryCard({ id, title, image, date }: BlogEntryCardP
   } as const;
   const tx = t[locale];
   const href = `/noticias/${id}`;
-  const imageSrc = image?.trim() || null;
+  const imageSrc = image?.trim() ? siteGalleryImage(image) : null;
 
   return (
     <article className="blog-entry clr large-entry has-media">

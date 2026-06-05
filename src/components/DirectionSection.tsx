@@ -14,7 +14,7 @@ const boardMembers = [
       en: 'President',
       fr: 'Présidente',
     },
-    image: '/gallery/Vice-President-Anglophone-Rosemary.jpg.webp',
+    image: '/gallery/Vice-President-Anglophone-Rosemary-1-300x261.jpg',
     language: { pt: 'Inglês', en: 'English', fr: 'Anglais' }
   },
   {
@@ -24,7 +24,7 @@ const boardMembers = [
       en: 'Vice-President',
       fr: 'Vice-Président',
     },
-    image: '/gallery/3-Tiago-Caungo-Mutombo-Vice-President-Lusophone-compressed-scaled.jpg.webp',
+    image: '/gallery/3-Tiago-Caungo-Mutombo-Vice-President-Lusophone-compressed-scaled-600x522.jpg',
     language: { pt: 'Português', en: 'Portuguese', fr: 'Portugais' }
   },
   {
@@ -34,7 +34,7 @@ const boardMembers = [
       en: 'Vice-President',
       fr: 'Vice-Président',
     },
-    image: '/gallery/4-Rene-Gnalega-Vice-President-Francophone-compressed-scaled.jpg.webp',
+    image: '/gallery/4-Rene-Gnalega-Vice-President-Francophone-compressed-scaled-600x522.jpg',
     language: { pt: 'Francês', en: 'French', fr: 'Français' }
   },
   {
@@ -44,7 +44,7 @@ const boardMembers = [
       en: 'Vice-President',
       fr: 'Vice-Présidente',
     },
-    image: '/gallery/5-Yar-Donlah-Gonway-Gono-Vice-President-Anglophone-compressed-scaled.jpg.webp',
+    image: '/gallery/5-Yar-Donlah-Gonway-Gono-Vice-President-Anglophone-compressed-scaled-600x522.jpg',
     language: { pt: 'Inglês', en: 'English', fr: 'Anglais' }
   },
   {
@@ -54,7 +54,7 @@ const boardMembers = [
       en: 'Executive Officer',
       fr: 'Directeur Exécutif',
     },
-    image: '/gallery/7-Jamisse-Taimo-Consultants-Executive-Officer-compressed-scaled.jpg.webp',
+    image: '/gallery/7-Jamisse-Taimo-Consultants-Executive-Officer-compressed-scaled-600x522.jpg',
   },
   {
     name: 'Tukumbi Lumumba',
@@ -63,7 +63,7 @@ const boardMembers = [
       en: 'Consultant',
       fr: 'Consultant',
     },
-    image: '/gallery/9-Tukumbi-Lumumba-Kasongo-Consultants-compressed-scaled.jpg.webp',
+    image: '/gallery/9-Tukumbi-Lumumba-Kasongo-Consultants-compressed-scaled-600x522.jpg',
   },
   {
     name: 'Peter Mageto',
@@ -72,7 +72,7 @@ const boardMembers = [
       en: 'Secretary',
       fr: 'Secrétaire',
     },
-    image: '/gallery/6-Peter-Mageto-Secretary-compressed-scaled.jpg.webp',
+    image: '/gallery/6-Peter-Mageto-Secretary-compressed-scaled-600x522.jpg',
   },
 ];
 

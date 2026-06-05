@@ -15,24 +15,24 @@ import { type SiteSearchChunk, stripHtml } from '@/lib/site-search';
 type Locale = 'pt' | 'fr' | 'en';
 
 const SEARCH_SECTION_IMAGES: Record<string, string> = {
-  'home-conference': '/images/IMG_Bg2.jpg',
-  'home-about': '/Imagens/sobre-nos-banner.png',
+  'home-conference': '/gallery/IMG_Bg2.jpg',
+  'home-about': '/gallery/sobre-nos-banner.png',
   'home-direcao': boardPresident.image,
-  'conf-banner': '/images/IMG_Bg2.jpg',
-  'conf-theme': '/images/IMG_Bg2.jpg',
-  'conf-fees': '/images/IMG_Bg2.jpg',
-  'conf-submission': '/images/IMG_Bg2.jpg',
-  'conf-contact': '/images/IMG_Bg2.jpg',
-  'sobre-historia': '/Imagens/sobre-nos-banner.png',
+  'conf-banner': '/gallery/IMG_Bg2.jpg',
+  'conf-theme': '/gallery/IMG_Bg2.jpg',
+  'conf-fees': '/gallery/IMG_Bg2.jpg',
+  'conf-submission': '/gallery/IMG_Bg2.jpg',
+  'conf-contact': '/gallery/IMG_Bg2.jpg',
+  'sobre-historia': '/gallery/sobre-nos-banner.png',
   'sobre-direcao': boardPresident.image,
   'sobre-fazemos': '/gallery/Bg_serv.webp',
-  'sobre-estatutos': '/Imagens/sobre-nos-banner.png',
+  'sobre-estatutos': '/gallery/sobre-nos-banner.png',
   contact: DEFAULT_SITE_PAGE_CONFIG.contact.bannerImage,
 };
 
 function sectionImageFor(id: string): string | undefined {
   if (SEARCH_SECTION_IMAGES[id]) return SEARCH_SECTION_IMAGES[id];
-  if (id.startsWith('conf-')) return '/images/IMG_Bg2.jpg';
+  if (id.startsWith('conf-')) return '/gallery/IMG_Bg2.jpg';
   return undefined;
 }
 

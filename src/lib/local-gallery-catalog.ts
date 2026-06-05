@@ -1,6 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { findBestGalleryUrl } from '@/lib/gallery-match';
 import { mediaUniqueBasename } from '@/lib/media-catalog-key';
 import { isLocalGalleryMode, supabaseOrPathToGalleryUrl } from '@/lib/local-gallery-mode';
 import type { SiteMediaRecord } from '@/lib/site-media';
@@ -9,6 +10,7 @@ export { isLocalGalleryMode, supabaseOrPathToGalleryUrl };
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
 const GALLERY_DIR = 'gallery';
+const GALLERY_FALLBACK = '/gallery/Logo-Small.png.webp';
 
 function mimeFromName(name: string): string {
   const ext = path.extname(name).toLowerCase();
@@ -95,14 +97,20 @@ export async function collectGalleryImages(): Promise<SiteMediaRecord[]> {
 /** Resolve caminho de notícia/site para ficheiro em public/gallery. */
 export async function resolveToGalleryUrl(imagePath: string): Promise<string> {
   const trimmed = imagePath?.trim();
-  if (!trimmed) return '/gallery/Logo.webp';
+  if (!trimmed) return GALLERY_FALLBACK;
 
   const catalog = await collectGalleryImages();
+  const urls = catalog.map((item) => item.url);
+  const normalized = trimmed.startsWith('/images/')
+    ? trimmed.replace(/^\/images\//, '/gallery/')
+    : trimmed.startsWith('/Imagens/')
+      ? trimmed.replace(/^\/Imagens\//, '/gallery/')
+      : trimmed;
+
+  const fuzzy = findBestGalleryUrl(normalized, urls);
+  if (fuzzy) return fuzzy;
+
   const basename = mediaUniqueBasename(trimmed);
-
-  const exact = catalog.find((item) => item.url === trimmed || item.url.endsWith(trimmed));
-  if (exact) return exact.url;
-
   const byBasename = catalog.filter((item) => mediaUniqueBasename(item.url) === basename);
   if (byBasename.length > 0) {
     byBasename.sort((a, b) => (b.size || 0) - (a.size || 0));
@@ -111,10 +119,9 @@ export async function resolveToGalleryUrl(imagePath: string): Promise<string> {
 
   const direct = supabaseOrPathToGalleryUrl(trimmed);
   if (direct) {
-    const hit = catalog.find((item) => item.url === direct || item.url.endsWith(path.posix.basename(direct)));
-    if (hit) return hit.url;
+    const hit = findBestGalleryUrl(direct, urls);
+    if (hit) return hit;
   }
 
-  if (trimmed.startsWith('/gallery/')) return trimmed;
-  return '/gallery/Logo.webp';
+  return GALLERY_FALLBACK;
 }

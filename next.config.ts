@@ -84,6 +84,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: '/images/:path*',
+        destination: '/gallery/:path*',
+      },
+      {
+        source: '/Imagens/:path*',
+        destination: '/gallery/:path*',
+      },
+      {
         source: '/servicos',
         destination: '/servicos.html',
       },

@@ -1,11 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
+  isLocalMediaPath,
   isSupabaseStorageUrl,
   mediaCatalogKey,
   mediaQualityScore,
   mediaUniqueBasename,
 } from '@/lib/media-catalog-key';
+import { normalizeAssetUrl } from '@/lib/supabase-asset-url';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { getSupabaseAdmin, isSupabaseConfigured, MEDIA_BUCKET } from '@/lib/supabase/server';
 
@@ -47,6 +49,10 @@ export async function resolveMediaDisplayUrl(record: MediaRecordWithStorage): Pr
   const storedUrl = record.url?.trim();
   if (storedUrl && isSupabaseStorageUrl(storedUrl)) {
     return storedUrl;
+  }
+
+  if (storedUrl && isLocalMediaPath(storedUrl)) {
+    return normalizeAssetUrl(storedUrl);
   }
 
   return null;

@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { heroBannerCopy } from '@/i18n/messages';
+import { siteGalleryImage } from '@/lib/site-gallery-image';
 import './HeroBanner.css';
 
 const slides = [
@@ -11,21 +12,21 @@ const slides = [
     title: 'BEM–VINDO',
     description:
       'Associação Africana de Instituições Metodistas de Ensino Superior - AAIMES',
-    image: '/images/hero-banner-bg.jpg',
+    image: siteGalleryImage('/images/hero-banner-bg.jpg'),
   },
   {
     id: 'fr',
     title: 'BIENVENUE',
     description:
       'Association africaine des institutions méthodistes d’enseignement supérieur - AAIMDS',
-    image: '/images/França.jpg',
+    image: siteGalleryImage('/images/França.jpg'),
   },
   {
     id: 'en',
     title: 'WELCOME',
     description:
       'African Association of Methodist Institutions of Higher Education - AAMIHE',
-    image: '/images/London.jpg',
+    image: siteGalleryImage('/images/London.jpg'),
   },
 ] as const;
 

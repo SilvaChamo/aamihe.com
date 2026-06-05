@@ -4,7 +4,7 @@ import { collectGalleryImages, resolveToGalleryUrl } from '@/lib/local-gallery-c
 import { supabaseOrPathToGalleryUrl } from '@/lib/local-gallery-mode';
 import type { SiteMediaRecord } from '@/lib/site-media';
 
-const NEWS_IMAGE_FALLBACK = '/gallery/Logo.webp';
+const NEWS_IMAGE_FALLBACK = '/gallery/Logo-Small.png.webp';
 
 type MediaLookup = {
   byCatalogKey: Map<string, SiteMediaRecord>;

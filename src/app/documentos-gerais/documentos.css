@@ -1,6 +1,7 @@
 .main-content {
   background-color: var(--light);
   min-height: 600px;
+  overflow: visible;
 }
 
 .hero {
@@ -23,6 +24,16 @@
   grid-template-columns: 3fr 1fr;
   gap: 30px;
   padding: 40px 20px;
+}
+
+.gallery-section {
+  display: block;
+  padding: 40px 20px;
+  overflow: visible;
+}
+
+.gallery-page {
+  overflow: visible;
 }
 
 .content-area {

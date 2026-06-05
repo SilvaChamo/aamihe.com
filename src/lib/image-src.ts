@@ -1,8 +1,18 @@
+import { siteGalleryImage } from '@/lib/site-gallery-image';
 import { normalizeAssetUrl } from '@/lib/supabase-asset-url';
 
 /** Normaliza URL de imagem — galeria em public/gallery. */
 export function normalizeImageSrc(src: string | null | undefined): string | null {
-  return normalizeAssetUrl(src);
+  const normalized = normalizeAssetUrl(src);
+  if (!normalized) return null;
+  if (
+    normalized.startsWith('/gallery/') ||
+    normalized.startsWith('/images/') ||
+    normalized.startsWith('/Imagens/')
+  ) {
+    return siteGalleryImage(src ?? normalized);
+  }
+  return normalized;
 }
 
 /** Domínios permitidos para optimização via next/image. */

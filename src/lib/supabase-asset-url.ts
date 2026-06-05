@@ -7,8 +7,16 @@ export function normalizeAssetUrl(url: string | null | undefined): string | null
 
   if (trimmed.startsWith('data:')) return trimmed;
 
-  if (trimmed.startsWith('/gallery/') || trimmed.startsWith('/images/')) {
+  if (trimmed.startsWith('/gallery/')) {
     return trimmed;
+  }
+
+  if (trimmed.startsWith('/images/')) {
+    return trimmed.replace(/^\/images\//, '/gallery/');
+  }
+
+  if (trimmed.startsWith('/Imagens/')) {
+    return trimmed.replace(/^\/Imagens\//, '/gallery/');
   }
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {

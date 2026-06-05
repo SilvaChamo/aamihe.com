@@ -6,7 +6,7 @@ import { Play } from 'lucide-react';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
-import OptimizedImage from '@/components/ui/OptimizedImage';
+import { normalizeImageSrc } from '@/lib/image-src';
 import { useLanguage } from '@/context/LanguageContext';
 import { galleryCopy } from '@/i18n/messages';
 import './GalleryGrid.css';
@@ -140,7 +140,7 @@ export default function GalleryGrid() {
 
   return (
     <div className="gallery-grid-page">
-      <div className="gallery-toolbar">
+      <div className="gallery-toolbar" role="toolbar" aria-label={t.filterType}>
         <select
           className="gallery-type-select"
           value={typeFilter}
@@ -202,14 +202,27 @@ export default function GalleryGrid() {
                 <article key={item.id} className="gallery-item-card">
                   <div className="gallery-item-preview">
                     {kind === 'imagens' ? (
-                      <OptimizedImage
-                        src={item.url}
-                        alt={item.title}
-                        fill
-                        className="gallery-item-image"
-                        sizes={GALLERY_IMAGE_SIZES}
-                        quality={85}
-                      />
+                      (() => {
+                        const src = normalizeImageSrc(item.url);
+                        if (!src) {
+                          return (
+                            <div className="gallery-item-placeholder" aria-hidden="true">
+                              ?
+                            </div>
+                          );
+                        }
+                        return (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={src}
+                            alt={item.title}
+                            className="gallery-item-image"
+                            loading="lazy"
+                            decoding="async"
+                            sizes={GALLERY_IMAGE_SIZES}
+                          />
+                        );
+                      })()
                     ) : kind === 'videos' ? (
                       <div className="gallery-item-placeholder video">
                         <Play size={28} />
