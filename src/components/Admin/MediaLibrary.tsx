@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { adminFetch } from '@/lib/admin-auth';
 import { uploadMediaFiles } from '@/lib/persist-client-media';
 import { canDeleteMedia, dedupeMediaRecords, mediaCatalogKey } from '@/lib/media-catalog-key';
-import { rewriteSupabaseStorageUrl } from '@/lib/supabase-asset-url';
+import { normalizeImageSrc } from '@/lib/image-src';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { 
   Trash2, 
@@ -245,11 +245,7 @@ export default function MediaLibrary({
 
   const getPublicUrl = (file: MediaFile) => {
     const url = file.url?.trim() || '';
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-      return url.includes('/storage/v1/object/public/') ? rewriteSupabaseStorageUrl(url) : url;
-    }
-    return url;
+    return normalizeImageSrc(url) || url;
   };
 
   const fileDisplayKind = (file: MediaFile) =>

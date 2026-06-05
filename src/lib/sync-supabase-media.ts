@@ -1,6 +1,5 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { mediaUniqueBasename } from '@/lib/media-catalog-key';
 import { uploadLocalFileToSupabase } from '@/lib/media-local-upload';
 import { canonicalSupabaseMediaUrl } from '@/lib/supabase-media-url';
 import { deleteSupabaseMedia, upsertSupabaseMedia } from '@/lib/supabase-media';
@@ -8,7 +7,6 @@ import { getSupabaseAdmin, isSupabaseConfigured, MEDIA_BUCKET, rowToMediaRecord 
 import type { SupabaseMediaRow } from '@/lib/supabase/server';
 
 const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
-const SKIP = /(?:^|\/)(pt_PT|fr_FR|en_GB)\.png$|Logo-Small|cropped-Logo|favicon/i;
 
 async function listAllStoragePaths(admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>): Promise<Set<string>> {
   const paths = new Set<string>();
@@ -26,9 +24,10 @@ async function listAllStoragePaths(admin: NonNullable<ReturnType<typeof getSupab
   return paths;
 }
 
-async function walkLocalImages(): Promise<{ absolute: string; rel: string }[]> {
+/** Todas as imagens em public/gallery (inclui subpastas paises/, flags/, etc.). */
+async function walkGalleryImages(): Promise<{ absolute: string; rel: string }[]> {
   const files: { absolute: string; rel: string }[] = [];
-  const publicRoot = path.join(process.cwd(), 'public');
+  const galleryRoot = path.join(process.cwd(), 'public', 'gallery');
 
   async function walk(dir: string, prefix: string) {
     let entries;
@@ -45,12 +44,12 @@ async function walkLocalImages(): Promise<{ absolute: string; rel: string }[]> {
         continue;
       }
       const ext = path.extname(entry.name).toLowerCase();
-      if (!IMAGE_EXT.has(ext) || SKIP.test(rel)) continue;
-      files.push({ absolute: full, rel: rel.replace(/\\/g, '/') });
+      if (!IMAGE_EXT.has(ext)) continue;
+      files.push({ absolute: full, rel: `gallery/${rel}`.replace(/\\/g, '/') });
     }
   }
 
-  await walk(publicRoot, '');
+  await walk(galleryRoot, '');
   return files;
 }
 
@@ -62,10 +61,7 @@ export type SyncSupabaseMediaResult = {
   catalogAfter: number;
 };
 
-/**
- * Garante que cada imagem local existe no Supabase Storage e que site_media tem URL canónica.
- * Remove linhas órfãs (sem ficheiro no bucket).
- */
+/** Importa cada ficheiro de public/gallery para Supabase Storage + site_media. */
 export async function syncSupabaseMediaFromDisk(): Promise<SyncSupabaseMediaResult> {
   if (!isSupabaseConfigured()) {
     throw new Error('Supabase é obrigatório.');
@@ -74,7 +70,14 @@ export async function syncSupabaseMediaFromDisk(): Promise<SyncSupabaseMediaResu
   const admin = getSupabaseAdmin();
   if (!admin) throw new Error('Supabase não configurado.');
 
-  const localFiles = await walkLocalImages();
+  const localFiles = await walkGalleryImages();
+  const localStoragePaths = new Set(
+    localFiles.map((f) => {
+      const normalized = f.rel.replace(/\\/g, '/');
+      return normalized.startsWith('legacy/') ? normalized : `legacy/${normalized}`;
+    }),
+  );
+
   let uploaded = 0;
   let uploadFailed = 0;
 
@@ -91,20 +94,15 @@ export async function syncSupabaseMediaFromDisk(): Promise<SyncSupabaseMediaResu
   const { data: rows, error } = await admin.from('site_media').select('*').eq('category', 'imagens');
   if (error) throw new Error(error.message);
 
-  const localKeys = new Set(
-    localFiles.map((f) => mediaUniqueBasename(`/${f.rel}`)).filter(Boolean),
-  );
-
   const storagePaths = await listAllStoragePaths(admin);
   let prunedOrphans = 0;
 
   for (const row of (rows || []) as SupabaseMediaRow[]) {
     const storagePath = row.storage_path?.trim();
     const existsInStorage = storagePath ? storagePaths.has(storagePath) : false;
-    const basename = mediaUniqueBasename(row.url);
-    const existsLocally = basename ? localKeys.has(basename) : false;
+    const existsInGalleryImport = storagePath ? localStoragePaths.has(storagePath) : false;
 
-    if (!existsInStorage && !existsLocally) {
+    if (!existsInStorage && !existsInGalleryImport) {
       await deleteSupabaseMedia(row.id);
       prunedOrphans += 1;
       continue;

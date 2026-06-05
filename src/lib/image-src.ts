@@ -1,6 +1,6 @@
 import { normalizeAssetUrl } from '@/lib/supabase-asset-url';
 
-/** Normaliza URL de imagem — fonte única Supabase Storage. */
+/** Normaliza URL de imagem — galeria em public/gallery. */
 export function normalizeImageSrc(src: string | null | undefined): string | null {
   return normalizeAssetUrl(src);
 }

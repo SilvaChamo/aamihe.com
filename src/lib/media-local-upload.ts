@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { mediaCatalogKey, mediaUniqueBasename } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { upsertSupabaseMedia } from '@/lib/supabase-media';
 import { getSupabaseAdmin, isSupabaseConfigured, MEDIA_BUCKET } from '@/lib/supabase/server';
@@ -38,6 +37,7 @@ function titleFromName(name: string) {
 }
 
 export function subcategoryFor(relPath: string, filename: string) {
+  if (relPath.includes('gallery/paises/')) return 'Países membros';
   if (relPath.startsWith('gallery/')) {
     return filename.startsWith('news-') ? 'Notícias' : 'Galeria';
   }
@@ -74,8 +74,8 @@ export async function uploadLocalFileToSupabase(
   }
 
   const { data: publicData } = admin.storage.from(MEDIA_BUCKET).getPublicUrl(storagePathFinal);
-  const catalog_key = mediaCatalogKey(publicData.publicUrl);
-  const id = stableMediaId(mediaUniqueBasename(publicData.publicUrl) || catalog_key);
+  const id = stableMediaId(storagePathFinal);
+  const catalog_key = storagePathFinal.toLowerCase();
   const record: SiteMediaRecord = {
     id,
     site_slug: 'aamihe',
@@ -89,7 +89,7 @@ export async function uploadLocalFileToSupabase(
     published: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    catalog_key: mediaUniqueBasename(publicData.publicUrl) || catalog_key,
+    catalog_key,
     storage_path: storagePathFinal,
   };
 

@@ -3,13 +3,8 @@ import type { SiteMediaRecord } from '@/lib/site-media';
 import { inferMediaCategory, inferMediaCategoryFromUrl } from '@/lib/site-media';
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { mediaCatalogKey } from '@/lib/media-catalog-key';
-import { dedupeMediaByCatalogKey, type MediaRecordWithStorage } from '@/lib/resolve-media-url';
-import { normalizeSupabaseMediaRecords } from '@/lib/supabase-media-url';
-import {
-  getSupabaseMediaById,
-  listSupabaseMedia,
-  upsertSupabaseMedia,
-} from '@/lib/supabase-media';
+import { collectGalleryImages } from '@/lib/local-gallery-catalog';
+import { upsertSupabaseMedia } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { randomUUID } from 'node:crypto';
 
@@ -32,45 +27,25 @@ function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[
     }));
 }
 
-/** Biblioteca admin — fonte: Supabase `site_media`. */
+/** Biblioteca admin — fonte: public/gallery (todas as imagens do projecto). */
 export async function buildAdminMediaCatalog(): Promise<SiteMediaRecord[]> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase é obrigatório para a biblioteca multimédia.');
-  }
-
-  const items = (await listSupabaseMedia({ all: true })) as MediaRecordWithStorage[];
-  return finalizeAdminCatalog(items);
+  return sortMediaCatalog(await collectGalleryImages());
 }
 
-/** Galeria pública: Supabase (imagens/vídeos) + PDFs gerais publicados. */
+/** Galeria pública — public/gallery + PDFs gerais publicados. */
 export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase é obrigatório para a galeria multimédia.');
-  }
-
-  const items: SiteMediaRecord[] = [...(await listSupabaseMedia())];
+  const items: SiteMediaRecord[] = [...(await collectGalleryImages())];
 
   try {
     const publishedGeral = await listDocuments({ category: 'geral', published: true });
     for (const item of documentMediaRecords(publishedGeral)) {
       items.push(item);
     }
-  } catch (err) {
-    console.warn('Published documents for gallery skipped:', err);
+  } catch {
+    /* skip */
   }
 
-  return finalizeCatalog(items);
-}
-
-function finalizeAdminCatalog(items: MediaRecordWithStorage[]): SiteMediaRecord[] {
-  const normalized = normalizeSupabaseMediaRecords(items);
-  const deduped = dedupeMediaByCatalogKey(normalized);
-  return sortMediaCatalog(deduped);
-}
-
-function finalizeCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
-  const normalized = normalizeSupabaseMediaRecords(items);
-  return sortMediaCatalog(dedupeMediaByCatalogKey(normalized as MediaRecordWithStorage[]));
+  return sortMediaCatalog(items);
 }
 
 function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
@@ -79,6 +54,7 @@ function sortMediaCatalog(items: SiteMediaRecord[]): SiteMediaRecord[] {
   );
 }
 
+/** Guarda metadados em site_media (URL local); ficheiro fica em public/gallery. */
 export async function upsertMediaRecord(
   input: Omit<SiteMediaRecord, 'id' | 'created_at' | 'updated_at'> & {
     id?: string;
@@ -86,10 +62,6 @@ export async function upsertMediaRecord(
     catalog_key?: string;
   },
 ): Promise<SiteMediaRecord> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase é obrigatório para guardar multimédia.');
-  }
-
   const now = new Date().toISOString();
   const record: SiteMediaRecord = {
     id: input.id ?? `media_${Date.now()}_${randomUUID().slice(0, 6)}`,
@@ -110,26 +82,21 @@ export async function upsertMediaRecord(
     description: input.description,
   };
 
-  const saved = await upsertSupabaseMedia({
-    ...record,
-    storage_path: input.storage_path ?? null,
-    catalog_key: input.catalog_key ?? mediaCatalogKey(record.url),
-  });
-
-  if (!saved) {
-    throw new Error('Não foi possível guardar o registo multimédia.');
+  if (isSupabaseConfigured() && record.category === 'imagens') {
+    const saved = await upsertSupabaseMedia({
+      ...record,
+      storage_path: null,
+      catalog_key: input.catalog_key ?? mediaCatalogKey(record.url),
+    });
+    if (saved) return saved;
   }
 
-  return saved;
+  return record;
 }
 
 export async function findMediaRecordById(id: string): Promise<SiteMediaRecord | null> {
-  if (isSupabaseConfigured()) {
-    const fromDb = await getSupabaseMediaById(id);
-    if (fromDb) return fromDb;
-  }
-
-  return null;
+  const items = await collectGalleryImages();
+  return items.find((m) => m.id === id) ?? null;
 }
 
 export function categoryFromFile(file: { mimetype?: string; name: string }): 'imagens' | 'videos' | 'documentos' {

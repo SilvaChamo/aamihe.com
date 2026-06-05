@@ -48,17 +48,13 @@ function mediaSource(subcategory: string): 'news' | 'upload' {
 }
 
 async function registerImageUrl(url: string, subcategory: string, title: string) {
-  if (url.startsWith('/')) {
-    throw new Error('URLs locais não são suportados. Use upload para o Supabase Storage.');
-  }
-
   return upsertMediaRecord({
     site_slug: 'aamihe',
     title: title || titleFromUrl(url),
     url,
     category: 'imagens',
     subcategory,
-    mime_type: mimeFromUrl(publicUrl),
+    mime_type: mimeFromUrl(url),
     source: mediaSource(subcategory),
     published: true,
   });

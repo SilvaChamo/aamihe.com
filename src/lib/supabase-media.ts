@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto';
 import type { MediaCategory } from '@/lib/site-media';
 import type { SiteMediaRecord } from '@/lib/site-media';
 import { isLocalMediaPath, mediaCatalogKey, mediaUniqueBasename } from '@/lib/media-catalog-key';
+import { supabaseOrPathToGalleryUrl } from '@/lib/local-gallery-mode';
+import { storeGalleryBuffer, storeUploadBuffer } from '@/lib/media-storage';
 import {
   getSupabaseAdmin,
   isSupabaseConfigured,
@@ -224,6 +226,32 @@ export async function replaceExistingMediaFile(
   const now = new Date().toISOString();
   const nextTitle = title?.trim() || existing.title;
 
+  const localUrl =
+    (isLocalMediaPath(existing.url) ? existing.url : null) ??
+    supabaseOrPathToGalleryUrl(existing.url);
+
+  if (localUrl?.startsWith('/gallery/')) {
+    const filePath = path.join(process.cwd(), 'public', localUrl.replace(/^\//, ''));
+    await writeFile(filePath, buffer);
+    const updated: SiteMediaRecord = {
+      ...existing,
+      url: localUrl,
+      title: nextTitle,
+      mime_type: mimeType,
+      size: buffer.length,
+      updated_at: now,
+    };
+    if (isSupabaseConfigured()) {
+      const saved = await upsertSupabaseMedia({
+        ...updated,
+        storage_path: null,
+        catalog_key: mediaCatalogKey(localUrl),
+      });
+      if (saved) return saved;
+    }
+    return updated;
+  }
+
   if (admin && isSupabaseConfigured()) {
     let storagePath: string | null = null;
 
@@ -273,18 +301,6 @@ export async function replaceExistingMediaFile(
     }
   }
 
-  if (isLocalMediaPath(existing.url)) {
-    const filePath = path.join(process.cwd(), 'public', existing.url.replace(/^\//, ''));
-    await writeFile(filePath, buffer);
-    return {
-      ...existing,
-      title: nextTitle,
-      mime_type: mimeType,
-      size: buffer.length,
-      updated_at: now,
-    };
-  }
-
   throw new Error('Não foi possível substituir este ficheiro no armazenamento actual.');
 }
 
@@ -296,21 +312,39 @@ export async function uploadFileToStore(
   subcategory: string,
   options?: { catalogKey?: string },
 ): Promise<SiteMediaRecord> {
-  const admin = getSupabaseAdmin();
   const source = subcategory === 'Notícias' ? 'news' : 'upload';
-  const catalogKey = options?.catalogKey ?? mediaCatalogKey(originalName);
-  const existingByKey = catalogKey ? await getSupabaseMediaByCatalogKey(catalogKey) : null;
-  if (existingByKey?.url) {
-    const resolved = existingByKey.storage_path
-      ? admin?.storage.from(MEDIA_BUCKET).getPublicUrl(existingByKey.storage_path).data.publicUrl
-      : existingByKey.url;
-    if (resolved) {
-      return { ...existingByKey, url: resolved || existingByKey.url };
+  const id = `media_${Date.now()}_${randomUUID().slice(0, 6)}`;
+  const now = new Date().toISOString();
+
+  if (category === 'imagens') {
+    const saved = await storeGalleryBuffer(buffer, originalName, mimeType, subcategory);
+    const record: SiteMediaRecord = {
+      id,
+      site_slug: 'aamihe',
+      title: originalName,
+      url: saved.url,
+      category,
+      subcategory,
+      mime_type: mimeType,
+      size: buffer.length,
+      source,
+      published: true,
+      created_at: now,
+      updated_at: now,
+    };
+
+    if (isSupabaseConfigured()) {
+      const synced = await upsertSupabaseMedia({
+        ...record,
+        storage_path: null,
+        catalog_key: options?.catalogKey ?? mediaCatalogKey(saved.url),
+      });
+      if (synced) return synced;
     }
+    return record;
   }
 
-  const id = `media_${Date.now()}_${randomUUID().slice(0, 6)}`;
-
+  const admin = getSupabaseAdmin();
   if (admin && isSupabaseConfigured()) {
     const storagePath = storagePathForFile(originalName, subcategory);
     const { error: uploadError } = await admin.storage
@@ -330,22 +364,37 @@ export async function uploadFileToStore(
         size: buffer.length,
         source,
         published: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       };
 
-      const saved = await upsertSupabaseMedia({
+      const synced = await upsertSupabaseMedia({
         ...record,
         storage_path: storagePath,
-        catalog_key: catalogKey,
+        catalog_key: options?.catalogKey ?? mediaCatalogKey(publicData.publicUrl),
       });
-      if (saved) return saved;
-    } else {
-      const msg = uploadError.message || 'Erro desconhecido';
-      console.error('Supabase storage upload:', msg);
-      throw new Error(`Não foi possível guardar o ficheiro no Supabase: ${msg}`);
+      if (synced) return synced;
     }
   }
 
-  throw new Error('Não foi possível guardar o ficheiro no Supabase Storage.');
+  const fallback = await storeUploadBuffer(
+    buffer,
+    originalName,
+    category === 'videos' ? 'uploads/videos' : 'uploads/documentos',
+    mimeType,
+  );
+  return {
+    id,
+    site_slug: 'aamihe',
+    title: originalName,
+    url: fallback.url,
+    category,
+    subcategory,
+    mime_type: mimeType,
+    size: buffer.length,
+    source,
+    published: true,
+    created_at: now,
+    updated_at: now,
+  };
 }

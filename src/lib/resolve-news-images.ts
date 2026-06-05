@@ -1,12 +1,10 @@
 import type { NewsItem } from '@/data/news';
 import { mediaCatalogKey, mediaQualityScore, mediaUniqueBasename } from '@/lib/media-catalog-key';
-import { legacyPublicPathToSupabaseUrl, rewriteSupabaseStorageUrl } from '@/lib/supabase-asset-url';
+import { collectGalleryImages, resolveToGalleryUrl } from '@/lib/local-gallery-catalog';
+import { supabaseOrPathToGalleryUrl } from '@/lib/local-gallery-mode';
 import type { SiteMediaRecord } from '@/lib/site-media';
-import { listSupabaseMedia } from '@/lib/supabase-media';
-import { canonicalSupabaseMediaUrl } from '@/lib/supabase-media-url';
-import { isSupabaseConfigured } from '@/lib/supabase/server';
 
-const NEWS_IMAGE_FALLBACK = legacyPublicPathToSupabaseUrl('/gallery/Logo.webp') || '';
+const NEWS_IMAGE_FALLBACK = '/gallery/Logo.webp';
 
 type MediaLookup = {
   byCatalogKey: Map<string, SiteMediaRecord>;
@@ -25,18 +23,10 @@ async function buildMediaLookup(): Promise<MediaLookup> {
   const byCatalogKey = new Map<string, SiteMediaRecord>();
   const byBasename = new Map<string, SiteMediaRecord>();
 
-  if (!isSupabaseConfigured()) {
-    return { byCatalogKey, byBasename };
-  }
-
-  const items = await listSupabaseMedia({ all: true });
-  for (const item of items) {
-    if (item.category !== 'imagens') continue;
+  for (const item of await collectGalleryImages()) {
     remember(byCatalogKey, mediaCatalogKey(item.url), item);
     remember(byBasename, mediaUniqueBasename(item.url), item);
-    if (item.url.startsWith('/')) {
-      remember(byCatalogKey, item.url.toLowerCase(), item);
-    }
+    remember(byCatalogKey, item.url.toLowerCase(), item);
   }
 
   return { byCatalogKey, byBasename };
@@ -53,22 +43,15 @@ function pickFromLookup(lookup: MediaLookup, imagePath: string): SiteMediaRecord
   );
 }
 
-function resolveLocalNewsImage(imagePath: string, lookup: MediaLookup): string {
+async function resolveNewsImage(imagePath: string, lookup: MediaLookup): Promise<string> {
   const fromLibrary = pickFromLookup(lookup, imagePath);
-  if (fromLibrary) {
-    const displayUrl = canonicalSupabaseMediaUrl(fromLibrary);
-    if (displayUrl) return displayUrl;
-  }
-
-  const fromPath = legacyPublicPathToSupabaseUrl(imagePath);
-  if (fromPath) return fromPath;
-
-  return NEWS_IMAGE_FALLBACK || imagePath;
+  if (fromLibrary) return fromLibrary.url;
+  return resolveToGalleryUrl(imagePath);
 }
 
 export async function resolveNewsImageUrl(
   image: string | undefined,
-  title: string,
+  _title: string,
   lookup: MediaLookup,
 ): Promise<string> {
   const trimmed = image?.trim();
@@ -76,21 +59,18 @@ export async function resolveNewsImageUrl(
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     const fromLibrary = pickFromLookup(lookup, trimmed);
-    if (fromLibrary) {
-      const url = canonicalSupabaseMediaUrl(fromLibrary);
-      if (url) return url;
-    }
-    return rewriteSupabaseStorageUrl(trimmed);
+    if (fromLibrary) return fromLibrary.url;
+    return supabaseOrPathToGalleryUrl(trimmed) ?? trimmed;
   }
 
   if (trimmed.startsWith('/')) {
-    return resolveLocalNewsImage(trimmed, lookup);
+    return resolveNewsImage(trimmed, lookup);
   }
 
   return trimmed;
 }
 
-/** Garante URLs de imagem estáveis (Supabase quando possível). */
+/** Notícias: melhor imagem disponível em public/gallery. */
 export async function resolveNewsItemImages(news: NewsItem[]): Promise<NewsItem[]> {
   const lookup = await buildMediaLookup();
 

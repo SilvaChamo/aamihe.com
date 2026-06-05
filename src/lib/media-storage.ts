@@ -8,17 +8,38 @@ export function newsImageFilename(originalName: string): string {
   return `news-${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
 }
 
-/** Fallback local quando Supabase Storage não está disponível (desenvolvimento). */
+function extFromMime(mimeType: string, fallbackName: string): string {
+  if (mimeType === 'image/webp') return '.webp';
+  if (mimeType === 'image/png') return '.png';
+  if (mimeType === 'image/gif') return '.gif';
+  return path.extname(fallbackName) || '.jpg';
+}
+
+/** Guarda imagem em public/gallery (fonte única da galeria do site). */
+export async function storeGalleryBuffer(
+  buffer: Buffer,
+  originalName: string,
+  mimeType: string,
+  subcategory = 'Galeria',
+): Promise<{ url: string; filename: string }> {
+  const ext = extFromMime(mimeType, originalName);
+  const filename =
+    subcategory === 'Notícias'
+      ? newsImageFilename(originalName)
+      : `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`;
+  const dir = path.join(process.cwd(), 'public', 'gallery');
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, filename), buffer);
+  return { url: `/gallery/${filename}`, filename };
+}
+
+/** @deprecated Use storeGalleryBuffer */
 export async function storeImageBuffer(
   buffer: Buffer,
   originalName: string,
   mimeType: string,
 ): Promise<{ url: string; filename: string }> {
-  const filename = newsImageFilename(originalName);
-  const dir = path.join(process.cwd(), 'public', 'gallery');
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, filename), buffer);
-  return { url: `/gallery/${filename}`, filename };
+  return storeGalleryBuffer(buffer, originalName, mimeType, 'Notícias');
 }
 
 export async function storeUploadBuffer(
