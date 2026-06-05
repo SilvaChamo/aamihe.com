@@ -1,6 +1,11 @@
 import nodemailer from 'nodemailer';
 import type Mail from 'nodemailer/lib/mailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import {
+  getSmtpCredentialsForFrom,
+  listConfiguredSmtpAccounts,
+  parseFromEmail,
+} from '@/lib/smtp-accounts';
 
 export type SmtpMailInput = {
   from: string;
@@ -50,61 +55,80 @@ export function getSmtpConfigStatus(): SmtpConfigStatus {
       configured: false,
       mode: 'none',
       hint:
-        'Configure SMTP_HOST, SMTP_PORT, SMTP_USER e SMTP_PASS (conta de e-mail criada no DirectAdmin). No servidor Hetzner pode usar SMTP_HOST=127.0.0.1 e SMTP_PORT=25, ou SMTP_TRANSPORT=sendmail.',
+        'Configure SMTP_HOST, SMTP_PORT e credenciais (SMTP_USER/SMTP_PASS e opcionalmente SMTP_GERAL_PASS).',
     };
   }
 
   const port = smtpPort();
-  const user = process.env.SMTP_USER?.trim();
+  const accounts = listConfiguredSmtpAccounts();
   const needsAuth = !isLocalSmtpHost(host);
 
-  if (needsAuth && (!user || !process.env.SMTP_PASS?.trim())) {
+  if (needsAuth && accounts.length === 0) {
     return {
       configured: false,
       mode: 'smtp',
       host,
       port,
       hint:
-        'Defina SMTP_USER e SMTP_PASS com uma conta @aamihe.com do DirectAdmin (ex.: noreply@aamihe.com).',
+        'Defina SMTP_USER/SMTP_PASS (noreply@aamihe.com) e SMTP_GERAL_PASS (geral@aamihe.com) no DirectAdmin/Vercel.',
     };
   }
+
+  const accountList = accounts.map((a) => a.email).join(', ');
 
   return {
     configured: true,
     mode: 'smtp',
     host,
     port,
-    user: user || undefined,
+    user: accounts[0]?.user,
     hint: needsAuth
-      ? `SMTP autenticado em ${host}:${port} (${user}).`
-      : `SMTP local em ${host}:${port} (Exim do DirectAdmin). Remetente: ${from}`,
+      ? `SMTP em ${host}:${port} — contas: ${accountList || process.env.SMTP_USER}.`
+      : `SMTP local em ${host}:${port} (Exim). Remetente: ${from}`,
   };
 }
 
-let transporter: Mail | null = null;
+const transporterCache = new Map<string, Mail>();
 
-function createTransporter(): Mail {
-  const status = getSmtpConfigStatus();
-  if (!status.configured) {
-    throw new Error(status.hint || 'SMTP não configurado.');
-  }
-
-  if (status.mode === 'sendmail') {
-    return nodemailer.createTransport({
-      sendmail: true,
-      path: process.env.SENDMAIL_PATH?.trim() || '/usr/sbin/sendmail',
-      newline: 'unix',
-    });
-  }
-
+function createAuthenticatedTransporter(credentials: { user: string; pass: string }): Mail {
   const host = process.env.SMTP_HOST!.trim();
   const port = smtpPort();
   const secure =
     process.env.SMTP_SECURE === 'true' || port === 465 || process.env.SMTP_SECURE === '1';
-  const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim();
 
   const options: SMTPTransport.Options = {
+    host,
+    port,
+    secure,
+    requireTLS: !secure && port === 587,
+    auth: { user: credentials.user, pass: credentials.pass },
+    connectionTimeout: 12_000,
+    greetingTimeout: 12_000,
+    socketTimeout: 20_000,
+    tls:
+      process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'false'
+        ? { rejectUnauthorized: false }
+        : undefined,
+  };
+
+  return nodemailer.createTransport(options);
+}
+
+function createSendmailTransporter(): Mail {
+  return nodemailer.createTransport({
+    sendmail: true,
+    path: process.env.SENDMAIL_PATH?.trim() || '/usr/sbin/sendmail',
+    newline: 'unix',
+  });
+}
+
+function createLocalTransporter(): Mail {
+  const host = process.env.SMTP_HOST!.trim();
+  const port = smtpPort();
+  const secure =
+    process.env.SMTP_SECURE === 'true' || port === 465 || process.env.SMTP_SECURE === '1';
+
+  return nodemailer.createTransport({
     host,
     port,
     secure,
@@ -112,25 +136,52 @@ function createTransporter(): Mail {
     connectionTimeout: 12_000,
     greetingTimeout: 12_000,
     socketTimeout: 20_000,
-    tls: process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'false' ? { rejectUnauthorized: false } : undefined,
-  };
-
-  if (user && pass) {
-    options.auth = { user, pass };
-  }
-
-  return nodemailer.createTransport(options);
+    tls:
+      process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'false'
+        ? { rejectUnauthorized: false }
+        : undefined,
+  });
 }
 
-function getTransporter(): Mail {
-  if (!transporter) {
-    transporter = createTransporter();
+function getTransporterForFrom(from: string): Mail {
+  const status = getSmtpConfigStatus();
+  if (!status.configured) {
+    throw new Error(status.hint || 'SMTP não configurado.');
   }
-  return transporter;
+
+  if (status.mode === 'sendmail') {
+    const key = 'sendmail';
+    if (!transporterCache.has(key)) {
+      transporterCache.set(key, createSendmailTransporter());
+    }
+    return transporterCache.get(key)!;
+  }
+
+  const host = process.env.SMTP_HOST!.trim();
+  if (isLocalSmtpHost(host)) {
+    const key = 'local';
+    if (!transporterCache.has(key)) {
+      transporterCache.set(key, createLocalTransporter());
+    }
+    return transporterCache.get(key)!;
+  }
+
+  const credentials = getSmtpCredentialsForFrom(from);
+  if (!credentials) {
+    throw new Error(
+      `Sem credenciais SMTP para ${parseFromEmail(from)}. Configure SMTP_PASS ou SMTP_GERAL_PASS.`,
+    );
+  }
+
+  const cacheKey = credentials.email;
+  if (!transporterCache.has(cacheKey)) {
+    transporterCache.set(cacheKey, createAuthenticatedTransporter(credentials));
+  }
+  return transporterCache.get(cacheKey)!;
 }
 
 export async function sendSmtpMail(input: SmtpMailInput): Promise<string> {
-  const transport = getTransporter();
+  const transport = getTransporterForFrom(input.from);
   const info = await transport.sendMail({
     from: input.from,
     to: input.to,
@@ -144,8 +195,21 @@ export async function sendSmtpMail(input: SmtpMailInput): Promise<string> {
 }
 
 export async function verifySmtpConnection(): Promise<void> {
-  const transport = getTransporter();
-  if (typeof transport.verify === 'function') {
-    await transport.verify();
+  const accounts = listConfiguredSmtpAccounts();
+  if (accounts.length === 0) {
+    const transport = getTransporterForFrom(
+      process.env.SITE_EMAIL_FROM || 'AAMIHE <noreply@aamihe.com>',
+    );
+    if (typeof transport.verify === 'function') {
+      await transport.verify();
+    }
+    return;
+  }
+
+  for (const account of accounts) {
+    const transport = getTransporterForFrom(`${account.user} <${account.email}>`);
+    if (typeof transport.verify === 'function') {
+      await transport.verify();
+    }
   }
 }

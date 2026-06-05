@@ -58,17 +58,14 @@ export function getEmailProviderStatus(): EmailProviderStatus {
 }
 
 function smtpErrorMessage(error: unknown): string {
-  const smtpUser = process.env.SMTP_USER?.trim() || 'noreply@aamihe.com';
-
   if (error && typeof error === 'object') {
     const mailError = error as { message?: string; response?: string; responseCode?: number };
     const raw = [mailError.message, mailError.response].filter(Boolean).join(' — ');
     if (raw) {
       if (/535|incorrect authentication/i.test(raw)) {
         return (
-          `Autenticação SMTP recusada (535). Confirme no DirectAdmin a palavra-passe de ${smtpUser} ` +
-          `e actualize SMTP_PASS na Vercel (Settings → Environment Variables). ` +
-          `SMTP_USER deve ser o mesmo e-mail da conta (${smtpUser}).`
+          'Autenticação SMTP recusada (535). No DirectAdmin confirme as palavras-passe de ' +
+          'noreply@aamihe.com (SMTP_PASS) e geral@aamihe.com (SMTP_GERAL_PASS) e actualize na Vercel.'
         );
       }
       return raw;

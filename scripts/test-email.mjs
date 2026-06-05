@@ -60,8 +60,21 @@ if (transportMode === 'sendmail') {
   }
 
   const local = host === '127.0.0.1' || host === 'localhost';
-  if (!local && (!user || !pass)) {
-    console.error('Defina SMTP_USER e SMTP_PASS (conta de e-mail do DirectAdmin).');
+  const geralUser = process.env.SMTP_GERAL_USER?.trim() || 'geral@aamihe.com';
+  const geralPass = process.env.SMTP_GERAL_PASS?.trim();
+  const fromEmail = (from.match(/<([^>]+)>/) || [])[1]?.toLowerCase() || from.toLowerCase();
+
+  let authUser = user;
+  let authPass = pass;
+  if (fromEmail === geralUser.toLowerCase() && geralPass) {
+    authUser = geralUser;
+    authPass = geralPass;
+  }
+
+  if (!local && (!authUser || !authPass)) {
+    console.error(
+      'Defina SMTP_USER/SMTP_PASS (noreply) e/ou SMTP_GERAL_PASS (geral) no DirectAdmin.',
+    );
     process.exit(1);
   }
 
@@ -69,7 +82,8 @@ if (transportMode === 'sendmail') {
     host,
     port,
     secure,
-    auth: user && pass ? { user, pass } : undefined,
+    requireTLS: !secure && port === 587,
+    auth: authUser && authPass ? { user: authUser, pass: authPass } : undefined,
   });
 }
 
