@@ -192,7 +192,7 @@ export default function ConferenceParticipantRegisterForm({
 
       <p className={styles.loginHint}>
         {labels.loginHint}{' '}
-        <Link href="/dashboard" className={styles.loginLink}>
+        <Link href="/dashboard/login?next=/dashboard" className={styles.loginLink}>
           {labels.loginLink}
         </Link>
       </p>

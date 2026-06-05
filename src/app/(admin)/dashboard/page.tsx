@@ -1,15 +1,21 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import DashboardContent from '@/components/Admin/DashboardContent';
 import SubscriberWelcomeContent from '@/components/Admin/SubscriberWelcomeContent';
 import { useSessionUser } from '@/hooks/useSessionUser';
-import { useAdminBase } from '@/lib/admin-base';
 
 function DashboardPageInner() {
-  const base = useAdminBase();
-  const { loading, isSubscriber } = useSessionUser();
+  const router = useRouter();
+  const { loading, isSubscriber, isStaff } = useSessionUser();
+
+  useEffect(() => {
+    if (!loading && isStaff && !isSubscriber) {
+      router.replace('/admin/dashboard');
+    }
+  }, [loading, isStaff, isSubscriber, router]);
 
   if (loading) {
     return (
@@ -19,8 +25,16 @@ function DashboardPageInner() {
     );
   }
 
-  if (base === '/dashboard' && isSubscriber) {
+  if (isSubscriber) {
     return <SubscriberWelcomeContent />;
+  }
+
+  if (isStaff) {
+    return (
+      <div className="admin-main-content" aria-busy="true" aria-label="A redirecionar">
+        <AdminPanelLoading variant="dashboard" />
+      </div>
+    );
   }
 
   return <DashboardContent />;

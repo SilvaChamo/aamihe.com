@@ -373,7 +373,7 @@ export default function Header() {
           </nav>
           
           <div className="header-actions">
-            <Link href="/dashboard/login" className="login-btn">
+            <Link href="/dashboard/login?next=/dashboard" className="login-btn">
               {t.entrar}
             </Link>
 

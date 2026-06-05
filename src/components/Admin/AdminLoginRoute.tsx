@@ -14,7 +14,7 @@ function AdminLoginContent() {
   const initialMode =
     action === 'new-password' ? 'new-password' : action === 'register' ? 'register' : 'login';
   const redirectTo =
-    next && next.startsWith('/') && !next.startsWith('//') ? next : '/admin/dashboard';
+    next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
