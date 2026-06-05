@@ -34,8 +34,22 @@ const to = process.argv[2]?.trim();
 const from = process.env.SITE_EMAIL_FROM?.trim() || 'AAMIHE <noreply@aamihe.com>';
 const transportMode = process.env.SMTP_TRANSPORT?.trim().toLowerCase();
 
+function looksLikePlaceholder(value) {
+  const v = String(value || '').trim();
+  if (!v) return true;
+  return (
+    (v.startsWith('<') && v.endsWith('>')) ||
+    /senha_da_conta|palavra-passe|password|CHAVE|example|your_|sua_senha/i.test(v)
+  );
+}
+
 if (!to) {
   console.error('Uso: node scripts/test-email.mjs destino@exemplo.com');
+  console.error('');
+  console.error('Testar noreply:');
+  console.error("  SITE_EMAIL_FROM='AAMIHE <noreply@aamihe.com>' node scripts/test-email.mjs seu@email.com");
+  console.error('Testar geral:');
+  console.error("  SITE_EMAIL_FROM='AAMIHE <geral@aamihe.com>' node scripts/test-email.mjs seu@email.com");
   process.exit(1);
 }
 
@@ -78,6 +92,17 @@ if (transportMode === 'sendmail') {
     process.exit(1);
   }
 
+  if (!local && looksLikePlaceholder(authPass)) {
+    const varName =
+      authUser?.toLowerCase() === geralUser.toLowerCase() ? 'SMTP_GERAL_PASS' : 'SMTP_PASS';
+    console.error(`A variável ${varName} em .env.local ainda é um placeholder.`);
+    console.error('No DirectAdmin → Email Accounts → repor palavra-passe da conta e colar em .env.local.');
+    console.error(`Conta em teste: ${authUser}`);
+    process.exit(1);
+  }
+
+  console.log(`A testar SMTP como ${authUser} @ ${host}:${port} …`);
+
   transporter = nodemailer.createTransport({
     host,
     port,
@@ -91,7 +116,13 @@ try {
   await transporter.verify();
   console.log('Ligação SMTP OK');
 } catch (error) {
-  console.error('Falha na ligação SMTP:', error instanceof Error ? error.message : error);
+  const msg = error instanceof Error ? error.message : String(error);
+  console.error('Falha na ligação SMTP:', msg);
+  if (/535|incorrect authentication/i.test(msg)) {
+    console.error('');
+    console.error('Erro 535 = palavra-passe incorrecta no DirectAdmin ou variável errada na Vercel.');
+    console.error('Confirme a palavra-passe em DirectAdmin → Email Accounts e actualize .env.local / Vercel.');
+  }
   process.exit(1);
 }
 
