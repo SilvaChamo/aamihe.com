@@ -32,7 +32,7 @@ export function SessionUserProvider({ children }: { children: ReactNode }) {
   const [isAdminSecret, setIsAdminSecret] = useState(false);
   const [loading, setLoading] = useState(() => {
     if (typeof window === 'undefined') return true;
-    return !getSessionProfile();
+    return !isSessionProfileCacheFresh();
   });
 
   useEffect(() => {

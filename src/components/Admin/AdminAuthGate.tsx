@@ -3,9 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
+import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
 import { SessionUserProvider } from '@/hooks/useSessionUser';
+import { getSessionProfile } from '@/lib/admin-auth';
+
 export default function AdminAuthGate({ children }: { children: React.ReactNode }) {
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [authorized, setAuthorized] = useState<boolean | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return getSessionProfile() ? true : null;
+  });
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -28,7 +34,7 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
   }, []);
 
   if (authorized === null) {
-    return null;
+    return <AdminLoginSkeleton />;
   }
 
   if (!authorized) {

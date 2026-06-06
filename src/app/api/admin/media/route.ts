@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { deleteMediaItem } from '@/lib/media-delete';
-import { buildAdminMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
+import { buildAdminMediaCatalog, invalidateGalleryCatalogCache, upsertMediaRecord } from '@/lib/media-registry';
 import { uploadFileToStore } from '@/lib/supabase-media';
 import type { MediaCategory } from '@/lib/site-media';
 import { inferUploadMimeType } from '@/lib/infer-upload-mime';
@@ -125,6 +125,7 @@ export async function POST(request: Request) {
           subcategory,
           String(form.get('title') || 'Imagem'),
         );
+        invalidateGalleryCatalogCache();
         return NextResponse.json({ success: true, media: record });
       }
     }
@@ -145,6 +146,7 @@ export async function POST(request: Request) {
       }
       const record = await uploadFileToStore(buffer, title, mimeType, 'imagens', subcategory);
       await upsertMediaRecord(record);
+      invalidateGalleryCatalogCache();
       return NextResponse.json({ success: true, media: record });
     }
 
@@ -166,6 +168,7 @@ export async function POST(request: Request) {
       uploaded.push(record);
     }
 
+    invalidateGalleryCatalogCache();
     return NextResponse.json({
       success: true,
       media: uploaded.length === 1 ? uploaded[0] : uploaded,
@@ -225,6 +228,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: result.error }, { status: result.status });
     }
 
+    invalidateGalleryCatalogCache();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

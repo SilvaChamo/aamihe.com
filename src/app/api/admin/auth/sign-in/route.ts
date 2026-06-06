@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { getSupabaseAdmin, hasSupabaseServiceRole } from '@/lib/supabase/server';
 import { safeErrorMessage } from '@/lib/safe-error-message';
 import { clearStaleSupabaseAuthCookiesFromRequest } from '@/lib/supabase-auth-cookies';
-import { findUserByLogin, getUserById } from '@/lib/users';
+import { findUserByLogin, getUserById, rowToProfile } from '@/lib/users';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     if (!login || !password) {
       return NextResponse.json(
-        { success: false, error: 'Email, utilizador, alcunha e senha são obrigatórios.' },
+        { success: false, error: 'Email, nome, alcunha e senha são obrigatórios.' },
         { status: 400 },
       );
     }
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            'Não encontrámos conta AAMIHE com esse email, utilizador ou alcunha. Registe-se ou use o email completo.',
+            'Não encontrámos conta AAMIHE com esse email, nome, alcunha ou utilizador. Registe-se ou use o email completo.',
         },
         { status: 401 },
       );
@@ -87,13 +87,16 @@ export async function POST(request: Request) {
           success: false,
           error: wrongPassword
             ? 'Senha incorrecta. Use a mesma senha definida para a sua conta AAMIHE ou «Repor senha».'
-            : 'Email, utilizador, alcunha ou senha incorrectos.',
+            : 'Email, nome, alcunha ou senha incorrectos.',
         },
         { status: 401 },
       );
     }
 
-    const user = await getUserById(data.user.id);
+    const user =
+      profile && profile.id === data.user.id
+        ? rowToProfile(profile)
+        : await getUserById(data.user.id);
     if (!user) {
       return NextResponse.json(
         {

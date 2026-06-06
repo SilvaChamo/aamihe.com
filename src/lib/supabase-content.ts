@@ -35,6 +35,21 @@ export async function loadSiteContentFromSupabase(): Promise<SiteContentPayload 
   };
 }
 
+/** Contagem leve para estatísticas do painel (sem carregar arrays completos). */
+export async function countNewsFromSupabase(): Promise<number> {
+  const admin = getSupabaseAdmin();
+  if (!admin || !isSupabaseConfigured()) return 0;
+
+  const { data, error } = await admin
+    .from('site_content')
+    .select('news')
+    .eq('site_slug', SITE_SLUG)
+    .maybeSingle();
+
+  if (error || !data?.news) return 0;
+  return Array.isArray(data.news) ? data.news.length : 0;
+}
+
 export async function saveSiteContentToSupabase(payload: SiteContentPayload): Promise<boolean> {
   const admin = getSupabaseAdmin();
   if (!admin || !isSupabaseConfigured()) return false;

@@ -1,6 +1,8 @@
 'use client';
 
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
+import { getSessionProfile, isSessionProfileCacheFresh } from '@/lib/admin-auth';
+import { isSubscriberRole } from '@/lib/user-types';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
@@ -21,6 +23,19 @@ function AdminLoginContent() {
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session || initialMode === 'new-password' || cancelled) return;
+
+      if (isSessionProfileCacheFresh()) {
+        const profile = getSessionProfile();
+        const target =
+          profile && isSubscriberRole(profile.role)
+            ? '/dashboard'
+            : redirectTo.startsWith('/dashboard')
+              ? redirectTo
+              : '/dashboard';
+        router.replace(target);
+        return;
+      }
+
       const me = await fetch('/api/admin/users/me', { credentials: 'same-origin' });
       if (cancelled) return;
       if (me.ok) {

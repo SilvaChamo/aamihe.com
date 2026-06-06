@@ -16,6 +16,9 @@ export { USER_ROLES, type UserRole, type UserListItem, type UserProfile, isSubsc
 
 const TABLE = 'aamihe_user_profiles';
 
+const PROFILE_SELECT =
+  'id,username,email,first_name,last_name,alcunha,display_name_type,role,bio,website,avatar_url,telefone,profissao,cargo,created_at,updated_at';
+
 type ProfileRow = {
   id: string;
   username: string;
@@ -158,20 +161,35 @@ function escapeIlike(value: string): string {
   return value.replace(/[%_\\]/g, '\\$&');
 }
 
-async function findProfileByColumn(
+async function fetchProfiles(
   admin: ReturnType<typeof adminClient>,
-  column: keyof ProfileRow,
-  value: string,
-  pattern?: string,
-): Promise<ProfileRow | undefined> {
-  const filter = pattern ?? value;
-  const { data, error } = await admin.from(TABLE).select('*').ilike(column, filter).limit(2);
+  apply: (query: ReturnType<ReturnType<typeof adminClient>['from']>) => PromiseLike<{
+    data: ProfileRow[] | null;
+    error: { message: string } | null;
+  }>,
+): Promise<ProfileRow[]> {
+  const { data, error } = await apply(admin.from(TABLE));
   if (error) {
-    console.error(`[findUserByLogin] ${column}:`, error.message);
+    console.error('[findUserByLogin]:', error.message);
     throw new Error('Não foi possível validar as credenciais. Tente novamente em instantes.');
   }
-  const rows = (data || []) as ProfileRow[];
-  if (rows.length === 1) return rows[0];
+  return (data || []) as ProfileRow[];
+}
+
+function pickUnique(rows: ProfileRow[]): ProfileRow | undefined {
+  return rows.length === 1 ? rows[0] : undefined;
+}
+
+function matchDisplayOrFullName(rows: ProfileRow[], value: string): ProfileRow | undefined {
+  const displayMatches = rows.filter((row) => getDisplayName(row).toLowerCase() === value);
+  if (displayMatches.length === 1) return displayMatches[0];
+
+  const fullNameMatches = rows.filter((row) => {
+    const combined = `${row.first_name} ${row.last_name}`.trim().toLowerCase();
+    return combined === value;
+  });
+  if (fullNameMatches.length === 1) return fullNameMatches[0];
+
   return undefined;
 }
 
@@ -182,51 +200,57 @@ export async function findUserByLogin(login: string): Promise<ProfileRow | undef
   const admin = adminClient();
   const partial = `%${escapeIlike(value)}%`;
 
-  const byEmail = await findProfileByColumn(admin, 'email', value);
-  if (byEmail) return byEmail;
+  const exactQueries = await Promise.all([
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('email', value).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('username', value).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('alcunha', value).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('first_name', value).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('last_name', value).limit(2)),
+  ]);
 
-  const byUsername = await findProfileByColumn(admin, 'username', value);
-  if (byUsername) return byUsername;
-
-  const byUsernamePartial = await findProfileByColumn(admin, 'username', value, partial);
-  if (byUsernamePartial) return byUsernamePartial;
-
-  const byAlcunha = await findProfileByColumn(admin, 'alcunha', value);
-  if (byAlcunha) return byAlcunha;
-
-  const byAlcunhaPartial = await findProfileByColumn(admin, 'alcunha', value, partial);
-  if (byAlcunhaPartial) return byAlcunhaPartial;
-
-  const byFirstName = await findProfileByColumn(admin, 'first_name', value);
-  if (byFirstName) return byFirstName;
-
-  const byLastName = await findProfileByColumn(admin, 'last_name', value);
-  if (byLastName) return byLastName;
-
-  const byFirstNamePartial = await findProfileByColumn(admin, 'first_name', value, partial);
-  if (byFirstNamePartial) return byFirstNamePartial;
-
-  const byLastNamePartial = await findProfileByColumn(admin, 'last_name', value, partial);
-  if (byLastNamePartial) return byLastNamePartial;
-
-  const { data: allRows, error: listError } = await admin.from(TABLE).select('*');
-  if (listError) {
-    console.error('[findUserByLogin] list:', listError.message);
-    throw new Error('Não foi possível validar as credenciais. Tente novamente em instantes.');
+  for (const rows of exactQueries) {
+    const match = pickUnique(rows);
+    if (match) return match;
   }
 
-  const displayMatches = (allRows as ProfileRow[]).filter(
-    (row) => getDisplayName(row).toLowerCase() === value,
+  const nameParts = value.split(/\s+/).filter(Boolean);
+  if (nameParts.length >= 2) {
+    const first = nameParts[0];
+    const last = nameParts.slice(1).join(' ');
+    const byFullName = await fetchProfiles(admin, (q) =>
+      q.select(PROFILE_SELECT).ilike('first_name', first).ilike('last_name', last).limit(2),
+    );
+    const fullMatch = pickUnique(byFullName);
+    if (fullMatch) return fullMatch;
+  }
+
+  const partialQueries = await Promise.all([
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('username', partial).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('alcunha', partial).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('first_name', partial).limit(2)),
+    fetchProfiles(admin, (q) => q.select(PROFILE_SELECT).ilike('last_name', partial).limit(2)),
+  ]);
+
+  for (const rows of partialQueries) {
+    const match = pickUnique(rows);
+    if (match) return match;
+  }
+
+  const candidateRows = await fetchProfiles(admin, (q) =>
+    q
+      .select(PROFILE_SELECT)
+      .or(
+        [
+          `username.ilike.${partial}`,
+          `alcunha.ilike.${partial}`,
+          `first_name.ilike.${partial}`,
+          `last_name.ilike.${partial}`,
+        ].join(','),
+      )
+      .limit(24),
   );
-  if (displayMatches.length === 1) return displayMatches[0];
 
-  const byFullName = (allRows as ProfileRow[]).filter((row) => {
-    const combined = `${row.first_name} ${row.last_name}`.trim().toLowerCase();
-    return combined === value;
-  });
-  if (byFullName.length === 1) return byFullName[0];
-
-  return undefined;
+  return matchDisplayOrFullName(candidateRows, value);
 }
 
 export async function verifyUserPassword(userId: string, password: string) {

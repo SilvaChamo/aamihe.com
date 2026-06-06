@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import {
   requestPasswordReset,
@@ -73,6 +73,7 @@ function AdminLoginPageInner({
   onSuccess,
   initialMode = 'login',
 }: AdminLoginPageProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -155,7 +156,7 @@ function AdminLoginPageInner({
           formatApiError(
             result.error,
             response.status === 401
-              ? 'Email, utilizador, alcunha ou senha incorrectos.'
+              ? 'Email, nome, alcunha ou senha incorrectos.'
               : response.status === 503
                 ? 'Serviço de autenticação indisponível. Tente com o email completo ou contacte a administração.'
                 : 'Não foi possível iniciar sessão.',
@@ -188,7 +189,7 @@ function AdminLoginPageInner({
           : redirectTo.startsWith('/dashboard')
             ? redirectTo
             : '/dashboard';
-      window.location.assign(target);
+      router.replace(target);
     } catch {
       setError('Erro de ligação. Tente novamente.');
     } finally {
@@ -356,7 +357,7 @@ function AdminLoginPageInner({
                       type="text"
                       name="log"
                       className="input"
-                      placeholder="Email, utilizador ou alcunha"
+                      placeholder="Email, nome, alcunha ou utilizador"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       autoComplete="username"

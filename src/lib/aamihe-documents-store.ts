@@ -141,6 +141,24 @@ export async function listDocuments(options?: {
   }
 }
 
+export async function countDocuments(): Promise<number> {
+  if (!hasDocumentsAdmin()) return 0;
+
+  try {
+    const { count, error } = await admin()
+      .from(TABLE)
+      .select('*', { count: 'exact', head: true });
+    if (error) {
+      console.error('[aamihe_documents] count:', error.message);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.error('[aamihe_documents] count failed:', err);
+    return 0;
+  }
+}
+
 export async function listDocumentsForUser(user: UserProfile): Promise<SiteDocumentRecord[]> {
   const email = user.email.trim().toLowerCase();
 

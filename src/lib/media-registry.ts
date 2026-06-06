@@ -8,6 +8,25 @@ import { upsertSupabaseMedia } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { randomUUID } from 'node:crypto';
 
+const GALLERY_CATALOG_TTL_MS = 45_000;
+let galleryCatalogCache: SiteMediaRecord[] | null = null;
+let galleryCatalogCachedAt = 0;
+
+export function invalidateGalleryCatalogCache() {
+  galleryCatalogCache = null;
+  galleryCatalogCachedAt = 0;
+}
+
+async function collectGalleryImagesCached(): Promise<SiteMediaRecord[]> {
+  const now = Date.now();
+  if (galleryCatalogCache && now - galleryCatalogCachedAt < GALLERY_CATALOG_TTL_MS) {
+    return galleryCatalogCache;
+  }
+  galleryCatalogCache = await collectGalleryImages();
+  galleryCatalogCachedAt = now;
+  return galleryCatalogCache;
+}
+
 function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[] {
   return documents
     .filter((doc) => doc.category === 'geral' && doc.published)
@@ -29,7 +48,7 @@ function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[
 
 /** Biblioteca admin — fonte: public/gallery (todas as imagens do projecto). */
 export async function buildAdminMediaCatalog(): Promise<SiteMediaRecord[]> {
-  return sortMediaCatalog(await collectGalleryImages());
+  return sortMediaCatalog(await collectGalleryImagesCached());
 }
 
 /** Galeria pública — public/gallery + PDFs gerais publicados. */
