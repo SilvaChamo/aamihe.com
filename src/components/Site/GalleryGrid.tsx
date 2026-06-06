@@ -1,18 +1,31 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Play } from 'lucide-react';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import { normalizeImageSrc } from '@/lib/image-src';
+import {
+  type GalleryPhotoTab,
+  matchesGalleryPhotoTab,
+} from '@/lib/gallery-tab-classify';
 import { useLanguage } from '@/context/LanguageContext';
 import { galleryCopy } from '@/i18n/messages';
 import './GalleryGrid.css';
 
 const GALLERY_IMAGE_SIZES =
   '(max-width: 600px) 50vw, (max-width: 900px) 33vw, (max-width: 1200px) 25vw, 16vw';
+
+const PHOTO_TABS: GalleryPhotoTab[] = [
+  'all',
+  'graduacao',
+  'fotos-direccao',
+  'arquivo-1',
+  'arquivo-2',
+  'eventos',
+];
 
 type MediaItem = {
   id: string;
@@ -34,9 +47,40 @@ function buildMediaUrl(typeFilter: 'all' | MediaCategory): string {
   return `/api/public/site-media${query ? `?${query}` : ''}`;
 }
 
+function parsePhotoTab(value: string | null): GalleryPhotoTab {
+  if (value && PHOTO_TABS.includes(value as GalleryPhotoTab)) {
+    return value as GalleryPhotoTab;
+  }
+  return 'all';
+}
+
+function tabLabel(
+  tab: GalleryPhotoTab,
+  t: (typeof galleryCopy)[keyof typeof galleryCopy],
+): string {
+  switch (tab) {
+    case 'all':
+      return t.tabAll;
+    case 'graduacao':
+      return t.tabGraduacao;
+    case 'fotos-direccao':
+      return t.tabDireccao;
+    case 'arquivo-1':
+      return t.tabArquivo1;
+    case 'arquivo-2':
+      return t.tabArquivo2;
+    case 'eventos':
+      return t.tabEventos;
+    default:
+      return t.tabAll;
+  }
+}
+
 export default function GalleryGrid() {
   const { locale } = useLanguage();
   const t = galleryCopy[locale];
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const tipoParam = searchParams.get('tipo') as MediaCategory | null;
   const initialType =
@@ -45,9 +89,14 @@ export default function GalleryGrid() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<'all' | MediaCategory>(initialType);
+  const [photoTab, setPhotoTab] = useState<GalleryPhotoTab>(() =>
+    parsePhotoTab(searchParams.get('tab')),
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const isPhotoGallery = typeFilter === 'imagens';
 
   const typeOptions = useMemo(
     () =>
@@ -81,8 +130,8 @@ export default function GalleryGrid() {
               ({
                 ...item,
                 category: resolveMediaCategory(item),
-              }) as MediaItem
-          )
+              }) as MediaItem,
+          ),
         );
       } else {
         setItems([]);
@@ -110,8 +159,15 @@ export default function GalleryGrid() {
     const tipo = searchParams.get('tipo') as MediaCategory | null;
     if (tipo && ['imagens', 'documentos', 'videos'].includes(tipo)) {
       setTypeFilter(tipo);
+    } else if (!tipo) {
+      setTypeFilter('imagens');
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (typeFilter !== 'imagens') return;
+    setPhotoTab(parsePhotoTab(searchParams.get('tab')));
+  }, [searchParams, typeFilter]);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -124,68 +180,129 @@ export default function GalleryGrid() {
         item.subcategory.toLowerCase().includes(query);
       const matchesSubcategory =
         !subcategoryFilter || item.subcategory === subcategoryFilter;
-      return matchesType && matchesSearch && matchesSubcategory;
+      const matchesTab =
+        !isPhotoGallery ||
+        kind !== 'imagens' ||
+        matchesGalleryPhotoTab(item.url, item.subcategory, photoTab);
+      return matchesType && matchesSearch && matchesSubcategory && matchesTab;
     });
-  }, [items, typeFilter, searchQuery, subcategoryFilter]);
+  }, [items, typeFilter, searchQuery, subcategoryFilter, isPhotoGallery, photoTab]);
 
   const visibleItems = useMemo(
     () => filtered.slice(0, visibleCount),
-    [filtered, visibleCount]
+    [filtered, visibleCount],
   );
 
   const handleTypeChange = (value: 'all' | MediaCategory) => {
     setTypeFilter(value);
     setVisibleCount(PAGE_SIZE);
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'imagens') {
+      params.delete('tipo');
+    } else {
+      params.set('tipo', value);
+      params.delete('tab');
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const handlePhotoTabChange = (tab: GalleryPhotoTab) => {
+    setPhotoTab(tab);
+    setVisibleCount(PAGE_SIZE);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('tipo');
+    if (tab === 'all') {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
   return (
     <div className="gallery-grid-page">
-      <div className="gallery-toolbar" role="toolbar" aria-label={t.filterType}>
-        <select
-          className="gallery-type-select"
-          value={typeFilter}
-          onChange={(e) => handleTypeChange(e.target.value as 'all' | MediaCategory)}
-          aria-label={t.filterType}
-        >
-          {typeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      {isPhotoGallery ? (
+        <div className="gallery-tabs-wrap" role="toolbar" aria-label={t.tabsLabel}>
+          <div className="gallery-tabs" role="tablist" aria-label={t.tabsLabel}>
+            {PHOTO_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={photoTab === tab}
+                className={`gallery-tab${photoTab === tab ? ' gallery-tab--active' : ''}`}
+                onClick={() => handlePhotoTabChange(tab)}
+              >
+                {tabLabel(tab, t)}
+              </button>
+            ))}
+          </div>
+          <div className="gallery-toolbar-right gallery-tabs-toolbar-right">
+            <span className="gallery-count">
+              {t.itemsCount(visibleItems.length, filtered.length)}
+            </span>
+            <input
+              type="search"
+              className="gallery-search"
+              placeholder={t.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(PAGE_SIZE);
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="gallery-toolbar" role="toolbar" aria-label={t.filterType}>
+          <select
+            className="gallery-type-select"
+            value={typeFilter}
+            onChange={(e) => handleTypeChange(e.target.value as 'all' | MediaCategory)}
+            aria-label={t.filterType}
+          >
+            {typeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
 
-        <select
-          className="gallery-type-select"
-          value={subcategoryFilter}
-          onChange={(e) => {
-            setSubcategoryFilter(e.target.value);
-            setVisibleCount(PAGE_SIZE);
-          }}
-          aria-label={t.filterOrigin}
-        >
-          {subcategoryOptions.map((option) => (
-            <option key={option.value || 'all'} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <div className="gallery-toolbar-right">
-          <span className="gallery-count">
-            {t.itemsCount(visibleItems.length, filtered.length)}
-          </span>
-          <input
-            type="search"
-            className="gallery-search"
-            placeholder={t.searchPlaceholder}
-            value={searchQuery}
+          <select
+            className="gallery-type-select"
+            value={subcategoryFilter}
             onChange={(e) => {
-              setSearchQuery(e.target.value);
+              setSubcategoryFilter(e.target.value);
               setVisibleCount(PAGE_SIZE);
             }}
-          />
+            aria-label={t.filterOrigin}
+          >
+            {subcategoryOptions.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <div className="gallery-toolbar-right">
+            <span className="gallery-count">
+              {t.itemsCount(visibleItems.length, filtered.length)}
+            </span>
+            <input
+              type="search"
+              className="gallery-search"
+              placeholder={t.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(PAGE_SIZE);
+              }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {loading ? (
         <p className="gallery-empty">{t.loadingGallery}</p>
@@ -194,35 +311,63 @@ export default function GalleryGrid() {
       ) : (
         <>
           <div
-            className={`gallery-items-grid ${typeFilter === 'imagens' ? 'gallery-items-grid--images' : ''}`}
+            className={`gallery-items-grid ${
+              isPhotoGallery ? 'gallery-items-grid--images gallery-items-grid--photos-only' : ''
+            }`}
           >
             {visibleItems.map((item) => {
               const kind = resolveMediaCategory(item);
+              const src = normalizeImageSrc(item.url);
+
+              if (isPhotoGallery && kind === 'imagens') {
+                return (
+                  <article key={item.id} className="gallery-photo-tile">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="gallery-photo-tile-link"
+                      aria-label={item.title}
+                    >
+                      {src ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={src}
+                          alt={item.title}
+                          className="gallery-item-image"
+                          loading="lazy"
+                          decoding="async"
+                          sizes={GALLERY_IMAGE_SIZES}
+                        />
+                      ) : (
+                        <div className="gallery-item-placeholder" aria-hidden="true">
+                          ?
+                        </div>
+                      )}
+                    </a>
+                  </article>
+                );
+              }
+
               return (
                 <article key={item.id} className="gallery-item-card">
                   <div className="gallery-item-preview">
                     {kind === 'imagens' ? (
-                      (() => {
-                        const src = normalizeImageSrc(item.url);
-                        if (!src) {
-                          return (
-                            <div className="gallery-item-placeholder" aria-hidden="true">
-                              ?
-                            </div>
-                          );
-                        }
-                        return (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={src}
-                            alt={item.title}
-                            className="gallery-item-image"
-                            loading="lazy"
-                            decoding="async"
-                            sizes={GALLERY_IMAGE_SIZES}
-                          />
-                        );
-                      })()
+                      src ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={src}
+                          alt={item.title}
+                          className="gallery-item-image"
+                          loading="lazy"
+                          decoding="async"
+                          sizes={GALLERY_IMAGE_SIZES}
+                        />
+                      ) : (
+                        <div className="gallery-item-placeholder" aria-hidden="true">
+                          ?
+                        </div>
+                      )
                     ) : kind === 'videos' ? (
                       <div className="gallery-item-placeholder video">
                         <Play size={28} />

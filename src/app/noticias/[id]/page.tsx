@@ -10,6 +10,7 @@ import BlogPageLayout from '@/components/Blog/BlogPageLayout';
 import BlogSidebar from '@/components/Blog/BlogSidebar';
 import { useLanguage } from '@/context/LanguageContext';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
+import overlay from '@/components/Site/PageOverlayCard.module.css';
 import '@/components/Blog/BlogLayout.css';
 
 export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,17 +48,23 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
     return (
       <>
         <Header />
-        <main id="main" className="blog-site-main site-main clr" role="main">
+        <main id="main" className={`blog-site-main site-main clr ${overlay.main}`} role="main">
           <BlogPageBanner title={tx.banner} />
-          <BlogPageLayout sidebar={<BlogSidebar news={published} />}>
-            <div className="single-post-content">
-              <h1>{tx.notFoundTitle}</h1>
-              <p>{tx.notFoundText}</p>
-              <p>
-                <Link href="/noticias">{tx.back}</Link>
-              </p>
+          <section className={overlay.section} aria-label={tx.banner}>
+            <div className="container">
+              <div className={overlay.contentCard}>
+                <BlogPageLayout embedded sidebar={<BlogSidebar news={published} />}>
+                  <div className="single-post-content">
+                    <h1>{tx.notFoundTitle}</h1>
+                    <p>{tx.notFoundText}</p>
+                    <p>
+                      <Link href="/noticias">{tx.back}</Link>
+                    </p>
+                  </div>
+                </BlogPageLayout>
+              </div>
             </div>
-          </BlogPageLayout>
+          </section>
         </main>
         <Footer />
       </>
@@ -67,27 +74,33 @@ export default function NoticiaDetalhePage({ params }: { params: Promise<{ id: s
   return (
     <>
       <Header />
-      <main id="main" className="blog-site-main site-main clr" role="main">
+      <main id="main" className={`blog-site-main site-main clr ${overlay.main}`} role="main">
         <BlogPageBanner
           id="article-banner"
           title={tx.newsBanner}
           breadcrumbLabel={item.title}
           imageUrl={item.image || '/Imagens/BgNoticias.jpeg'}
         />
-        <BlogPageLayout sidebar={<BlogSidebar news={published} currentId={item.id} />}>
-          <article className="single-post-content clr">
-            <h1>{item.title}</h1>
-            <ul className="meta obem-default clr">
-              <li className="meta-date" itemProp="datePublished">
-                {item.date}
-                {item.author ? ` · ${item.author}` : ''}
-              </li>
-            </ul>
-            <div className="post-content">
-              <NewsArticleBody content={item.content} className="post-content" />
+        <section className={overlay.section} aria-label={tx.newsBanner}>
+          <div className="container">
+            <div className={overlay.contentCard}>
+              <BlogPageLayout embedded sidebar={<BlogSidebar news={published} currentId={item.id} />}>
+                <article className="single-post-content clr">
+                  <h1>{item.title}</h1>
+                  <ul className="meta obem-default clr">
+                    <li className="meta-date" itemProp="datePublished">
+                      {item.date}
+                      {item.author ? ` · ${item.author}` : ''}
+                    </li>
+                  </ul>
+                  <div className="post-content">
+                    <NewsArticleBody content={item.content} className="post-content" />
+                  </div>
+                </article>
+              </BlogPageLayout>
             </div>
-          </article>
-        </BlogPageLayout>
+          </div>
+        </section>
       </main>
       <Footer />
     </>

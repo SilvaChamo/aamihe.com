@@ -5,7 +5,7 @@ import { Code, Save, Key, Webhook, Copy, RefreshCw, Trash2 } from 'lucide-react'
 import '../definicoes.css';
 
 const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.aamihe.com';
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.visualdesignmoz.com';
 
 export default function DefinicoesAPIPage() {
   const [apiKey, setApiKey] = useState('ec_live_sk_1234567890abcdef');

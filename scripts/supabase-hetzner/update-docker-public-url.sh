@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Actualiza URLs públicas do Supabase Docker (após mudar subdomínio).
-# Uso: bash update-docker-public-url.sh https://supabase.aamihe.com
+# Uso: bash update-docker-public-url.sh https://supabase.visualdesignmoz.com
 set -euo pipefail
 
-PUBLIC_URL="${1:-https://supabase.aamihe.com}"
+PUBLIC_URL="${1:-https://supabase.visualdesignmoz.com}"
 SITE_URL="${SITE_URL:-https://aamihe.com}"
 COMPOSE_DIR="/opt/supabase-aamihe/docker"
 ENV_FILE="${COMPOSE_DIR}/.env"

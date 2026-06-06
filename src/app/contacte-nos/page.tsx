@@ -11,6 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
 import { contactPageCopy } from '@/data/contact-content';
 import { contactPageExtra } from '@/i18n/messages';
+import overlay from '@/components/Site/PageOverlayCard.module.css';
 import styles from './contacte.module.css';
 
 export default function ContacteNosPage() {
@@ -35,61 +36,67 @@ export default function ContacteNosPage() {
   return (
     <>
       <Header />
-      <main id="main" className={`site-main clr ${styles['contact-main']}`} role="main">
+      <main id="main" className={`site-main clr ${overlay.main} ${styles['contact-main']}`} role="main">
         <BlogPageBanner title={contact.bannerTitle} imageUrl={contact.bannerImage} />
 
-        <div className={`container clr ${styles['contact-layout']}`}>
-          <div className={styles['contact-primary']}>
-            <div className={styles['contact-form-section']}>
-              <ContactForm labels={t} />
-            </div>
-            <div className={styles['contact-map']}>
-              <iframe
-                src={contact.mapEmbedUrl}
-                title={extra.mapTitle}
-                loading="lazy"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-          </div>
-
-          <aside className={styles['contact-sidebar']} aria-label={extra.sidebarAria}>
-            <div className={styles['contact-sidebar-box']}>
-              <h3>{t.search}</h3>
-              <div className={styles['contact-sidebar-divider']} />
-              <form className={styles['contact-search']} onSubmit={handleSiteSearch} role="search">
-                <input
-                  type="text"
-                  name="company_url"
-                  className={styles['contact-honeypot']}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                />
-                <div className={styles['contact-search-row']}>
-                  <input type="search" name="q" placeholder={t.searchPlaceholder} aria-label={t.search} />
-                  <button type="submit" className={styles['contact-search-btn']} aria-label={t.search}>
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        fill="currentColor"
-                        d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
-                      />
-                    </svg>
-                  </button>
+        <section className={overlay.section} aria-label={contact.bannerTitle}>
+          <div className="container">
+            <div className={overlay.contentCard}>
+              <div className={`clr ${styles['contact-layout']}`}>
+                <div className={styles['contact-primary']}>
+                  <div className={styles['contact-form-section']}>
+                    <ContactForm labels={t} />
+                  </div>
+                  <div className={styles['contact-map']}>
+                    <iframe
+                      src={contact.mapEmbedUrl}
+                      title={extra.mapTitle}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
                 </div>
-              </form>
-            </div>
 
-            <div className={`${styles['contact-sidebar-box']} ${styles['contact-sidebar-box--facebook']}`}>
-              <h3>{t.facebook}</h3>
-              <div className={styles['contact-sidebar-divider']} />
-              <div className={styles['contact-facebook']}>
-                <FacebookPageEmbed />
+                <aside className={styles['contact-sidebar']} aria-label={extra.sidebarAria}>
+                  <div className={styles['contact-sidebar-box']}>
+                    <h3>{t.search}</h3>
+                    <div className={styles['contact-sidebar-divider']} />
+                    <form className={styles['contact-search']} onSubmit={handleSiteSearch} role="search">
+                      <input
+                        type="text"
+                        name="company_url"
+                        className={styles['contact-honeypot']}
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                      />
+                      <div className={styles['contact-search-row']}>
+                        <input type="search" name="q" placeholder={t.searchPlaceholder} aria-label={t.search} />
+                        <button type="submit" className={styles['contact-search-btn']} aria-label={t.search}>
+                          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              fill="currentColor"
+                              d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className={`${styles['contact-sidebar-box']} ${styles['contact-sidebar-box--facebook']}`}>
+                    <h3>{t.facebook}</h3>
+                    <div className={styles['contact-sidebar-divider']} />
+                    <div className={styles['contact-facebook']}>
+                      <FacebookPageEmbed />
+                    </div>
+                  </div>
+                </aside>
               </div>
             </div>
-          </aside>
-        </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </>

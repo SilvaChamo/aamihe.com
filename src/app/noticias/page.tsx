@@ -14,6 +14,7 @@ import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import { useSitePageConfig } from '@/hooks/useSitePageConfig';
 import { filterNewsByQuery, filterNewsByYear } from '@/lib/blog-utils';
 import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
+import overlay from '@/components/Site/PageOverlayCard.module.css';
 import '@/components/Blog/BlogLayout.css';
 
 export default function NoticiasPage() {
@@ -84,53 +85,60 @@ export default function NoticiasPage() {
   return (
     <>
       <Header />
-      <main id="main" className="blog-site-main site-main clr" role="main">
+      <main id="main" className={`blog-site-main site-main clr ${overlay.main}`} role="main">
         <BlogPageBanner title={pages.blog.bannerTitle} imageUrl={pages.blog.bannerImage} />
         <div id="blog-content-start" className="blog-content-anchor" aria-hidden="true" />
-        <BlogPageLayout
-          sidebar={
-            <BlogSidebar
-              news={published}
-              onSearchChange={setSearchQuery}
-              onYearFilter={setActiveYear}
-              activeYear={activeYear}
-            />
-          }
-        >
-          <div className="blog-entries-wrap">
-            <div
-              id="blog-entries"
-              className="entries clr"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(1, pages.blog.gridColumns)}, minmax(0, 1fr))`,
-              }}
-            >
-              {filtered.length === 0 ? (
-                <p className="blog-empty-state">
-                  {tx.empty}
-                </p>
-              ) : (
-                paginated.map((item) => (
-                  <BlogEntryCard
-                    key={item.id}
-                    id={item.id}
-                    title={item.title}
-                    image={item.image}
-                    date={item.date}
+        <section className={overlay.section} aria-label={pages.blog.bannerTitle}>
+          <div className="container">
+            <div className={overlay.contentCard}>
+              <BlogPageLayout
+                embedded
+                sidebar={
+                  <BlogSidebar
+                    news={published}
+                    onSearchChange={setSearchQuery}
+                    onYearFilter={setActiveYear}
+                    activeYear={activeYear}
                   />
-                ))
-              )}
-            </div>
+                }
+              >
+                <div className="blog-entries-wrap">
+                  <div
+                    id="blog-entries"
+                    className="entries clr"
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.max(1, pages.blog.gridColumns)}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {filtered.length === 0 ? (
+                      <p className="blog-empty-state">
+                        {tx.empty}
+                      </p>
+                    ) : (
+                      paginated.map((item) => (
+                        <BlogEntryCard
+                          key={item.id}
+                          id={item.id}
+                          title={item.title}
+                          image={item.image}
+                          date={item.date}
+                        />
+                      ))
+                    )}
+                  </div>
 
-            {filtered.length > 0 && (
-              <BlogPagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
+                  {filtered.length > 0 && (
+                    <BlogPagination
+                      page={page}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  )}
+                </div>
+              </BlogPageLayout>
+            </div>
           </div>
-        </BlogPageLayout>
+        </section>
       </main>
       <Footer />
     </>

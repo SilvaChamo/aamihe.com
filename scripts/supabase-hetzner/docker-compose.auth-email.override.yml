@@ -5,4 +5,4 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      GOTRUE_MAILER_EXTERNAL_HOSTS: supabase.aamihe.com,aamihe.com
+      GOTRUE_MAILER_EXTERNAL_HOSTS: supabase.visualdesignmoz.com,aamihe.com

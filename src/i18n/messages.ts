@@ -108,6 +108,13 @@ export const galleryCopy = {
     viewFile: 'Ver ficheiro',
     loadMore: (remaining: number) => `Carregar mais (${remaining} restantes)`,
     mathPlus: 'mais',
+    tabAll: 'Todas',
+    tabGraduacao: 'Graduação',
+    tabDireccao: 'Fotos direcção',
+    tabArquivo1: 'Arquivo – 1',
+    tabArquivo2: 'Arquivo – 2',
+    tabEventos: 'Eventos',
+    tabsLabel: 'Filtrar galeria',
   },
   fr: {
     pageTitle: 'GALERIE',
@@ -129,6 +136,13 @@ export const galleryCopy = {
     viewFile: 'Voir le fichier',
     loadMore: (remaining: number) => `Charger plus (${remaining} restants)`,
     mathPlus: 'plus',
+    tabAll: 'Toutes',
+    tabGraduacao: 'Graduation',
+    tabDireccao: 'Photos direction',
+    tabArquivo1: 'Archives – 1',
+    tabArquivo2: 'Archives – 2',
+    tabEventos: 'Événements',
+    tabsLabel: 'Filtrer la galerie',
   },
   en: {
     pageTitle: 'GALLERY',
@@ -150,6 +164,85 @@ export const galleryCopy = {
     viewFile: 'View file',
     loadMore: (remaining: number) => `Load more (${remaining} remaining)`,
     mathPlus: 'plus',
+    tabAll: 'All',
+    tabGraduacao: 'Graduation',
+    tabDireccao: 'Board photos',
+    tabArquivo1: 'Archive – 1',
+    tabArquivo2: 'Archive – 2',
+    tabEventos: 'Events',
+    tabsLabel: 'Filter gallery',
+  },
+} as const;
+
+export const footerPagesCopy = {
+  pt: {
+    paises: {
+      bannerTitle: 'PAÍSES MEMBROS',
+      breadcrumb: 'Países membros',
+    },
+    universidades: {
+      bannerTitle: 'UNIVERSIDADES FILIADAS',
+      breadcrumb: 'Universidades filiais',
+      visitSite: 'Visitar site',
+    },
+    arquivo: {
+      bannerTitle: 'ARQUIVO',
+      breadcrumb: 'Arquivo',
+      intro:
+        'Consulte fotografias históricas e materiais de arquivo na galeria. Para enviar documentos ou imagens para o arquivo institucional, utilize o formulário de contacto.',
+      ctaGallery: 'Ver galeria – Arquivo',
+      ctaContact: 'Enviar material',
+    },
+    galeria: {
+      bannerTitle: 'GALERIA DE FOTOS',
+      breadcrumb: 'Galeria',
+    },
+  },
+  fr: {
+    paises: {
+      bannerTitle: 'PAYS MEMBRES',
+      breadcrumb: 'Pays membres',
+    },
+    universidades: {
+      bannerTitle: 'UNIVERSITÉS AFFILIÉES',
+      breadcrumb: 'Universités affiliées',
+      visitSite: 'Visiter le site',
+    },
+    arquivo: {
+      bannerTitle: 'ARCHIVES',
+      breadcrumb: 'Archives',
+      intro:
+        "Consultez les photographies historiques et les documents d'archives dans la galerie. Pour soumettre du matériel, utilisez le formulaire de contact.",
+      ctaGallery: 'Voir galerie – Archives',
+      ctaContact: 'Envoyer du matériel',
+    },
+    galeria: {
+      bannerTitle: 'GALERIE PHOTOS',
+      breadcrumb: 'Galerie',
+    },
+  },
+  en: {
+    paises: {
+      bannerTitle: 'MEMBER COUNTRIES',
+      breadcrumb: 'Member countries',
+    },
+    universidades: {
+      bannerTitle: 'AFFILIATED UNIVERSITIES',
+      breadcrumb: 'Affiliated universities',
+      visitSite: 'Visit website',
+    },
+    arquivo: {
+      bannerTitle: 'ARCHIVE',
+      breadcrumb: 'Archive',
+      intro:
+        'Browse historical photographs and archive materials in the gallery. To submit documents or images, please use the contact form.',
+      ctaGallery: 'View gallery – Archive',
+      ctaContact: 'Submit material',
+    },
+    galeria: {
+      bannerTitle: 'PHOTO GALLERY',
+      breadcrumb: 'Gallery',
+    },
   },
 } as const;
 

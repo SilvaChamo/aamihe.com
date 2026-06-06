@@ -19,8 +19,8 @@ set_var() {
 }
 
 set_var SITE_URL "$SITE_URL"
-set_var API_EXTERNAL_URL "https://supabase.aamihe.com"
-set_var SUPABASE_PUBLIC_URL "https://supabase.aamihe.com"
+set_var API_EXTERNAL_URL "https://supabase.visualdesignmoz.com"
+set_var SUPABASE_PUBLIC_URL "https://supabase.visualdesignmoz.com"
 set_var ADDITIONAL_REDIRECT_URLS "$REDIRECTS"
 
 cp -f "${SCRIPT_DIR}/docker-compose.auth-email.override.yml" "${COMPOSE_DIR}/docker-compose.override.yml"

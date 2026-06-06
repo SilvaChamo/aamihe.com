@@ -1,0 +1,162 @@
+.footer-page {
+  padding-bottom: 48px;
+}
+
+.footer-page :global(.blog-page-banner) {
+  margin-bottom: 40px;
+}
+
+.footer-page-body {
+  padding-bottom: 40px;
+}
+
+.entity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.entity-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ece8e3;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  min-height: 76px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.entity-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.entity-card:hover,
+.entity-card-link:hover {
+  border-color: rgba(204, 168, 118, 0.65);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+.entity-flag {
+  flex-shrink: 0;
+  width: 80px;
+  min-height: 76px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #f5f0ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+
+.entity-flag img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  object-fit: cover;
+  display: block;
+}
+
+.entity-flag-emoji {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.entity-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 18px 20px;
+}
+
+.entity-name {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #561713;
+}
+
+.entity-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #92754c;
+}
+
+.entity-card-link:hover .entity-visit {
+  color: #561713;
+}
+
+.footer-page-intro {
+  margin: 0 0 32px;
+  max-width: 780px;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: #444;
+}
+
+.arquivo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.arquivo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.arquivo-btn-primary {
+  background: #561713;
+  color: #fff;
+}
+
+.arquivo-btn-primary:hover {
+  background: #3d100e;
+  color: #fff;
+}
+
+.arquivo-btn-secondary {
+  background: #fff;
+  color: #561713;
+  border: 1px solid #561713;
+}
+
+.arquivo-btn-secondary:hover {
+  background: #f9f5f1;
+}
+
+@media (max-width: 768px) {
+  .entity-grid {
+    grid-template-columns: 1fr;
+  }
+}

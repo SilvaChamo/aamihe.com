@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'supabase.visualdesignmoz.com',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'supabase.aamihe.com',
         pathname: '/storage/v1/object/public/**',
       },
@@ -58,6 +63,21 @@ const nextConfig: NextConfig = {
         source: '/direccao',
         destination: '/#direcao',
         permanent: false,
+      },
+      {
+        source: '/galeria-de-fotos',
+        destination: '/galeria',
+        permanent: true,
+      },
+      {
+        source: '/paises-membros',
+        destination: '/paises',
+        permanent: true,
+      },
+      {
+        source: '/universidades-filiadas',
+        destination: '/universidades',
+        permanent: true,
       },
       {
         source: '/eventos',
@@ -104,18 +124,6 @@ const nextConfig: NextConfig = {
       {
         source: '/servicos',
         destination: '/servicos.html',
-      },
-      {
-        source: '/paises',
-        destination: '/Paises membros.htm',
-      },
-      {
-        source: '/universidades',
-        destination: '/Universidades filiadas.htm',
-      },
-      {
-        source: '/arquivo',
-        destination: '/Arquivo.htm',
       },
     ];
   },

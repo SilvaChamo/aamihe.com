@@ -7,7 +7,7 @@ set -euo pipefail
 COMPOSE_DIR="${COMPOSE_DIR:-/opt/supabase-aamihe/docker}"
 ENV_FILE="${ENV_FILE:-${COMPOSE_DIR}/.env}"
 OVERRIDE="${COMPOSE_DIR}/docker-compose.override.yml"
-PUBLIC_URL="${PUBLIC_URL:-https://supabase.aamihe.com}"
+PUBLIC_URL="${PUBLIC_URL:-https://supabase.visualdesignmoz.com}"
 SITE_URL="${SITE_URL:-https://aamihe.com}"
 
 CLIENT_ID="${GOOGLE_CLIENT_ID:?Defina GOOGLE_CLIENT_ID}"
@@ -39,7 +39,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      GOTRUE_MAILER_EXTERNAL_HOSTS: supabase.aamihe.com,aamihe.com
+      GOTRUE_MAILER_EXTERNAL_HOSTS: supabase.visualdesignmoz.com,aamihe.com
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: "true"
       GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: "${CLIENT_ID}"
       GOTRUE_EXTERNAL_GOOGLE_SECRET: "${CLIENT_SECRET}"

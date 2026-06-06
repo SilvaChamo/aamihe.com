@@ -9,6 +9,8 @@ import { homeConferenceCopy } from '@/components/ConferenceSection';
 import { homeAboutCopy } from '@/components/AboutSection';
 import { homeDirectionCopy } from '@/components/DirectionSection';
 import { contactPageCopy } from '@/data/contact-content';
+import { footerPagesCopy } from '@/i18n/messages';
+import { MEMBER_COUNTRIES, AFFILIATED_UNIVERSITIES } from '@/data/footer-pages-content';
 import { DEFAULT_SITE_PAGE_CONFIG } from '@/lib/site-page-config';
 import { type SiteSearchChunk, stripHtml } from '@/lib/site-search';
 
@@ -228,6 +230,61 @@ export function buildSiteSearchIndex(locale: Locale, news: NewsItem[]): SiteSear
     estatutos.statutesTitle,
     [estatutos.statutesIntro, ...estatutos.statutes.map((doc) => joinParts([doc.label, doc.lang]))],
     { image: sectionImageFor('sobre-estatutos') },
+  );
+
+  const footerPages = footerPagesCopy[locale];
+
+  pushChunk(
+    chunks,
+    'galeria',
+    '/galeria',
+    footerPages.galeria.bannerTitle,
+    [
+      footerPages.galeria.bannerTitle,
+      footerPages.galeria.breadcrumb,
+      'graduação',
+      'direcção',
+      'arquivo',
+      'eventos',
+    ],
+    { image: '/gallery/BgNoticias.jpeg' },
+  );
+
+  pushChunk(
+    chunks,
+    'paises-membros',
+    '/paises',
+    footerPages.paises.bannerTitle,
+    [
+      footerPages.paises.bannerTitle,
+      ...MEMBER_COUNTRIES.map((country) => country.name[locale]),
+    ],
+    { image: '/gallery/BgNoticias.jpeg' },
+  );
+
+  pushChunk(
+    chunks,
+    'universidades-filiadas',
+    '/universidades',
+    footerPages.universidades.bannerTitle,
+    [
+      footerPages.universidades.bannerTitle,
+      ...AFFILIATED_UNIVERSITIES.map((uni) => uni.name[locale]),
+    ],
+    { image: '/gallery/Blue-and-White-Geometric-Shapes-Conference-Poster.png.webp' },
+  );
+
+  pushChunk(
+    chunks,
+    'arquivo',
+    '/arquivo',
+    footerPages.arquivo.bannerTitle,
+    [
+      footerPages.arquivo.intro,
+      footerPages.arquivo.ctaGallery,
+      footerPages.arquivo.ctaContact,
+    ],
+    { image: '/gallery/Image-5-1-300x209.jpeg' },
   );
 
   pushChunk(

@@ -50,6 +50,30 @@ const ABOUT_LABEL = {
   fr: 'À propos',
 } as const;
 
+const GALLERY_LABEL = {
+  pt: 'Galeria',
+  en: 'Gallery',
+  fr: 'Galerie',
+} as const;
+
+const MEMBER_COUNTRIES_LABEL = {
+  pt: 'Países membros',
+  en: 'Member countries',
+  fr: 'Pays membres',
+} as const;
+
+const UNIVERSITIES_LABEL = {
+  pt: 'Universidades filiais',
+  en: 'Affiliated universities',
+  fr: 'Universités affiliées',
+} as const;
+
+const ARCHIVE_LABEL = {
+  pt: 'Arquivo',
+  en: 'Archive',
+  fr: 'Archives',
+} as const;
+
 function buildBreadcrumbs(
   pathname: string,
   locale: keyof typeof HOME_LABEL,
@@ -65,6 +89,22 @@ function buildBreadcrumbs(
 
   if (pathname === '/sobre-nos') {
     return [home, { label: lastLabel || ABOUT_LABEL[locale] }];
+  }
+
+  if (pathname === '/galeria') {
+    return [home, { label: lastLabel || GALLERY_LABEL[locale] }];
+  }
+
+  if (pathname === '/paises') {
+    return [home, { label: lastLabel || MEMBER_COUNTRIES_LABEL[locale] }];
+  }
+
+  if (pathname === '/universidades') {
+    return [home, { label: lastLabel || UNIVERSITIES_LABEL[locale] }];
+  }
+
+  if (pathname === '/arquivo') {
+    return [home, { label: lastLabel || ARCHIVE_LABEL[locale] }];
   }
 
   if (pathname === '/noticias') {

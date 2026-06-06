@@ -34,6 +34,87 @@
   color: var(--text, #333);
 }
 
+.gallery-tabs-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  position: sticky;
+  top: var(--site-header-height, 116px);
+  z-index: 900;
+  background: #fff;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gallery-tab {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #646970;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.gallery-tab:hover {
+  color: var(--primary, #561713);
+  background: rgba(86, 23, 19, 0.05);
+}
+
+.gallery-tab--active {
+  color: var(--primary, #561713);
+  background: rgba(204, 168, 118, 0.18);
+  border-color: rgba(204, 168, 118, 0.45);
+}
+
+.gallery-tabs-toolbar-right {
+  margin-left: auto;
+}
+
+.gallery-photo-tile {
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f5f5f5;
+  aspect-ratio: 1;
+}
+
+.gallery-photo-tile-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.gallery-photo-tile-link .gallery-item-image {
+  transition: transform 0.25s ease;
+}
+
+.gallery-photo-tile-link:hover .gallery-item-image {
+  transform: scale(1.04);
+}
+
+.gallery-items-grid--photos-only .gallery-item-card {
+  display: none;
+}
+
 .gallery-type-filters {
   display: none;
 }
@@ -254,14 +335,23 @@
 }
 
 @media (max-width: 768px) {
-  .gallery-toolbar {
+  .gallery-toolbar,
+  .gallery-tabs-wrap {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .gallery-toolbar-right {
+  .gallery-toolbar-right,
+  .gallery-tabs-toolbar-right {
     width: 100%;
     margin-left: 0;
+  }
+
+  .gallery-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .gallery-search {

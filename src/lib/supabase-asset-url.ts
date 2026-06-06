@@ -20,7 +20,11 @@ export function normalizeAssetUrl(url: string | null | undefined): string | null
   }
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return supabaseOrPathToGalleryUrl(trimmed) ?? trimmed;
+    const legacy = trimmed.replace(
+      'https://supabase.aamihe.com',
+      'https://supabase.visualdesignmoz.com',
+    );
+    return supabaseOrPathToGalleryUrl(legacy) ?? legacy;
   }
 
   if (trimmed.startsWith('/')) return trimmed;

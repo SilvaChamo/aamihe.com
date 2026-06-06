@@ -20,7 +20,7 @@ read_var() {
 
 ANON=$(read_var ANON_KEY)
 SERVICE=$(read_var SERVICE_ROLE_KEY)
-URL="https://supabase.aamihe.com"
+URL="https://supabase.visualdesignmoz.com"
 
 python3 - "$ENV_FILE" "$URL" "$ANON" "$SERVICE" <<'PY'
 import re, sys
