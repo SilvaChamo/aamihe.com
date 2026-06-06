@@ -29,6 +29,7 @@ yarn-error.log*
 # local env files
 .env*.local
 scripts/server/connection.env
+**/brevo-smtp-config.php
 
 # vercel
 .vercel

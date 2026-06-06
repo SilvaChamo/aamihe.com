@@ -7,7 +7,7 @@ return [
     'host' => 'smtp-relay.brevo.com',
     'port' => 587,
     'secure' => 'tls',
-    'user' => 'ad3ca6001@smtp-brevo.com',
+    'user' => 'seu_login@smtp-brevo.com',
     'pass' => 'CHAVE_SMTP_BREVO',
     'from_by_domain' => [
         'oshercollective.com' => [

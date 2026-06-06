@@ -50,7 +50,7 @@ fi
 
 HOST="${SMTP_HOST:-smtp-relay.brevo.com}"
 PORT="${SMTP_PORT:-587}"
-USER="${SMTP_USER:-ad3ca6001@smtp-brevo.com}"
+USER="${SMTP_USER:-seu_login@smtp-brevo.com}"
 SECURE="${SMTP_SECURE:-tls}"
 if [[ "$SECURE" == "false" || "$SECURE" == "0" ]]; then
   SECURE="tls"

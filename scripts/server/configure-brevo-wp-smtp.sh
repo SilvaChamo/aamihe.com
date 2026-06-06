@@ -12,7 +12,7 @@ CONFIG="${MU_DEST}/brevo-smtp-config.php"
 HOST="${SMTP_HOST:-smtp-relay.brevo.com}"
 PORT="${SMTP_PORT:-587}"
 SECURE="${SMTP_SECURE:-tls}"
-USER="${SMTP_USER:-ad3ca6001@smtp-brevo.com}"
+USER="${SMTP_USER:-seu_login@smtp-brevo.com}"
 PASS="${SMTP_PASS:-}"
 
 if [[ -z "$PASS" ]]; then
