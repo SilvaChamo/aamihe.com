@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
-import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
 import { SessionUserProvider } from '@/hooks/useSessionUser';
 export default function AdminAuthGate({ children }: { children: React.ReactNode }) {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -29,7 +28,7 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
   }, []);
 
   if (authorized === null) {
-    return <AdminShellSkeleton />;
+    return null;
   }
 
   if (!authorized) {

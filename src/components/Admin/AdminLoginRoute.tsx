@@ -1,7 +1,6 @@
 'use client';
 
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
-import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
@@ -49,7 +48,7 @@ function AdminLoginContent() {
 
 export default function AdminLoginRoute() {
   return (
-    <Suspense fallback={<AdminLoginSkeleton />}>
+    <Suspense fallback={null}>
       <AdminLoginContent />
     </Suspense>
   );

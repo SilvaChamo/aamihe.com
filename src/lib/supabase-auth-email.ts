@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase/server';
+import { getPublicSiteOrigin } from '@/lib/site-url';
 import { getSmtpConfigStatus, sendSmtpMail } from '@/lib/smtp-mail';
 
 /** Na Vercel, mail.aamihe.com:587 no Hetzner costuma dar ETIMEDOUT — o email sai pelo GoTrue no VPS. */
@@ -11,9 +12,7 @@ function useSiteSmtpForPasswordReset(): boolean {
 }
 
 function siteUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, '');
-  return 'https://aamihe.com';
+  return getPublicSiteOrigin();
 }
 
 function recoveryRedirectTo(): string {

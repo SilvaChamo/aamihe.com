@@ -5,9 +5,7 @@ import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import { LOGIN_PATH } from '@/lib/login-path';
 
 /**
- * Loading de grupo (admin) — renderizado DENTRO do AdminShell.
- * Para rotas de login retorna null: o dashboard/login/loading.tsx dedicado
- * trata o skeleton de login de forma isolada, sem shell visível.
+ * Loading de grupo (admin) — nunca mostrar skeleton do painel na página de login.
  */
 export default function AdminAreaLoading() {
   const pathname = usePathname();
@@ -19,7 +17,7 @@ export default function AdminAreaLoading() {
     pathname === '/login' ||
     pathname.startsWith('/login/');
 
-  if (isLogin) {
+  if (!pathname || isLogin) {
     return null;
   }
 

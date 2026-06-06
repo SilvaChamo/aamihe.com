@@ -107,16 +107,11 @@ export async function adminFetch(input: string, init: RequestInit = {}) {
 }
 
 export async function signInWithGoogle() {
-  const supabase = getSupabaseBrowserClient();
-  const redirectTo = `${window.location.origin}/auth/callback`;
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-      queryParams: { access_type: 'offline', prompt: 'select_account' },
-    },
-  });
-  if (error) throw error;
+  const next =
+    typeof window !== 'undefined'
+      ? `${window.location.pathname}${window.location.search}`
+      : '/dashboard';
+  window.location.assign(`/api/auth/google?next=${encodeURIComponent(next)}`);
 }
 
 export async function signInWithPassword(email: string, password: string) {

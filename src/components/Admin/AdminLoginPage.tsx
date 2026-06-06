@@ -13,7 +13,6 @@ import {
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { readApiJsonResponse, safeErrorMessage } from '@/lib/safe-error-message';
 import { isSubscriberRole, type UserProfile } from '@/lib/user-types';
-import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
 import AdminLoginMathChallenge, { createLoginMathChallenge } from '@/components/Admin/AdminLoginMathChallenge';
 import { verifyMathCaptcha } from '@/lib/math-captcha';
 import './AdminLoginPage.css';
@@ -62,7 +61,7 @@ interface AdminLoginPageProps {
 
 export default function AdminLoginPage(props: AdminLoginPageProps) {
   return (
-    <Suspense fallback={<AdminLoginSkeleton />}>
+    <Suspense fallback={null}>
       <AdminLoginPageInner {...props} />
     </Suspense>
   );

@@ -1,5 +1,4 @@
-import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
-
+/** Login carrega directamente — sem skeleton intermédio do painel. */
 export default function DashboardLoginLoading() {
-  return <AdminLoginSkeleton />;
+  return null;
 }
