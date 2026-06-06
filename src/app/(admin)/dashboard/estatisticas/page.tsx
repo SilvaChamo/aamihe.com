@@ -1,3 +1,5 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import SiteStatsPage from '@/components/Admin/SiteStatsPage';
 
-export default createDashboardStaffRedirect('/admin/estatisticas');
+export default function AdminEstatisticasPage() {
+  return <SiteStatsPage />;
+}

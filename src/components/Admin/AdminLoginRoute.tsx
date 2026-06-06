@@ -29,9 +29,9 @@ function AdminLoginContent() {
         const target =
           role === 'Subscritor'
             ? '/dashboard'
-            : redirectTo.startsWith('/admin')
+            : redirectTo.startsWith('/dashboard')
               ? redirectTo
-              : '/admin/dashboard';
+              : '/dashboard';
         router.replace(target);
       } else {
         await supabase.auth.signOut();

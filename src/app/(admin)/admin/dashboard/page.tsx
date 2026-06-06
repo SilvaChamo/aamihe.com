@@ -1,7 +1,3 @@
-'use client';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-import DashboardContent from '@/components/Admin/DashboardContent';
-
-export default function AdminDashboardPage() {
-  return <DashboardContent />;
-}
+export default createAdminAliasRedirect('/dashboard');

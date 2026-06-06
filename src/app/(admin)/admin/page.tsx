@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminIndexPage() {
-  redirect('/admin/dashboard');
-}
+export default createAdminAliasRedirect('/dashboard');

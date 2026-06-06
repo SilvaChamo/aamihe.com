@@ -1,4 +1,4 @@
-import { getRequestOrigin } from '@/lib/site-url';
+import { getPublicSiteOrigin } from '@/lib/site-url';
 
 export function getGoogleClientId(): string {
   return (
@@ -12,8 +12,8 @@ export function getGoogleClientSecret(): string {
   return process.env.GOOGLE_CLIENT_SECRET?.trim() || '';
 }
 
-export function getGoogleRedirectUri(request: Request): string {
-  return `${getRequestOrigin(request)}/api/auth/google/callback`;
+export function getGoogleRedirectUri(request?: Request): string {
+  return `${getPublicSiteOrigin(request)}/api/auth/google/callback`;
 }
 
 export function buildGoogleAuthUrl(request: Request, state: string): string {

@@ -1,7 +1,3 @@
-'use client';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-import BackupSettingsPage from '@/components/Admin/BackupSettingsPage';
-import '../definicoes.css';
-export default function DefinicoesBackupPage() {
-  return <BackupSettingsPage />;
-}
+export default createAdminAliasRedirect('/dashboard/definicoes/backup');

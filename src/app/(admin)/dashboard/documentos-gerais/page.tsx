@@ -1,3 +1,3 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default createDashboardStaffRedirect('/admin/documentos-gerais');
+export default createAdminAliasRedirect('/dashboard/documentos-gerais');

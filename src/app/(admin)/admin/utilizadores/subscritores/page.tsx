@@ -1,5 +1,3 @@
-import ConferenceSubscribersPage from '@/components/Admin/ConferenceSubscribersPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminConferenceSubscribersRoute() {
-  return <ConferenceSubscribersPage />;
-}
+export default createAdminAliasRedirect('/dashboard/utilizadores/subscritores');

@@ -1,5 +1,3 @@
-import NoticiasListPage from '@/components/Admin/NoticiasListPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminNoticiasPage() {
-  return <NoticiasListPage />;
-}
+export default createAdminAliasRedirect('/dashboard/noticias');

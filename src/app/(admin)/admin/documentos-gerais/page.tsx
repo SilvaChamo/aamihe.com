@@ -1,5 +1,3 @@
-import ConferenceSubmissionsList from '@/components/Admin/ConferenceSubmissionsList';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminDocumentosConferenciaPage() {
-  return <ConferenceSubmissionsList viewPath="/admin/documentos-gerais/ver" />;
-}
+export default createAdminAliasRedirect('/dashboard/documentos-gerais');

@@ -1,8 +1,9 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-type Props = { params: Promise<{ id: string }> };
+import { use } from 'react';
+import { EditUserFormPage } from '@/components/Admin/UserFormPage';
 
-export default async function DashboardUtilizadoresEditarRedirect({ params }: Props) {
-  const { id } = await params;
-  redirect(`/admin/utilizadores/editar/${id}`);
+export default function AdminEditUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return <EditUserFormPage userId={id} />;
 }

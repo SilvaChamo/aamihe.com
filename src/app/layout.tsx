@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import { NewsProvider } from '@/context/NewsContext';
 import ScrollRevealHandler from '@/components/ScrollRevealHandler';
 import HtmlLangUpdater from '@/components/HtmlLangUpdater';
+import SupabaseCookieSanitizer from '@/components/SupabaseCookieSanitizer';
 import localFont from 'next/font/local';
 
 const robotoSlab = localFont({
@@ -32,6 +33,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-PT" className={robotoSlab.className}>
       <body>
+        <Script id="supabase-cookie-sanitize" strategy="beforeInteractive">
+          {`(function(){try{var a='sb-supabase-auth-token';document.cookie.split(';').forEach(function(p){var n=p.trim().split('=')[0];if(!n||n.indexOf('sb-')!==0||n.indexOf('-auth-token')<0)return;var b=n.replace(/\\.\\d+$/,'');if(b.indexOf('gwankhxcbkrtgxopbxwd')>=0||b!==a){document.cookie=n+'=; Max-Age=0; path=/; SameSite=Lax';}});}catch(e){}})();`}
+        </Script>
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
@@ -45,6 +49,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <NewsProvider>
             <ScrollRevealHandler />
             <HtmlLangUpdater />
+            <SupabaseCookieSanitizer />
             <div className="site-root">{children}</div>
           </NewsProvider>
         </LanguageProvider>

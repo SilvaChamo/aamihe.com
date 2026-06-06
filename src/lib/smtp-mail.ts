@@ -3,6 +3,7 @@ import type Mail from 'nodemailer/lib/mailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import {
   getSmtpCredentialsForFrom,
+  isRelaySmtp,
   listConfiguredSmtpAccounts,
   parseFromEmail,
 } from '@/lib/smtp-accounts';
@@ -69,8 +70,9 @@ export function getSmtpConfigStatus(): SmtpConfigStatus {
       mode: 'smtp',
       host,
       port,
-      hint:
-        'Defina SMTP_USER/SMTP_PASS (noreply@aamihe.com) e SMTP_GERAL_PASS (geral@aamihe.com) no DirectAdmin/Vercel.',
+      hint: isRelaySmtp()
+        ? 'Defina SMTP_USER e SMTP_PASS (credencial Brevo) no .env.local ou Vercel.'
+        : 'Defina SMTP_USER/SMTP_PASS (noreply@aamihe.com) e SMTP_GERAL_PASS (geral@aamihe.com) no DirectAdmin/Vercel.',
     };
   }
 

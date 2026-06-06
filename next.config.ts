@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'supabase.visualdesignmoz.com',
+        hostname: 'supabase.aamihe.com',
         pathname: '/storage/v1/object/public/**',
       },
       {
@@ -34,6 +34,21 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: '/admin',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/admin/dashboard',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/admin/:path*',
+        destination: '/dashboard/:path*',
+        permanent: false,
+      },
       {
         source: '/documentos-gerais',
         destination: '/galeria?tipo=documentos',

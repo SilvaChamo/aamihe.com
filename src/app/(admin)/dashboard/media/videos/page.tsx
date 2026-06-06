@@ -1,3 +1,8 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+'use client';
 
-export default createDashboardStaffRedirect('/admin/media/videos');
+import MediaLibrarySection from '@/components/Admin/MediaLibrarySection';
+import '../media.css';
+
+export default function AdminMediaVideosPage() {
+  return <MediaLibrarySection title="Vídeos do site" initialCategory="videos" />;
+}

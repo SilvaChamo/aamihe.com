@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     await insertDocuments(records);
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com';
-    const adminUrl = `${siteUrl}/admin/documentos-gerais`;
+    const adminUrl = `${siteUrl}/dashboard/documentos-gerais`;
     const fileLines = records.map(
       (record, index) =>
         `${index + 1}. ${files[index].name} — ${record.file_url.startsWith('http') ? record.file_url : `${siteUrl}${record.file_url}`}`,

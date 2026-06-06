@@ -6,9 +6,9 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "next dev --port 3004",
+    "dev": "NODE_OPTIONS='--max-http-header-size=65536' next dev --port 3004",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS='--max-http-header-size=65536' next start",
     "consolidate-media": "npx tsx scripts/consolidate-media-catalog.ts",
     "sync-media-storage": "npx tsx scripts/run-sync-media.ts",
     "migrate-supabase-urls": "node scripts/migrate-supabase-urls.mjs",
@@ -18,8 +18,6 @@
     "sync-gallery": "npm run sync-gallery-metadata",
     "migrate-documents": "node scripts/migrate-documents-notifications-to-supabase.mjs",
     "migrate-all-to-supabase": "node scripts/migrate-all-to-supabase-hetzner.mjs",
-    "supabase-hetzner:migrate": "node scripts/migrate-aamihe-cloud-to-hetzner.mjs",
-    "supabase-hetzner:migrate-storage": "node scripts/migrate-storage-cloud-to-hetzner.mjs",
     "test-email": "node scripts/test-email.mjs",
     "set-user-password": "node scripts/set-aamihe-user-password.mjs",
     "server:ssh": "bash scripts/server/remote.sh",

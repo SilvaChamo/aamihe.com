@@ -1,9 +1,4 @@
-/** Origem do pedido HTTP (OAuth, callbacks). */
-export function getRequestOrigin(request: Request): string {
-  return new URL(request.url).origin;
-}
-
-/** Origem pública do site (emails, links) — aamihe.com, nunca supabase.co. */
+/** Origem pública do site (aamihe.com), nunca *.vercel.app nem supabase.co. */
 export function getPublicSiteOrigin(request?: Request): string {
   if (request) {
     const origin = new URL(request.url).origin;

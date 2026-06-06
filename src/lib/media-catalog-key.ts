@@ -49,8 +49,7 @@ export function isSupabaseStorageUrl(url: string | undefined): boolean {
   if (!url) return false;
   const lower = url.toLowerCase();
   return (
-    lower.includes('supabase.co/storage') ||
-    lower.includes('supabase.visualdesignmoz.com/storage') ||
+    lower.includes('supabase.aamihe.com/storage') ||
     /\/storage\/v1\/object\//i.test(url)
   );
 }
@@ -73,7 +72,7 @@ export function mediaPriority(item: { source?: string; id: string; url: string }
   if (item.url.startsWith('/gallery/') || item.url.startsWith('/images/')) return 5;
   if (item.source === 'upload' || item.source === 'news') return 4;
   if (item.id.startsWith('media_')) return 4;
-  if (item.url.includes('supabase.co/storage')) return 4;
+  if (item.url.includes('supabase.aamihe.com/storage')) return 4;
   if (item.url.startsWith('/uploads/')) return 3;
   return 1;
 }
@@ -94,7 +93,7 @@ export function mediaQualityScore(item: SiteMediaRecord): number {
   if (item.size && item.size > 0) score += item.size;
   score += parseDimensionsFromUrl(item.url);
   if (isThumbnailUrl(item.url)) score -= 500_000;
-  if (item.url.includes('supabase.co/storage')) score += 10_000;
+  if (item.url.includes('supabase.aamihe.com/storage')) score += 10_000;
   return score;
 }
 

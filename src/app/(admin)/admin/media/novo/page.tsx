@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AddMediaRedirectPage() {
-  redirect('/admin/media');
-}
+export default createAdminAliasRedirect('/dashboard/media');

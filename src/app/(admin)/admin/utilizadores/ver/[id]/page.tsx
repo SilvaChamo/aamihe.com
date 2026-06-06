@@ -1,5 +1,3 @@
-import UserViewPage from '@/components/Admin/UserViewPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function ViewUserPage() {
-  return <UserViewPage />;
-}
+export default createAdminAliasRedirect('/dashboard/utilizadores/ver/[id]');

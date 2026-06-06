@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { exchangeGoogleCode } from '@/lib/google-oauth';
+import { clearStaleSupabaseAuthCookiesFromRequest } from '@/lib/supabase-auth-cookies';
 import { GOOGLE_OAUTH_STATE_COOKIE } from '@/lib/google-oauth-state';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { findUserByLogin } from '@/lib/users';
@@ -83,16 +84,15 @@ export async function GET(request: Request) {
     return loginRedirect(request, 'no_aamihe_access', NO_ACCESS_MSG);
   }
 
-  const isStaff = profile.role !== 'Subscritor';
-  const defaultTarget = isStaff ? '/admin/dashboard' : '/dashboard';
+  const defaultTarget = '/dashboard';
   const target =
-    nextPath.startsWith('/admin') && !isStaff
-      ? '/dashboard'
-      : nextPath === '/dashboard/login'
-        ? defaultTarget
-        : nextPath;
+    nextPath.startsWith('/admin') || nextPath === '/dashboard/login' ? defaultTarget : nextPath;
 
   const response = NextResponse.redirect(new URL(target, request.url));
+  clearStaleSupabaseAuthCookiesFromRequest(
+    (await cookies()).getAll(),
+    response,
+  );
   response.cookies.delete(GOOGLE_OAUTH_STATE_COOKIE);
   return response;
 }

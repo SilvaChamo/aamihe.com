@@ -1,3 +1,5 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import { redirect } from 'next/navigation';
 
-export default createDashboardStaffRedirect('/admin/utilizadores/subscritores/email');
+export default function LegacySubscriberEmailRoute() {
+  redirect('/dashboard/enviar-email');
+}

@@ -1,4 +1,4 @@
-import { hasSmtpCredentialsForEmail, listConfiguredSmtpAccounts } from '@/lib/smtp-accounts';
+import { getSmtpFromDomain, hasSmtpCredentialsForEmail, isRelaySmtp, listConfiguredSmtpAccounts } from '@/lib/smtp-accounts';
 import { listUsers } from '@/lib/users';
 import type { UserListItem } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
@@ -12,8 +12,8 @@ export type SenderAccount = {
 };
 
 const SYSTEM_SENDERS: Omit<SenderAccount, 'from'>[] = [
-  { id: 'noreply', email: 'noreply@aamihe.com', name: 'AAMIHE', label: 'AAMIHE — noreply@aamihe.com' },
-  { id: 'geral', email: 'geral@aamihe.com', name: 'AAMIHE', label: 'AAMIHE — geral@aamihe.com' },
+  { id: 'noreply', email: `noreply@${getSmtpFromDomain()}`, name: 'AAMIHE', label: `AAMIHE — noreply@${getSmtpFromDomain()}` },
+  { id: 'geral', email: `geral@${getSmtpFromDomain()}`, name: 'AAMIHE', label: `AAMIHE — geral@${getSmtpFromDomain()}` },
 ];
 
 function formatFrom(name: string, email: string) {
@@ -21,12 +21,13 @@ function formatFrom(name: string, email: string) {
 }
 
 function isAamiheEmail(email: string) {
-  return email.trim().toLowerCase().endsWith('@aamihe.com');
+  return email.trim().toLowerCase().endsWith(`@${getSmtpFromDomain()}`);
 }
 
 function canSendAs(email: string): boolean {
   const configured = listConfiguredSmtpAccounts();
   if (configured.length === 0) return true;
+  if (isRelaySmtp()) return isAamiheEmail(email);
   return hasSmtpCredentialsForEmail(email);
 }
 
@@ -77,6 +78,6 @@ export async function listSenderAccounts(cachedUsers?: UserListItem[]): Promise<
 export function resolveSenderFrom(accounts: SenderAccount[], senderId?: string): string {
   const selected = senderId ? accounts.find((a) => a.id === senderId) : accounts[0];
   const name = selected?.name || 'AAMIHE';
-  const email = selected?.email || 'noreply@aamihe.com';
+  const email = selected?.email || `noreply@${getSmtpFromDomain()}`;
   return formatFrom(name, email);
 }

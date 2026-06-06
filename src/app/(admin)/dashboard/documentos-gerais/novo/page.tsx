@@ -1,3 +1,5 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import { redirect } from 'next/navigation';
 
-export default createDashboardStaffRedirect('/admin/documentos-gerais');
+export default function NovoDocumentoRedirect() {
+  redirect('/dashboard/documentos-gerais');
+}

@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function LegacySubscriberEmailRoute() {
-  redirect('/admin/enviar-email');
-}
+export default createAdminAliasRedirect('/dashboard/utilizadores/subscritores/email');

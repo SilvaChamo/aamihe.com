@@ -15,6 +15,7 @@ import { readApiJsonResponse, safeErrorMessage } from '@/lib/safe-error-message'
 import { isSubscriberRole, type UserProfile } from '@/lib/user-types';
 import AdminLoginMathChallenge, { createLoginMathChallenge } from '@/components/Admin/AdminLoginMathChallenge';
 import { verifyMathCaptcha } from '@/lib/math-captcha';
+import { clearStaleSupabaseAuthCookiesInBrowser } from '@/lib/supabase-auth-cookies';
 import './AdminLoginPage.css';
 
 function GoogleIcon() {
@@ -68,7 +69,7 @@ export default function AdminLoginPage(props: AdminLoginPageProps) {
 }
 
 function AdminLoginPageInner({
-  redirectTo = '/admin/noticias',
+  redirectTo = '/dashboard',
   onSuccess,
   initialMode = 'login',
 }: AdminLoginPageProps) {
@@ -97,6 +98,10 @@ function AdminLoginPageInner({
   const [resetChallenge, setResetChallenge] = useState(createLoginMathChallenge);
   const [resetMathAnswer, setResetMathAnswer] = useState('');
   const [resetLoadedAt, setResetLoadedAt] = useState(() => Date.now());
+
+  useEffect(() => {
+    clearStaleSupabaseAuthCookiesInBrowser();
+  }, []);
 
   useEffect(() => {
     const desc = searchParams.get('error_description');
@@ -180,9 +185,9 @@ function AdminLoginPageInner({
       const target =
         profile && isSubscriberRole(profile.role)
           ? '/dashboard'
-          : redirectTo.startsWith('/admin')
+          : redirectTo.startsWith('/dashboard')
             ? redirectTo
-            : '/admin/dashboard';
+            : '/dashboard';
       window.location.assign(target);
     } catch {
       setError('Erro de ligação. Tente novamente.');

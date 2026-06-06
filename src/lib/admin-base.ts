@@ -1,19 +1,10 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useSessionUser } from '@/hooks/useSessionUser';
+/** Prefixo único do painel — sempre /dashboard (sem alternar com /admin). */
+export type AdminBase = '/dashboard';
 
-export type AdminBase = '/admin' | '/dashboard';
-
-/** Prefixo de rotas para links do painel — subscritor usa /dashboard, staff usa /admin. */
 export function useAdminBase(): AdminBase {
-  const pathname = usePathname();
-  const { isSubscriber, loading } = useSessionUser();
-
-  if (!loading && isSubscriber) return '/dashboard';
-  if (!loading) return '/admin';
-
-  return pathname.startsWith('/dashboard') ? '/dashboard' : '/admin';
+  return '/dashboard';
 }
 
 export function adminHref(base: AdminBase, ...parts: string[]): string {

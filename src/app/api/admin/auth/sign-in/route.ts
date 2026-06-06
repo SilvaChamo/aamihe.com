@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { getSupabaseAdmin, hasSupabaseServiceRole } from '@/lib/supabase/server';
 import { safeErrorMessage } from '@/lib/safe-error-message';
+import { clearStaleSupabaseAuthCookiesFromRequest } from '@/lib/supabase-auth-cookies';
 import { findUserByLogin, getUserById } from '@/lib/users';
 
 export async function POST(request: Request) {
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
         type: 'magiclink',
         token_hash: linkResult.data.properties.hashed_token,
       });
-      data = verified.data;
+      data = verified.data as typeof data;
       error = verified.error;
     } else {
       const signIn = await admin.auth.signInWithPassword({ email, password });
@@ -103,21 +105,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createSupabaseServerClient();
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-    });
-
-    if (sessionError) {
-      console.error('[sign-in] setSession:', sessionError.message);
-      return NextResponse.json(
-        { success: false, error: 'Sessão criada mas cookies não guardados. Tente novamente.' },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       username: user.username || login,
       user,
@@ -126,6 +114,11 @@ export async function POST(request: Request) {
         refresh_token: data.session.refresh_token,
       },
     });
+
+    const cookieStore = await cookies();
+    clearStaleSupabaseAuthCookiesFromRequest(cookieStore.getAll(), response);
+
+    return response;
   } catch (error: unknown) {
     const message = safeErrorMessage(
       error instanceof Error ? error.message : '',

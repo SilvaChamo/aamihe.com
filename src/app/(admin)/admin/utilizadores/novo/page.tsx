@@ -1,5 +1,3 @@
-import { AddUserFormPage } from '@/components/Admin/UserFormPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminAddUserPage() {
-  return <AddUserFormPage />;
-}
+export default createAdminAliasRedirect('/dashboard/utilizadores/novo');

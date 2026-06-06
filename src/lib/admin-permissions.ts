@@ -32,10 +32,7 @@ export function isSubscriberOnlyDashboardPath(pathname: string): boolean {
 }
 
 export function staffDashboardPathToAdmin(pathname: string): string | null {
-  if (!pathname.startsWith('/dashboard')) return null;
-  if (pathname === '/dashboard') return '/admin/dashboard';
-  if (isSubscriberOnlyDashboardPath(pathname)) return null;
-  return pathname.replace(/^\/dashboard/, '/admin');
+  return null;
 }
 
 export type AdminPermissions = {

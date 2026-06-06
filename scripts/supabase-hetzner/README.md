@@ -1,6 +1,6 @@
 # Supabase AAMIHE — Hetzner (só AAMIHE)
 
-Instância **isolada**. Visualdesign e outros projectos ficam no Supabase cloud.
+Instância **isolada** no Hetzner — única fonte de dados do AAMIHE (`supabase.aamihe.com`).
 
 ## Fase 1 — VPS (Hetzner Cloud)
 
@@ -64,38 +64,43 @@ http://localhost:3004/auth/confirm
 http://localhost:3004/auth/callback
 ```
 
-## Fase 5 — Migrar dados do Supabase cloud
+## Fase 5 — Google OAuth (login «Entrar com Google»)
 
-Em `.env.local`:
-
-```env
-# Origem (cloud actual — manter até migrar)
-NEXT_PUBLIC_SUPABASE_URL=https://gwankhxcbkrtgxopbxwd.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=...
-
-# Destino (Hetzner)
-SUPABASE_HETZNER_URL=https://supabase.aamihe.com
-SUPABASE_HETZNER_SERVICE_ROLE_KEY=...
-```
+No servidor Hetzner, com as credenciais do Google Cloud Console:
 
 ```bash
-npm run supabase-hetzner:migrate
+scp -P 2234 scripts/supabase-hetzner/configure-google-oauth.sh root@37.27.17.25:/root/
+ssh root@37.27.17.25 -p 2234 \
+  'GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... bash /root/configure-google-oauth.sh'
 ```
 
-## Fase 6 — App AAMIHE
+Isto define `SITE_URL=https://aamihe.com`, `API_EXTERNAL_URL=https://supabase.aamihe.com` e activa GoTrue Google (para `signInWithIdToken`).
 
-Substituir em `.env.local` e **Vercel** (Production):
+URIs de redireccionamento no **Google Cloud Console**:
 
-- `NEXT_PUBLIC_SUPABASE_URL` → `https://supabase.aamihe.com`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` → anon do Hetzner
-- `SUPABASE_SERVICE_ROLE_KEY` → service_role do Hetzner
+- `https://aamihe.com/api/auth/google/callback`
+- `https://app.aamihe.com/api/auth/google/callback`
+- `http://localhost:3004/api/auth/google/callback`
+
+## Fase 6 — App AAMIHE (única fonte Supabase)
+
+Em `.env.local` e **Vercel** (Production) — só Hetzner, sem cloud:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://supabase.aamihe.com
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...   # anon do Hetzner
+SUPABASE_SERVICE_ROLE_KEY=...       # service_role do Hetzner
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+NEXT_PUBLIC_SITE_URL=https://aamihe.com
+```
 
 ```bash
 npm run build
 npx vercel deploy --prod --yes
 ```
 
-Testar: login, repor senha, notícias, media.
+Testar: login email/senha, Google, repor senha, notícias, media.
 
 ## Backup semanal (cron)
 

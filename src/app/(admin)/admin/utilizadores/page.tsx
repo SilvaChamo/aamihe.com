@@ -1,5 +1,3 @@
-import UsersListPage from '@/components/Admin/UsersListPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminUsersPage() {
-  return <UsersListPage />;
-}
+export default createAdminAliasRedirect('/dashboard/utilizadores');

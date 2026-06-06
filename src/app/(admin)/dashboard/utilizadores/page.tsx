@@ -1,3 +1,5 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import UsersListPage from '@/components/Admin/UsersListPage';
 
-export default createDashboardStaffRedirect('/admin/utilizadores');
+export default function AdminUsersPage() {
+  return <UsersListPage />;
+}

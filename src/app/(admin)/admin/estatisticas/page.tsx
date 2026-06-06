@@ -1,5 +1,3 @@
-import SiteStatsPage from '@/components/Admin/SiteStatsPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminEstatisticasPage() {
-  return <SiteStatsPage />;
-}
+export default createAdminAliasRedirect('/dashboard/estatisticas');

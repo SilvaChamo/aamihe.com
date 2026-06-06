@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function DashboardDocumentosEditarRedirect() {
-  redirect('/admin/documentos-gerais');
+export default function EditarDocumentoRedirect() {
+  redirect('/dashboard/documentos-gerais');
 }

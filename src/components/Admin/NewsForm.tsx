@@ -10,6 +10,7 @@ import { Calendar, Eye, Key, ChevronUp } from 'lucide-react';
 import VisualEditor from './VisualEditor';
 import MediaModal from './MediaModal';
 import { persistNewsImage } from '@/lib/persist-client-media';
+import { useAdminBase } from '@/lib/admin-base';
 import './NewsForm.css';
 
 interface NewsFormProps {
@@ -21,6 +22,7 @@ const localeLabels = { pt: 'Português', fr: 'Français', en: 'English' } as con
 
 export default function NewsForm({ initialData, isEdit = false }: NewsFormProps) {
   const router = useRouter();
+  const base = useAdminBase();
   const { locale } = useLanguage();
   const { addNews, updateNews, categories, getNewsById } = useNews();
   const [loading, setLoading] = useState(false);
@@ -95,7 +97,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       } else {
         addNews(payload as Omit<NewsItem, 'id'>);
       }
-      router.push('/admin/noticias');
+      router.push(`${base}/noticias`);
     } catch (err) {
       console.error(err);
       alert(err instanceof Error ? err.message : 'Erro ao guardar notícia');
@@ -210,7 +212,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
               </div>
             </div>
             <div className="news-form-panel-footer">
-              <button type="button" className="news-form-link news-form-link-danger" onClick={() => router.push('/admin/noticias')}>
+              <button type="button" className="news-form-link news-form-link-danger" onClick={() => router.push(`${base}/noticias`)}>
                 Mover para o lixo
               </button>
               <button type="submit" className="news-form-submit" disabled={loading}>

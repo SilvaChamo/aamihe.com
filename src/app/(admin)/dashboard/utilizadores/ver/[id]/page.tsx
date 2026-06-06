@@ -1,8 +1,5 @@
-import { redirect } from 'next/navigation';
+import UserViewPage from '@/components/Admin/UserViewPage';
 
-type Props = { params: Promise<{ id: string }> };
-
-export default async function DashboardUtilizadoresVerRedirect({ params }: Props) {
-  const { id } = await params;
-  redirect(`/admin/utilizadores/ver/${id}`);
+export default function ViewUserPage() {
+  return <UserViewPage />;
 }

@@ -69,5 +69,9 @@ export async function recordEmailSends(count: number) {
     if (key < cutoffKey) delete days[key];
   }
 
-  await writeEmailSendDays(days);
+  try {
+    await writeEmailSendDays(days);
+  } catch (error) {
+    console.error('[email-send-quota] record failed after send:', error);
+  }
 }

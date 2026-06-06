@@ -1,5 +1,3 @@
-import EmailSendPage from '@/components/Admin/EmailSendPage';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function AdminSendEmailMarketingRoute() {
-  return <EmailSendPage />;
-}
+export default createAdminAliasRedirect('/dashboard/enviar-email');

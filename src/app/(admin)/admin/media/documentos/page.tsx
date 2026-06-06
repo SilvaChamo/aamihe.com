@@ -1,8 +1,3 @@
-'use client';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-import MediaLibrarySection from '@/components/Admin/MediaLibrarySection';
-import '../media.css';
-
-export default function AdminMediaDocumentsPage() {
-  return <MediaLibrarySection title="Documentos do site" initialCategory="documentos" />;
-}
+export default createAdminAliasRedirect('/dashboard/media/documentos');

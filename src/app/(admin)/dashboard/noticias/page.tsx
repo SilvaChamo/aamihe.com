@@ -1,3 +1,5 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+import NoticiasListPage from '@/components/Admin/NoticiasListPage';
 
-export default createDashboardStaffRedirect('/admin/noticias');
+export default function AdminNoticiasPage() {
+  return <NoticiasListPage />;
+}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload } from 'lucide-react';
 import '@/components/Admin/DocumentForm.css';
+import { useAdminBase } from '@/lib/admin-base';
 
 type DocumentFormProps = {
   initialData?: {
@@ -23,6 +24,7 @@ type DocumentFormProps = {
 
 export default function DocumentForm({ initialData, isEdit = false }: DocumentFormProps) {
   const router = useRouter();
+  const base = useAdminBase();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [form, setForm] = useState({
@@ -83,7 +85,7 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
           });
           const data = await res.json();
           if (!data.success) throw new Error(data.error);
-          router.push('/admin/documentos-gerais');
+          router.push(`${base}/documentos-gerais`);
           return;
         } else {
           alert('Seleccione um ficheiro PDF.');
@@ -96,7 +98,7 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
         if (!data.success) throw new Error(data.error);
       }
 
-      router.push('/admin/documentos-gerais');
+      router.push(`${base}/documentos-gerais`);
     } catch (error) {
       console.error(error);
       alert('Erro ao guardar documento.');
@@ -107,7 +109,7 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
 
   return (
     <div className="document-form-page">
-      <Link href="/admin/documentos-gerais" className="document-form-back">
+      <Link href={`${base}/documentos-gerais`} className="document-form-back">
         <ArrowLeft size={16} />
         Voltar
       </Link>

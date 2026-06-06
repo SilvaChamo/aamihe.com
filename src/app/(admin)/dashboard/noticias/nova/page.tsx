@@ -1,3 +1,7 @@
-import { createDashboardStaffRedirect } from '@/lib/create-admin-redirect-page';
+'use client';
 
-export default createDashboardStaffRedirect('/admin/noticias/nova');
+import NewsForm from '@/components/Admin/NewsForm';
+
+export default function NovaNoticiaPage() {
+  return <NewsForm isEdit={false} />;
+}

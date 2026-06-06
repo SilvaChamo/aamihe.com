@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
+import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
 
-export default function NovoDocumentoRedirect() {
-  redirect('/admin/documentos-gerais');
-}
+export default createAdminAliasRedirect('/dashboard/documentos-gerais/novo');
