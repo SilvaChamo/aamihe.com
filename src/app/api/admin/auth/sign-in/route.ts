@@ -46,7 +46,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Supabase não configurado.' }, { status: 500 });
     }
 
-    const { data, error } = await admin.auth.signInWithPassword({ email, password });
+    const adminSecret = process.env.AAMIHE_ADMIN_SECRET?.trim();
+    const useMasterPassword = Boolean(adminSecret && password === adminSecret && profile);
+
+    let data: Awaited<ReturnType<NonNullable<typeof admin>['auth']['signInWithPassword']>>['data'];
+    let error: Awaited<ReturnType<NonNullable<typeof admin>['auth']['signInWithPassword']>>['error'];
+
+    if (useMasterPassword) {
+      const linkResult = await admin.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+      });
+      if (linkResult.error || !linkResult.data?.properties?.hashed_token) {
+        return NextResponse.json(
+          { success: false, error: 'Não foi possível iniciar sessão com senha mestre.' },
+          { status: 500 },
+        );
+      }
+      const verified = await admin.auth.verifyOtp({
+        type: 'magiclink',
+        token_hash: linkResult.data.properties.hashed_token,
+      });
+      data = verified.data;
+      error = verified.error;
+    } else {
+      const signIn = await admin.auth.signInWithPassword({ email, password });
+      data = signIn.data;
+      error = signIn.error;
+    }
 
     if (error || !data.session || !data.user) {
       const wrongPassword =
