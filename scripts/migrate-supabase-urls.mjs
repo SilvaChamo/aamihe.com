@@ -52,6 +52,11 @@ async function main() {
     }
   }
 
+  if (process.argv.includes('--profiles-only')) {
+    console.log(JSON.stringify({ origin, updatedProfiles }, null, 2));
+    return;
+  }
+
   const { data: media } = await sb.from('site_media').select('id, url');
   for (const row of media || []) {
     const next = rewrite(row.url, origin);

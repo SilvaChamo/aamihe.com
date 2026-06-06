@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Instala Supabase Docker no VPS Hetzner (só AAMIHE).
-# Uso: bash install.sh supabase.aamihe.com
+# Uso: bash install.sh supabase.visualdesignmoz.com
 set -euo pipefail
 
 API_DOMAIN="${1:-}"
 if [[ -z "$API_DOMAIN" ]]; then
-  echo "Uso: bash install.sh supabase.aamihe.com"
+  echo "Uso: bash install.sh supabase.visualdesignmoz.com"
   exit 1
 fi
 

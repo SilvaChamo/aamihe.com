@@ -99,9 +99,7 @@ fi
 rm -rf /home/admin/domains/supabase.aamihe.com 2>/dev/null || true
 
 echo ""
-echo "=== Testes ==="
+echo "=== Teste ==="
 curl -sI "https://supabase.visualdesignmoz.com" | head -5
-echo "---"
-curl -sI "https://supabase.aamihe.com" | head -5 || echo "(supabase.aamihe.com inacessível — OK)"
 echo ""
 grep -E '^(SITE_URL|API_EXTERNAL_URL|SUPABASE_PUBLIC_URL)=' "$ENV_FILE"

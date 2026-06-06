@@ -6,7 +6,7 @@ Preencher após instalação. **Não commitar** este ficheiro com passwords reai
 
 | Campo | Valor |
 |-------|--------|
-| URL | https://supabase.aamihe.com |
+| URL | https://supabase.visualdesignmoz.com |
 | Utilizador | Supabase |
 | Password | *(password cliente — ver gestor de passwords)* |
 
@@ -22,7 +22,7 @@ Preencher após instalação. **Não commitar** este ficheiro com passwords reai
 
 | Variável | Notas |
 |----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | https://supabase.aamihe.com |
+| `NEXT_PUBLIC_SUPABASE_URL` | https://supabase.visualdesignmoz.com |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anon (Vercel) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Só servidor — nunca no browser |
 

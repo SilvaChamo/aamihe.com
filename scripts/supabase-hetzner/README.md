@@ -1,6 +1,6 @@
 # Supabase AAMIHE — Hetzner (só AAMIHE)
 
-Instância **isolada** no Hetzner — única fonte de dados do AAMIHE (`supabase.aamihe.com`).
+Instância **isolada** no Hetzner — única fonte de dados do AAMIHE (`supabase.visualdesignmoz.com`).
 
 ## Fase 1 — VPS (Hetzner Cloud)
 
@@ -9,7 +9,7 @@ Instância **isolada** no Hetzner — única fonte de dados do AAMIHE (`supabase
 3. Chave SSH (a mesma que usa no servidor)
 4. Anote o **IP público** (ex.: `95.x.x.x`)
 
-DNS **Cloudflare**: registo **A** `supabase` → IP do VPS (`supabase.aamihe.com`)
+DNS **Cloudflare**: registo **A** `supabase` → IP do VPS (`supabase.visualdesignmoz.com`)
 
 ## Fase 2 — Instalar Supabase no VPS
 
@@ -17,7 +17,7 @@ No Mac, a partir da raiz do projecto:
 
 ```bash
 scp scripts/supabase-hetzner/install.sh scripts/supabase-hetzner/aamihe-init.sql root@IP_DO_VPS:/root/
-ssh root@IP_DO_VPS 'bash /root/install.sh supabase.aamihe.com'
+ssh root@IP_DO_VPS 'bash /root/install.sh supabase.visualdesignmoz.com'
 ```
 
 No fim, o script imprime **ANON_KEY**, **SERVICE_ROLE_KEY** e **POSTGRES_PASSWORD**. Guarde em local seguro.
@@ -44,7 +44,7 @@ docker compose exec -T db psql -U postgres < /root/aamihe-init.sql
 
 ## Fase 4 — SMTP (Auth emails)
 
-Abra `https://supabase.aamihe.com` (Studio) → **Authentication → Emails → SMTP**:
+Abra `https://supabase.visualdesignmoz.com` (Studio) → **Authentication → Emails → SMTP**:
 
 | Campo | Valor |
 |-------|--------|
@@ -74,7 +74,7 @@ ssh root@37.27.17.25 -p 2234 \
   'GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... bash /root/configure-google-oauth.sh'
 ```
 
-Isto define `SITE_URL=https://aamihe.com`, `API_EXTERNAL_URL=https://supabase.aamihe.com` e activa GoTrue Google (para `signInWithIdToken`).
+Isto define `SITE_URL=https://aamihe.com`, `API_EXTERNAL_URL=https://supabase.visualdesignmoz.com` e activa GoTrue Google (para `signInWithIdToken`).
 
 URIs de redireccionamento no **Google Cloud Console**:
 
@@ -87,7 +87,7 @@ URIs de redireccionamento no **Google Cloud Console**:
 Em `.env.local` e **Vercel** (Production) — só Hetzner, sem cloud:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://supabase.aamihe.com
+NEXT_PUBLIC_SUPABASE_URL=https://supabase.visualdesignmoz.com
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...   # anon do Hetzner
 SUPABASE_SERVICE_ROLE_KEY=...       # service_role do Hetzner
 GOOGLE_CLIENT_ID=...
@@ -142,10 +142,10 @@ ssh root@37.27.17.25 -p 2234 "bash /root/patch-da-httpd-api-proxy.sh"
 
 Esperado: `Server: kong` e `401`. Caddy desactivado se porta 443 ocupada.
 
-## Mudar de `api.aamihe.com` para `supabase.aamihe.com`
+## Mudar de `api.aamihe.com` para `supabase.visualdesignmoz.com`
 
 1. Cloudflare: **A** `supabase` → `37.27.17.25` (DNS only)
-2. DirectAdmin: subdomínio **supabase** + Let's Encrypt (incluir `supabase.aamihe.com`)
+2. DirectAdmin: subdomínio **supabase** + Let's Encrypt (incluir `supabase.visualdesignmoz.com`)
 3. No Mac:
 
 ```bash
@@ -155,7 +155,7 @@ scp -P 2234 scripts/supabase-hetzner/switch-to-supabase-subdomain.sh \
   scripts/supabase-hetzner/update-docker-public-url.sh \
   root@37.27.17.25:/root/
 ssh root@37.27.17.25 -p 2234 "bash /root/switch-to-supabase-subdomain.sh"
-curl -I https://supabase.aamihe.com
+curl -I https://supabase.visualdesignmoz.com
 ```
 
 **Depois de `rewrite_confs`:** o DirectAdmin pode voltar a servir HTML no subdomínio. Corra de novo `bash /root/patch-da-httpd-supabase-proxy.sh` ou instale o proxy persistente:
@@ -168,8 +168,8 @@ scp -P 2234 scripts/supabase-hetzner/apache-supabase-aamihe.conf \
 ssh root@37.27.17.25 -p 2234 "bash /root/install-apache-supabase-proxy.sh"
 ```
 
-4. `.env.local` + Vercel: `NEXT_PUBLIC_SUPABASE_URL=https://supabase.aamihe.com`
-5. Studio → Auth URLs com `supabase.aamihe.com` (não `api`)
+4. `.env.local` + Vercel: `NEXT_PUBLIC_SUPABASE_URL=https://supabase.visualdesignmoz.com`
+5. Studio → Auth URLs com `supabase.visualdesignmoz.com` (não `api`)
 
 Padrão futuro: `supabase.[dominio-do-site]` (ex. `supabase.entrecampos.pt`).
 

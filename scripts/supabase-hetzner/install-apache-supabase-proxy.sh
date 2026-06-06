@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Proxy persistente: supabase.aamihe.com -> Kong (127.0.0.1:8000)
-# Sobrevive melhor a rewrite_confs do que só o patch no httpd.conf do DirectAdmin.
+# Proxy persistente: supabase.visualdesignmoz.com -> Kong (127.0.0.1:8000)
 # No Mac:
-#   scp -P 2234 scripts/supabase-hetzner/apache-supabase-aamihe.conf \
+#   scp -P 2234 scripts/supabase-hetzner/apache-supabase-visualdesignmoz.conf \
 #     scripts/supabase-hetzner/install-apache-supabase-proxy.sh \
-#     scripts/supabase-hetzner/patch-da-httpd-supabase-proxy.sh root@37.27.17.25:/root/
+#     scripts/supabase-hetzner/patch-da-httpd-supabase-visualdesignmoz-proxy.sh root@37.27.17.25:/root/
 #   ssh root@37.27.17.25 -p 2234 "bash /root/install-apache-supabase-proxy.sh"
 set -euo pipefail
 
@@ -13,12 +12,12 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-CONF_NAME="supabase-aamihe.conf"
+CONF_NAME="supabase-visualdesignmoz.conf"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-SOURCE="${SCRIPT_DIR}/apache-supabase-aamihe.conf"
-[[ -f "$SOURCE" ]] || SOURCE="/root/apache-supabase-aamihe.conf"
-[[ -f "$SOURCE" ]] || { echo "Falta apache-supabase-aamihe.conf em /root/"; exit 1; }
+SOURCE="${SCRIPT_DIR}/apache-supabase-visualdesignmoz.conf"
+[[ -f "$SOURCE" ]] || SOURCE="/root/apache-supabase-visualdesignmoz.conf"
+[[ -f "$SOURCE" ]] || { echo "Falta apache-supabase-visualdesignmoz.conf em /root/"; exit 1; }
 
 HTTPD_ROOT="$(apachectl -V 2>/dev/null | awk -F'"' '/HTTPD_ROOT/ {print $2; exit}')"
 SERVER_CONFIG="$(apachectl -V 2>/dev/null | awk -F'"' '/SERVER_CONFIG_FILE/ {print $2; exit}')"
@@ -75,13 +74,13 @@ fi
 apachectl configtest
 systemctl reload httpd
 
-PATCH="${SCRIPT_DIR}/patch-da-httpd-supabase-proxy.sh"
-[[ -f "$PATCH" ]] || PATCH="/root/patch-da-httpd-supabase-proxy.sh"
+PATCH="${SCRIPT_DIR}/patch-da-httpd-supabase-visualdesignmoz-proxy.sh"
+[[ -f "$PATCH" ]] || PATCH="/root/patch-da-httpd-supabase-visualdesignmoz-proxy.sh"
 if [[ -f "$PATCH" ]]; then
   bash "$PATCH"
 else
-  echo "Aviso: patch-da-httpd-supabase-proxy.sh não encontrado"
+  echo "Aviso: patch-da-httpd-supabase-visualdesignmoz-proxy.sh não encontrado"
 fi
 
 echo ""
-echo "Teste: curl -I https://supabase.aamihe.com  (esperado: Server: kong, 401)"
+echo "Teste: curl -I https://supabase.visualdesignmoz.com  (esperado: Server: kong, 401)"

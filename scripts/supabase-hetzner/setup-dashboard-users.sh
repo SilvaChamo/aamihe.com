@@ -48,7 +48,7 @@ cd "$COMPOSE_DIR"
 docker compose up -d
 
 echo ""
-echo "Contas Studio (https://supabase.aamihe.com):"
+echo "Contas Studio (https://supabase.visualdesignmoz.com):"
 echo "  Admin (você):     ${ADMIN_USER}"
 echo "  Supabase (cliente): ${CLIENT_USER}"
 echo ""
