@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Osher — Force HTTPS
- * Description: URLs sempre em HTTPS + cabeçalho HSTS. Copiar para wp-content/mu-plugins/osher-force-https.php
+ * Description: oshercollective.com — URLs em HTTPS + HSTS. Copiar para wp-content/mu-plugins/
  * Version: 1.0.1
  */
 

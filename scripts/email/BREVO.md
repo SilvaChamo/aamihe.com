@@ -56,7 +56,31 @@ npx vercel env update PASSWORD_RESET_USE_SITE_SMTP production --value "true" -y
 - Login → **Repor senha** (se `PASSWORD_RESET_USE_SITE_SMTP=true`).
 - Destino de teste: Gmail.
 
-## 5. O que o Brevo **não** resolve sozinho
+## 5. WordPress no VPS (todos os sites)
+
+Credenciais **uma vez** no servidor; mu-plugin partilhado via symlinks.
+
+Domínio Osher: **oshercollective.com** (remetente `geral@oshercollective.com` — verificar no Brevo).
+
+```bash
+cd scripts/server
+chmod +x deploy-brevo-wordpress.sh wp-deploy-mu-plugins.sh configure-brevo-wp-smtp.sh
+./deploy-brevo-wordpress.sh
+# Só oshercollective.com:
+WP_DEPLOY_FILTER=oshercollective.com ./deploy-brevo-wordpress.sh
+```
+
+Ficheiros:
+
+| Caminho | Função |
+|---------|--------|
+| `/usr/local/share/wordpress-mu-plugins/brevo-smtp.php` | mu-plugin |
+| `/usr/local/share/wordpress-mu-plugins/brevo-smtp-config.php` | credenciais (não versionar) |
+| `…/wp-content/mu-plugins/brevo-smtp.php` | symlink em cada WordPress |
+
+Teste no WordPress: plugin **Check Email** ou formulário de contacto.
+
+## 6. O que o Brevo **não** resolve sozinho
 
 | Canal | Situação |
 |-------|----------|
