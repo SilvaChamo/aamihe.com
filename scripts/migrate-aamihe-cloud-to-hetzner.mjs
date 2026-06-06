@@ -39,7 +39,7 @@ const sourceUrl =
 const sourceKey =
   process.env.SUPABASE_CLOUD_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const targetUrl =
-  process.env.SUPABASE_HETZNER_URL || 'https://supabase.aamihe.com';
+  process.env.SUPABASE_HETZNER_URL || 'https://supabase.visualdesignmoz.com';
 const targetKey = process.env.SUPABASE_HETZNER_SERVICE_ROLE_KEY;
 
 if (!sourceUrl || !sourceKey || !targetKey) {

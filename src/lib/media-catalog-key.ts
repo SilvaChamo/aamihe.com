@@ -50,7 +50,7 @@ export function isSupabaseStorageUrl(url: string | undefined): boolean {
   const lower = url.toLowerCase();
   return (
     lower.includes('supabase.co/storage') ||
-    lower.includes('supabase.aamihe.com/storage') ||
+    lower.includes('supabase.visualdesignmoz.com/storage') ||
     /\/storage\/v1\/object\//i.test(url)
   );
 }

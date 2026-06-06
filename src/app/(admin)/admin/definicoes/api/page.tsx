@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import { Code, Save, Key, Webhook, Copy, RefreshCw, Trash2 } from 'lucide-react';
 import '../definicoes.css';
 
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://supabase.visualdesignmoz.com';
+
 export default function DefinicoesAPIPage() {
   const [apiKey, setApiKey] = useState('ec_live_sk_1234567890abcdef');
   const [webhooks, setWebhooks] = useState([
@@ -116,14 +119,14 @@ export default function DefinicoesAPIPage() {
             <div className="settings-panel-body">
               <div className="code-snippet-box">
                 <p className="code-snippet-comment">// Exemplo: Listar notícias</p>
-                <p><span className="code-snippet-method">GET</span> <span className="code-snippet-url">https://supabase.aamihe.com/v1/news</span></p>
+                <p><span className="code-snippet-method">GET</span> <span className="code-snippet-url">{supabaseUrl}/v1/news</span></p>
                 <p className="code-snippet-comment">Headers:</p>
                 <p>Authorization: Bearer {apiKey}</p>
               </div>
 
               <div className="code-snippet-box">
                 <p className="code-snippet-comment">// Exemplo: Criar notícia</p>
-                <p><span className="code-snippet-method">POST</span> <span className="code-snippet-url">https://supabase.aamihe.com/v1/news</span></p>
+                <p><span className="code-snippet-method">POST</span> <span className="code-snippet-url">{supabaseUrl}/v1/news</span></p>
                 <p className="code-snippet-comment">Body:</p>
                 <p>{`{"title": "Nova Notícia", "content": "..."}`}</p>
               </div>

@@ -22,11 +22,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'supabase.aamihe.com',
-        pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'supabase.visualdesignmoz.com',
         pathname: '/storage/v1/object/public/**',
       },

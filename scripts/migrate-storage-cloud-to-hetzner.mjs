@@ -30,7 +30,7 @@ loadEnvFile(resolve(root, '.env.local'));
 
 const cloudUrl = process.env.SUPABASE_CLOUD_URL;
 const cloudKey = process.env.SUPABASE_CLOUD_SERVICE_ROLE_KEY;
-const hetznerUrl = process.env.SUPABASE_HETZNER_URL || 'https://supabase.aamihe.com';
+const hetznerUrl = process.env.SUPABASE_HETZNER_URL || 'https://supabase.visualdesignmoz.com';
 const hetznerKey =
   process.env.SUPABASE_HETZNER_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 

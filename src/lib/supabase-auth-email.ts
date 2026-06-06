@@ -11,14 +11,21 @@ function useSiteSmtpForPasswordReset(): boolean {
 }
 
 function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3004')
-  ).replace(/\/$/, '');
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  return 'https://aamihe.com';
 }
 
 function recoveryRedirectTo(): string {
   return `${siteUrl()}/auth/confirm?next=/dashboard/login?action=new-password`;
+}
+
+/** Link directo para /auth/confirm — evita redirect_to errado do Supabase. */
+function buildRecoveryConfirmLink(hashedToken: string): string {
+  const url = new URL(recoveryRedirectTo());
+  url.searchParams.set('token_hash', hashedToken);
+  url.searchParams.set('type', 'recovery');
+  return url.toString();
 }
 
 function resetEmailErrorMessage(error: { message?: string; status?: number }): string {
@@ -111,16 +118,13 @@ async function sendViaSiteSmtp(
     throw new Error(resetEmailErrorMessage(error));
   }
 
-  const actionLink =
-    data?.properties?.action_link?.trim() ||
-    (data as { action_link?: string } | null)?.action_link?.trim();
-
-  if (!actionLink) {
+  const hashedToken = data?.properties?.hashed_token?.trim();
+  if (!hashedToken) {
     throw new Error('Não foi possível gerar o link de recuperação. Confirme que a conta existe no Supabase Auth.');
   }
 
   try {
-    await sendRecoveryEmailViaSmtp(email, actionLink);
+    await sendRecoveryEmailViaSmtp(email, buildRecoveryConfirmLink(hashedToken));
   } catch (err) {
     throw wrapSmtpError(err);
   }
