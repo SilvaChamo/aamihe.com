@@ -3,6 +3,7 @@ import { listDocuments } from '@/lib/aamihe-documents-store';
 import { loadSiteContentFromSupabase, saveSiteContentToSupabase } from '@/lib/supabase-content';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { newsCatalog } from '@/data/news-catalog';
+import { enrichNewsList } from '@/data/noticias/merge-catalog-translations';
 import { NEWS_CATEGORIES } from '@/data/news-categories';
 import { resolveNewsItemImages } from '@/lib/resolve-news-images';
 import type { NewsItem } from '@/data/news';
@@ -45,7 +46,7 @@ export async function GET() {
       news = newsCatalog;
     }
 
-    news = await resolveNewsItemImages(news);
+    news = enrichNewsList(await resolveNewsItemImages(news));
 
     return NextResponse.json({
       success: true,

@@ -29,7 +29,7 @@
   width: 6px;
   height: 80%;
   transform: translateY(-50%);
-  background: #555555;
+  background: #c6924a;
   pointer-events: none;
 }
 
@@ -46,7 +46,7 @@
   width: 6px;
   height: 80%;
   transform: translateY(-50%);
-  background: #555555;
+  background: #e8e8e8;
   pointer-events: none;
 }
 

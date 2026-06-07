@@ -19,23 +19,30 @@ function mergeLocaleTranslation(
   };
 }
 
+/** Aplica traduções de corpo (pt/en/fr) a uma notícia. */
+export function enrichNewsItem(item: NewsItem): NewsItem {
+  const extras = extrasById[String(item.id)] ?? {};
+  const ptExtra = extras.pt;
+  const enMerged = mergeLocaleTranslation(item.translations?.en, extras.en);
+  const frMerged = mergeLocaleTranslation(item.translations?.fr, extras.fr);
+
+  const translations: NewsItem['translations'] = {};
+  if (enMerged?.title?.trim()) translations.en = enMerged;
+  if (frMerged?.title?.trim()) translations.fr = frMerged;
+
+  return {
+    ...item,
+    content: ptExtra?.content?.trim() ? ptExtra.content : item.content,
+    summary: ptExtra?.summary?.trim() ? ptExtra.summary : item.summary,
+    translations: Object.keys(translations).length > 0 ? translations : item.translations,
+  };
+}
+
+export function enrichNewsList(items: NewsItem[]): NewsItem[] {
+  return items.map(enrichNewsItem);
+}
+
 /** Catálogo WordPress com traduções de corpo completas (pt/en/fr). */
 export function getNewsCatalog(): NewsItem[] {
-  return (catalog as NewsItem[]).map((item) => {
-    const extras = extrasById[String(item.id)] ?? {};
-    const ptExtra = extras.pt;
-    const enMerged = mergeLocaleTranslation(item.translations?.en, extras.en);
-    const frMerged = mergeLocaleTranslation(item.translations?.fr, extras.fr);
-
-    const translations: NewsItem['translations'] = {};
-    if (enMerged?.title) translations.en = enMerged;
-    if (frMerged?.title) translations.fr = frMerged;
-
-    return {
-      ...item,
-      content: ptExtra?.content?.trim() ? ptExtra.content : item.content,
-      summary: ptExtra?.summary?.trim() ? ptExtra.summary : item.summary,
-      translations: Object.keys(translations).length > 0 ? translations : item.translations,
-    };
-  });
+  return enrichNewsList(catalog as NewsItem[]);
 }
