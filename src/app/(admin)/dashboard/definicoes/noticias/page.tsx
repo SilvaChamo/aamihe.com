@@ -4,7 +4,6 @@ import React from 'react';
 import { Newspaper, Save, Settings, CheckCircle, Loader2 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import '../definicoes.css';
-import '@/components/Admin/panel-skeleton.css';
 
 const DEFAULTS = {
   postsPerPage: 10,
@@ -38,34 +37,19 @@ export default function DefinicoesNoticiasPage() {
               </span>
             )}
             {error && <span className="settings-error-badge">{error}</span>}
-            <button type="submit" className="btn-save-settings" disabled={saving || loading}>
+            {loading && (
+              <span className="settings-saved-badge" style={{ opacity: 0.75 }}>
+                <Loader2 className="w-4 h-4 spin" /> A sincronizar…
+              </span>
+            )}
+            <button type="submit" className="btn-save-settings" disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'A guardar...' : 'Guardar'}
             </button>
           </div>
         </div>
 
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="settings-panel wp-skeleton-pulse" style={{ minHeight: i === 0 ? 210 : 280 }}>
-                <div className="settings-panel-header">
-                  <div className="panel-skeleton-title" />
-                </div>
-                <div className="settings-panel-body" style={{ display: 'grid', gap: 12 }}>
-                  {Array.from({ length: i === 0 ? 4 : 5 }).map((__, row) => (
-                    <div
-                      key={row}
-                      className="panel-skeleton-line"
-                      style={{ width: row % 2 === 0 ? '92%' : '78%', marginBottom: 0 }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="settings-layout-stack">
+        <div className="settings-layout-stack">
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <h2><Newspaper /> Configurações de Publicação</h2>
@@ -129,7 +113,6 @@ export default function DefinicoesNoticiasPage() {
               </div>
             </div>
           </div>
-        )}
       </form>
     </div>
   );

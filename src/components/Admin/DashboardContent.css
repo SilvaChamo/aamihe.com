@@ -1,7 +1,7 @@
 .dashboard-container {
   min-height: 100vh;
   color: #2c3338;
-  font-family: 'Roboto Slab', serif;
+  font-family: inherit;
   padding-bottom: 48px;
 }
 

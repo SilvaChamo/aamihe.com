@@ -8,14 +8,15 @@ import { SessionUserProvider } from '@/hooks/useSessionUser';
 import { getSessionProfile } from '@/lib/admin-auth';
 
 export default function AdminAuthGate({ children }: { children: React.ReactNode }) {
-  const [authorized, setAuthorized] = useState<boolean | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return getSessionProfile() ? true : null;
-  });
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     let cancelled = false;
+
+    if (getSessionProfile()) {
+      setAuthorized(true);
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!cancelled) setAuthorized(Boolean(session));

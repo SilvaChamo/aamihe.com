@@ -45,19 +45,19 @@ export default function DefinicoesMediaPage() {
               </span>
             )}
             {error && <span className="settings-error-badge">{error}</span>}
-            <button type="submit" className="btn-save-settings" disabled={saving || loading}>
+            {loading && (
+              <span className="settings-saved-badge" style={{ opacity: 0.75 }}>
+                <Loader2 className="w-4 h-4 spin" /> A sincronizar…
+              </span>
+            )}
+            <button type="submit" className="btn-save-settings" disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 spin" /> : <Save className="w-4 h-4" />}
               {saving ? 'A guardar...' : 'Guardar'}
             </button>
           </div>
         </div>
 
-        {loading ? (
-          <div className="settings-loading">
-            <Loader2 className="spin" size={24} /> A carregar definições...
-          </div>
-        ) : (
-          <div className="settings-layout-stack">
+        <div className="settings-layout-stack">
             <div className="settings-panel">
               <div className="settings-panel-header">
                 <h2><Upload /> Upload de Ficheiros</h2>
@@ -164,7 +164,6 @@ export default function DefinicoesMediaPage() {
               </div>
             </div>
           </div>
-        )}
       </form>
     </div>
   );

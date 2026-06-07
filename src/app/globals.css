@@ -16,8 +16,7 @@
   --text-light: #75828c;
   --border: #ededed;
   --max-width: 1280px;
-  --font-admin: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell,
-    'Helvetica Neue', sans-serif;
+  --font-admin: inherit;
   /* top-bar (44px) + main-nav (72px) — alinhado com Header.css */
   --site-header-height: 116px;
   --conference-banner-min-height: clamp(420px, 52vh, 560px);

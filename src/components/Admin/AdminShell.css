@@ -331,6 +331,22 @@ button.admin-brand-action {
   box-shadow: 0 0 0 2px rgba(224, 36, 36, 0.35);
 }
 
+.sidebar-new-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent, #cca876);
+  color: var(--primary-hover, #3a100d);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
 .sidebar-item-main.active .sidebar-notify-badge {
   box-shadow: 0 0 0 2px rgba(224, 36, 36, 0.2);
 }

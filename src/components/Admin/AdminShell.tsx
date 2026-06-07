@@ -20,6 +20,7 @@ import {
   UserCircle,
   Bell,
   Mail,
+  Shield,
 } from 'lucide-react';
 import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
@@ -27,6 +28,23 @@ import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import { useMenuPrivileges } from '@/hooks/useMenuPrivileges';
+import {
+  buildStaffSubmenuEntries,
+  buildSubscriberAdminExtraSubmenuEntries,
+  isStaffDashboardPathAllowed,
+  isStaffMenuEnabled,
+  isSubscriberAdminExtraEnabled,
+  isSubscriberDashboardPathAllowed,
+  isSubscriberMenuEnabled,
+  STAFF_MENU_HREFS,
+  STAFF_MENU_LABELS,
+  STAFF_SUBMENU_ITEMS,
+  SUBSCRIBER_ADMIN_EXTRA_KEYS,
+  type StaffMenuKey,
+  type SubscriberAdminExtraKey,
+  type SubscriberMenuKey,
+} from '@/lib/menu-privileges';
 import { resolveUserDisplayName } from '@/lib/user-types';
 import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
 import { useAdminBase } from '@/lib/admin-base';
@@ -37,6 +55,7 @@ import './admin-buttons.css';
 interface SubmenuEntry {
   label: string;
   href: string;
+  subKey?: string;
 }
 
 interface MenuItem {
@@ -44,8 +63,10 @@ interface MenuItem {
   onClick?: () => void;
   icon: React.ElementType;
   label: string;
+  menuKey?: StaffMenuKey | SubscriberMenuKey;
   submenu?: SubmenuEntry[];
   badge?: number;
+  badgeLabel?: string;
 }
 
 function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string | null {
@@ -66,6 +87,7 @@ interface SidebarItemProps {
   isOpen?: boolean;
   onToggle?: () => void;
   badge?: number;
+  badgeLabel?: string;
 }
 
 const SidebarItem = ({
@@ -79,21 +101,20 @@ const SidebarItem = ({
   isOpen = false,
   onToggle,
   badge = 0,
+  badgeLabel,
 }: SidebarItemProps) => {
   const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
   const mainClassName = ['sidebar-item-main', active ? 'active' : ''].filter(Boolean).join(' ');
-
-  React.useEffect(() => {
-    if (isChildActive && !isOpen && onToggle) onToggle();
-  }, [isChildActive, isOpen, onToggle]);
 
   const linkContent = (
     <>
       <Icon className={`sidebar-icon ${active ? 'active' : ''}`} />
       <span className="sidebar-label-row">
         <span className="sidebar-label">{label}</span>
-        {badge != null && badge > 0 ? (
+        {badgeLabel ? (
+          <span className="sidebar-new-badge">{badgeLabel}</span>
+        ) : badge != null && badge > 0 ? (
           <span className="sidebar-notify-badge" aria-label={`${badge} notificações por ler`}>
             {badge > 99 ? '99+' : badge}
           </span>
@@ -164,15 +185,31 @@ const SidebarItem = ({
   );
 };
 
+function staffMenuIcon(key: StaffMenuKey): React.ElementType {
+  const icons: Record<StaffMenuKey, React.ElementType> = {
+    dashboard: LayoutDashboard,
+    noticias: Newspaper,
+    multimedia: ImageIcon,
+    resumos: FileUp,
+    utilizadores: Users,
+    'enviar-email': Mail,
+    definicoes: Settings,
+    estatisticas: ChartColumnIncreasing,
+  };
+  return icons[key];
+}
+
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const base = useAdminBase();
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
   const { unread: subscriberUnread } = useSubscriberNotifications();
-  const { canManageNews, canManageUsers, canViewNews } = useAdminPermissions();
+  const { canManageNews, canManageUsers, canViewNews, isAdmin } = useAdminPermissions();
+  const { privileges, loading: privilegesLoading } = useMenuPrivileges();
   const showSubscriberNav = base === '/dashboard' && isSubscriber;
-  const menuBase = showSubscriberNav ? '/dashboard' : '/admin';
+  const menuBase = '/dashboard';
+  const privilegesReady = isAdmin || !privilegesLoading;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
@@ -195,17 +232,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const showAccountFooter = sessionLoading || !!loggedUserLabel;
 
-  const subscriberPaths = [
-    '/dashboard',
-    '/dashboard/minha-conta',
-    '/dashboard/meus-documentos',
-    '/dashboard/notificacoes',
-    '/dashboard/definicoes-conta',
-    '/dashboard/submissao-resumo',
-  ];
-
   React.useEffect(() => {
-    if (sessionLoading) return;
+    if (sessionLoading || !privilegesReady) return;
 
     if (isSubscriber && pathname.startsWith('/admin')) {
       router.replace('/dashboard');
@@ -216,6 +244,19 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       const adminPath = staffDashboardPathToAdmin(pathname);
       if (adminPath) {
         router.replace(adminPath);
+        return;
+      }
+
+      if (
+        !isStaffDashboardPathAllowed(
+          pathname,
+          privileges,
+          isAdmin,
+          canViewNews,
+          canManageUsers,
+        )
+      ) {
+        router.replace('/dashboard');
         return;
       }
     }
@@ -233,21 +274,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
     if (!showSubscriberNav) return;
 
-    const allowed = subscriberPaths.some(
-      (path) => pathname === path || pathname.startsWith(`${path}/`),
-    );
-    if (!allowed) {
+    if (!isSubscriberDashboardPathAllowed(pathname, privileges)) {
       router.replace('/dashboard');
     }
   }, [
     pathname,
     router,
     sessionLoading,
+    privilegesReady,
+    privileges,
     showSubscriberNav,
     isSubscriber,
     isStaff,
+    isAdmin,
     canManageNews,
     canViewNews,
+    canManageUsers,
     menuBase,
   ]);
 
@@ -255,122 +297,159 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     setOpenSubmenu((prev) => (prev === label ? null : label));
   };
 
-  React.useEffect(() => {
-    if (openSubmenu === 'Multimédia' && !pathname.startsWith(`${menuBase}/media`)) {
-      setOpenSubmenu(null);
-    }
-    if (openSubmenu === 'Notícias' && !pathname.startsWith(`${menuBase}/noticias`)) {
-      setOpenSubmenu(null);
-    }
-    if (openSubmenu === 'Utilizadores' && !pathname.startsWith(`${menuBase}/utilizadores`)) {
-      setOpenSubmenu(null);
-    }
-    if (openSubmenu === 'Definições' && !pathname.startsWith(`${menuBase}/definicoes`)) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, openSubmenu, menuBase]);
-
-  const newsSubmenu: SubmenuEntry[] = canManageNews
-    ? [
-        { label: 'Todas as Notícias', href: `${menuBase}/noticias` },
-        { label: 'Adicionar Nova', href: `${menuBase}/noticias/nova` },
-        { label: 'Categorias', href: `${menuBase}/noticias/categorias` },
-        { label: 'Etiquetas', href: `${menuBase}/noticias/etiquetas` },
-      ]
+  const newsSubmenuItems = canManageNews
+    ? STAFF_SUBMENU_ITEMS.noticias
     : canViewNews
-      ? [{ label: 'Todas as Notícias', href: `${menuBase}/noticias` }]
-      : [];
+      ? STAFF_SUBMENU_ITEMS.noticias?.filter((item) => item.key === 'list')
+      : undefined;
 
-  const menuItems: MenuItem[] = showSubscriberNav
-    ? [
-        { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta' },
-        { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Resumos' },
-        {
-          href: '/dashboard/notificacoes',
-          icon: Bell,
-          label: 'Notificações',
-          badge: subscriberUnread,
-        },
-        { href: '/dashboard/definicoes-conta', icon: Settings, label: 'Definições' },
-      ]
-    : [
-        {
-          href: `${menuBase}/dashboard`,
-          icon: LayoutDashboard,
-          label: 'Dashboard',
-        },
-    ...(canViewNews
-      ? [
-          {
-            href: `${menuBase}/noticias`,
-            icon: Newspaper,
-            label: 'Notícias',
-            submenu: newsSubmenu,
-          },
-        ]
-      : []),
+  const newsSubmenu: SubmenuEntry[] = newsSubmenuItems
+    ? buildStaffSubmenuEntries('noticias', menuBase, privileges, isAdmin, newsSubmenuItems)
+    : [];
+
+  const multimediaSubmenu = buildStaffSubmenuEntries(
+    'multimedia',
+    menuBase,
+    privileges,
+    isAdmin,
+  );
+
+  const utilizadoresSubmenu = buildStaffSubmenuEntries(
+    'utilizadores',
+    menuBase,
+    privileges,
+    isAdmin,
+  );
+
+  const definicoesSubmenu = buildStaffSubmenuEntries('definicoes', menuBase, privileges, isAdmin);
+
+  const subscriberExtraItems: MenuItem[] = SUBSCRIBER_ADMIN_EXTRA_KEYS.filter((key) =>
+    isSubscriberAdminExtraEnabled(privileges, key),
+  ).map((key) => {
+    const submenu = buildSubscriberAdminExtraSubmenuEntries(key, menuBase, privileges);
+    return {
+      href: `${menuBase}${STAFF_MENU_HREFS[key]}`,
+      icon: staffMenuIcon(key),
+      label: STAFF_MENU_LABELS[key],
+      badgeLabel: 'Novo',
+      ...(submenu.length ? { submenu } : {}),
+    };
+  });
+
+  const subscriberBaseItems: MenuItem[] = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', menuKey: 'dashboard' as SubscriberMenuKey },
+    { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta', menuKey: 'minha-conta' as SubscriberMenuKey },
+    { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Resumos', menuKey: 'resumos' as SubscriberMenuKey },
     {
-      href: `${menuBase}/media`,
-      icon: ImageIcon,
-      label: 'Multimédia',
-      submenu: [
-        { label: 'Biblioteca', href: `${menuBase}/media` },
-        { label: 'Documentos', href: `${menuBase}/media/documentos` },
-        { label: 'Vídeos', href: `${menuBase}/media/videos` },
-      ],
+      href: '/dashboard/notificacoes',
+      icon: Bell,
+      label: 'Notificações',
+      menuKey: 'notificacoes' as SubscriberMenuKey,
+      badge: subscriberUnread,
     },
     {
-      href: `${menuBase}/documentos-gerais`,
-      icon: FileUp,
-      label: 'Resumos',
-    },
-    ...(canManageUsers
-      ? [
-          {
-            href: `${menuBase}/utilizadores`,
-            icon: Users,
-            label: 'Utilizadores',
-            submenu: [
-              { label: 'Todos os Utilizadores', href: `${menuBase}/utilizadores` },
-              { label: 'Subscritores Conferência', href: `${menuBase}/utilizadores/subscritores` },
-              { label: 'Adicionar Novo', href: `${menuBase}/utilizadores/novo` },
-            ],
-          },
-        ]
-      : []),
-    {
-      href: `${menuBase}/enviar-email/normal`,
-      icon: Mail,
-      label: 'Enviar e-mail',
-    },
-    {
-      href: `${menuBase}/definicoes`,
+      href: '/dashboard/definicoes-conta',
       icon: Settings,
       label: 'Definições',
-      submenu: [
-        { label: 'Configurações do Site', href: `${menuBase}/definicoes` },
-        { label: 'Notícias', href: `${menuBase}/definicoes/noticias` },
-        { label: 'Utilizadores', href: `${menuBase}/definicoes/utilizadores` },
-        { label: 'Media', href: `${menuBase}/definicoes/media` },
-        { label: 'Segurança', href: `${menuBase}/definicoes/seguranca` },
-        { label: 'Backup', href: `${menuBase}/definicoes/backup` },
-        { label: 'API & Integrações', href: `${menuBase}/definicoes/api` },
-      ],
+      menuKey: 'definicoes-conta' as SubscriberMenuKey,
     },
-    {
-      href: `${menuBase}/estatisticas`,
-      icon: ChartColumnIncreasing,
-      label: 'Estatísticas',
-    },
-  ];
+  ].filter((item) =>
+    item.menuKey ? isSubscriberMenuEnabled(privileges, item.menuKey as SubscriberMenuKey) : true,
+  );
+
+  const menuItems: MenuItem[] = showSubscriberNav
+    ? [...subscriberBaseItems, ...subscriberExtraItems]
+    : [
+        {
+          href: menuBase,
+          icon: LayoutDashboard,
+          label: 'Dashboard',
+          menuKey: 'dashboard' as StaffMenuKey,
+        },
+        ...(canViewNews
+          ? [
+              {
+                href: `${menuBase}/noticias`,
+                icon: Newspaper,
+                label: 'Notícias',
+                menuKey: 'noticias' as StaffMenuKey,
+                ...(newsSubmenu.length ? { submenu: newsSubmenu } : {}),
+              },
+            ]
+          : []),
+        {
+          href: `${menuBase}/media`,
+          icon: ImageIcon,
+          label: 'Multimédia',
+          menuKey: 'multimedia' as StaffMenuKey,
+          ...(multimediaSubmenu.length ? { submenu: multimediaSubmenu } : {}),
+        },
+        {
+          href: `${menuBase}/documentos-gerais`,
+          icon: FileUp,
+          label: 'Resumos',
+          menuKey: 'resumos' as StaffMenuKey,
+        },
+        ...(canManageUsers
+          ? [
+              {
+                href: `${menuBase}/utilizadores`,
+                icon: Users,
+                label: 'Utilizadores',
+                menuKey: 'utilizadores' as StaffMenuKey,
+                ...(utilizadoresSubmenu.length ? { submenu: utilizadoresSubmenu } : {}),
+              },
+            ]
+          : []),
+        {
+          href: `${menuBase}/enviar-email/normal`,
+          icon: Mail,
+          label: 'Enviar e-mail',
+          menuKey: 'enviar-email' as StaffMenuKey,
+        },
+        {
+          href: `${menuBase}/definicoes`,
+          icon: Settings,
+          label: 'Definições',
+          menuKey: 'definicoes' as StaffMenuKey,
+          ...(definicoesSubmenu.length ? { submenu: definicoesSubmenu } : {}),
+        },
+        {
+          href: `${menuBase}/estatisticas`,
+          icon: ChartColumnIncreasing,
+          label: 'Estatísticas',
+          menuKey: 'estatisticas' as StaffMenuKey,
+        },
+        ...(isAdmin
+          ? [
+              {
+                href: `${menuBase}/privilegios`,
+                icon: Shield,
+                label: 'Privilégios',
+              } as MenuItem,
+            ]
+          : []),
+      ].filter((item) =>
+        item.menuKey
+          ? isStaffMenuEnabled(privileges, item.menuKey as StaffMenuKey, isAdmin)
+          : true,
+      );
+
+  React.useEffect(() => {
+    for (const item of menuItems) {
+      if (item.submenu?.length && getActiveSubmenuHref(pathname, item.submenu)) {
+        setOpenSubmenu(item.label);
+        return;
+      }
+    }
+  }, [pathname, menuItems]);
 
   const handleLogout = () => {
     clearAdminSecret();
     router.push('/dashboard/login');
   };
 
-  if (sessionLoading && !user) {
+  if ((sessionLoading && !user) || !privilegesReady) {
     return (
       <AdminShellSkeleton
         variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}
@@ -411,7 +490,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   : item.href?.includes('/enviar-email')
                     ? pathname.includes('/enviar-email')
                     : pathname === item.href;
-              const shouldBeOpen = openSubmenu === item.label || isChildActive;
+              const shouldBeOpen = openSubmenu === item.label;
 
               return (
                 <SidebarItem
@@ -421,6 +500,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   icon={item.icon}
                   label={item.label}
                   badge={item.badge}
+                  badgeLabel={item.badgeLabel}
                   submenu={item.submenu}
                   active={isActive}
                   activeSubHref={activeSubHref}

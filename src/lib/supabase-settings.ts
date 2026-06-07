@@ -47,6 +47,8 @@ export type SiteSettingsPayload = {
   backupTime?: string;
   keepBackups?: number;
   includeMedia?: boolean;
+  /** Visibilidade dos menus editor / subscritor (Definições → Privilégios). */
+  menuPrivileges?: import('@/lib/menu-privileges').MenuPrivilegesConfig;
 };
 
 // We store settings inside the existing site_content table using a dedicated slug

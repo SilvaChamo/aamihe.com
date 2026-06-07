@@ -28,14 +28,14 @@ const SessionUserContext = createContext<SessionState | null>(null);
 
 /** Uma única verificação de sessão para todo o painel (evita 3–4× /api/admin/users/me). */
 export function SessionUserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(() => getSessionProfile());
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isAdminSecret, setIsAdminSecret] = useState(false);
-  const [loading, setLoading] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return !isSessionProfileCacheFresh();
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const cached = getSessionProfile();
+    if (cached) setUser(cached);
+
     if (isSessionProfileCacheFresh()) {
       setLoading(false);
       return;

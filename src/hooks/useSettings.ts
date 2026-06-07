@@ -2,12 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { adminFetch } from '@/lib/admin-auth';
+import {
+  fetchSettingsCached,
+  invalidateSettingsCache,
+  peekCachedSettings,
+} from '@/lib/settings-cache';
 
 export type SettingsState = Record<string, unknown>;
 
 export function useSettings<T extends SettingsState>(defaults: T) {
-  const [settings, setSettings] = useState<T>(defaults);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<T>(() => {
+    const cached = peekCachedSettings();
+    return cached ? ({ ...defaults, ...cached } as T) : defaults;
+  });
+  const [loading, setLoading] = useState(() => !peekCachedSettings());
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState('');
@@ -17,15 +25,11 @@ export function useSettings<T extends SettingsState>(defaults: T) {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    adminFetch('/api/admin/settings')
-      .then((r) => r.json())
+    fetchSettingsCached()
       .then((data) => {
-        if (data.settings && Object.keys(data.settings).length > 0) {
-          setSettings((prev) => ({ ...prev, ...data.settings }));
+        if (data && Object.keys(data).length > 0) {
+          setSettings((prev) => ({ ...prev, ...data } as T));
         }
-      })
-      .catch(() => {
-        // silent fail — defaults remain
       })
       .finally(() => setLoading(false));
   }, []);
@@ -47,6 +51,7 @@ export function useSettings<T extends SettingsState>(defaults: T) {
         if (!res.ok || !data.success) {
           setError(data.error || 'Erro ao guardar definições.');
         } else {
+          invalidateSettingsCache();
           setSavedAt(new Date());
         }
       } catch {

@@ -1,0 +1,326 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Save, Shield, CheckCircle, Loader2, ChevronDown } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import {
+  STAFF_MENU_KEYS,
+  STAFF_MENU_LABELS,
+  STAFF_SUBMENU_ITEMS,
+  SUBSCRIBER_MENU_KEYS,
+  SUBSCRIBER_MENU_LABELS,
+  SUBSCRIBER_SUBMENU_ITEMS,
+  SUBSCRIBER_ADMIN_EXTRA_KEYS,
+  defaultMenuPrivileges,
+  menuSubPrivilegeKey,
+  type MenuPrivilegesConfig,
+  type StaffMenuKey,
+  type SubscriberAdminExtraKey,
+  type SubscriberMenuKey,
+} from '@/lib/menu-privileges';
+import { invalidateSettingsCache } from '@/lib/settings-cache';
+import '../definicoes/definicoes.css';
+import './privilegios.css';
+
+const DEFAULTS = {
+  menuPrivileges: defaultMenuPrivileges(),
+};
+
+function ToggleRow({
+  title,
+  checked,
+  onChange,
+  nested,
+}: {
+  title: string;
+  checked: boolean;
+  onChange: (enabled: boolean) => void;
+  nested?: boolean;
+}) {
+  return (
+    <div className={`switch-field-row privileges-toggle-row${nested ? ' privileges-sub-row' : ''}`}>
+      <div className="switch-field-label">
+        <p className={`switch-title${nested ? ' privileges-sub-title' : ''}`}>{title}</p>
+      </div>
+      <label className="ios-toggle-switch">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <span className="ios-toggle-slider" />
+      </label>
+    </div>
+  );
+}
+
+function MenuPrivilegeGroup({
+  title,
+  checked,
+  onToggle,
+  children,
+}: {
+  title: string;
+  checked: boolean;
+  onToggle: (enabled: boolean) => void;
+  children?: React.ReactNode;
+}) {
+  const hasChildren = React.Children.count(children) > 0;
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="privileges-menu-group">
+      <div className="switch-field-row privileges-toggle-row privileges-parent-row">
+        <div className="privileges-parent-left">
+          {hasChildren ? (
+            <button
+              type="button"
+              className="privileges-expand-btn"
+              aria-expanded={open}
+              aria-label={open ? 'Ocultar submenus' : 'Mostrar submenus'}
+              onClick={() => setOpen((prev) => !prev)}
+            >
+              <ChevronDown className={`privileges-expand-icon${open ? ' open' : ''}`} />
+            </button>
+          ) : (
+            <span className="privileges-expand-spacer" aria-hidden />
+          )}
+          <div className="switch-field-label">
+            <p className="switch-title">{title}</p>
+          </div>
+        </div>
+        <label className="ios-toggle-switch">
+          <input type="checkbox" checked={checked} onChange={(e) => onToggle(e.target.checked)} />
+          <span className="ios-toggle-slider" />
+        </label>
+      </div>
+      {hasChildren && open ? <div className="privileges-children">{children}</div> : null}
+    </div>
+  );
+}
+
+function AdminExtrasSection({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="privileges-admin-extras-section">
+      <button
+        type="button"
+        className="privileges-section-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        <ChevronDown className={`privileges-expand-icon${open ? ' open' : ''}`} />
+        <div className="privileges-section-heading">
+          <h3>Opções do administrador</h3>
+          <p>Ao activar, aparecem no painel subscritor com a etiqueta «Novo»</p>
+        </div>
+      </button>
+      {open ? <div className="privileges-admin-extras-body">{children}</div> : null}
+    </div>
+  );
+}
+
+export default function PrivilegiosPage() {
+  const { settings, setSettings, loading, saving, savedAt, error, save } = useSettings(DEFAULTS);
+
+  const privileges = settings.menuPrivileges as MenuPrivilegesConfig;
+
+  const toggleStaff = (key: StaffMenuKey, enabled: boolean) => {
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        editor: { ...privileges?.editor, [key]: enabled },
+      },
+    });
+  };
+
+  const toggleStaffSub = (parent: StaffMenuKey, childKey: string, enabled: boolean) => {
+    const subKey = menuSubPrivilegeKey(parent, childKey);
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        editorSub: { ...privileges?.editorSub, [subKey]: enabled },
+      },
+    });
+  };
+
+  const toggleSubscriber = (key: SubscriberMenuKey, enabled: boolean) => {
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        subscriber: { ...privileges?.subscriber, [key]: enabled },
+      },
+    });
+  };
+
+  const toggleSubscriberSub = (parent: SubscriberMenuKey, childKey: string, enabled: boolean) => {
+    const subKey = menuSubPrivilegeKey(parent, childKey);
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        subscriberSub: { ...privileges?.subscriberSub, [subKey]: enabled },
+      },
+    });
+  };
+
+  const toggleSubscriberAdminExtra = (key: SubscriberAdminExtraKey, enabled: boolean) => {
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        subscriberAdminExtras: { ...privileges?.subscriberAdminExtras, [key]: enabled },
+      },
+    });
+  };
+
+  const toggleSubscriberAdminExtraSub = (
+    parent: SubscriberAdminExtraKey,
+    childKey: string,
+    enabled: boolean,
+  ) => {
+    const subKey = menuSubPrivilegeKey(parent, childKey);
+    setSettings({
+      ...settings,
+      menuPrivileges: {
+        ...privileges,
+        subscriberAdminExtrasSub: { ...privileges?.subscriberAdminExtrasSub, [subKey]: enabled },
+      },
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await save();
+    invalidateSettingsCache();
+  };
+
+  return (
+    <div className="settings-container">
+      <form onSubmit={handleSubmit}>
+        <div className="settings-header">
+          <div className="settings-title-group">
+            <h1>Privilégios de menu</h1>
+            <p>Active ou desactive itens da barra lateral do painel editor e do subscritor</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {savedAt && !saving && (
+              <span className="settings-saved-badge">
+                <CheckCircle size={14} /> Guardado
+              </span>
+            )}
+            {error && <span className="settings-error-badge">{error}</span>}
+            {loading && (
+              <span className="settings-saved-badge" style={{ opacity: 0.75 }}>
+                <Loader2 className="w-4 h-4 spin" /> A sincronizar…
+              </span>
+            )}
+            <button type="submit" className="btn-save-settings" disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 spin" /> : <Save className="w-4 h-4" />}
+              {saving ? 'A guardar...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+
+        <div className="privileges-panels-row">
+          <div className="settings-panel">
+            <div className="settings-panel-header">
+              <h2>
+                <Shield /> Painel editor (staff)
+              </h2>
+            </div>
+            <div className="settings-panel-body">
+              {STAFF_MENU_KEYS.map((key) => {
+                const children = STAFF_SUBMENU_ITEMS[key];
+                return (
+                  <MenuPrivilegeGroup
+                    key={key}
+                    title={STAFF_MENU_LABELS[key]}
+                    checked={privileges?.editor?.[key] !== false}
+                    onToggle={(enabled) => toggleStaff(key, enabled)}
+                  >
+                    {children?.map((child) => (
+                      <ToggleRow
+                        key={child.key}
+                        title={child.label}
+                        checked={
+                          privileges?.editorSub?.[menuSubPrivilegeKey(key, child.key)] !== false
+                        }
+                        onChange={(enabled) => toggleStaffSub(key, child.key, enabled)}
+                        nested
+                      />
+                    ))}
+                  </MenuPrivilegeGroup>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="settings-panel">
+            <div className="settings-panel-header">
+              <h2>
+                <Shield /> Painel subscritor
+              </h2>
+            </div>
+            <div className="settings-panel-body">
+              {SUBSCRIBER_MENU_KEYS.map((key) => {
+                const children = SUBSCRIBER_SUBMENU_ITEMS[key];
+                return (
+                  <MenuPrivilegeGroup
+                    key={key}
+                    title={SUBSCRIBER_MENU_LABELS[key]}
+                    checked={privileges?.subscriber?.[key] !== false}
+                    onToggle={(enabled) => toggleSubscriber(key, enabled)}
+                  >
+                    {children?.map((child) => (
+                      <ToggleRow
+                        key={child.key}
+                        title={child.label}
+                        checked={
+                          privileges?.subscriberSub?.[menuSubPrivilegeKey(key, child.key)] !==
+                          false
+                        }
+                        onChange={(enabled) => toggleSubscriberSub(key, child.key, enabled)}
+                        nested
+                      />
+                    ))}
+                  </MenuPrivilegeGroup>
+                );
+              })}
+
+              <AdminExtrasSection>
+                {SUBSCRIBER_ADMIN_EXTRA_KEYS.map((key) => {
+                  const children = STAFF_SUBMENU_ITEMS[key];
+                  return (
+                    <MenuPrivilegeGroup
+                      key={key}
+                      title={STAFF_MENU_LABELS[key]}
+                      checked={privileges?.subscriberAdminExtras?.[key] === true}
+                      onToggle={(enabled) => toggleSubscriberAdminExtra(key, enabled)}
+                    >
+                      {children?.map((child) => (
+                        <ToggleRow
+                          key={child.key}
+                          title={child.label}
+                          checked={
+                            privileges?.subscriberAdminExtrasSub?.[
+                              menuSubPrivilegeKey(key, child.key)
+                            ] !== false
+                          }
+                          onChange={(enabled) =>
+                            toggleSubscriberAdminExtraSub(key, child.key, enabled)
+                          }
+                          nested
+                        />
+                      ))}
+                    </MenuPrivilegeGroup>
+                  );
+                })}
+              </AdminExtrasSection>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
