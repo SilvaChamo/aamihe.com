@@ -33,6 +33,23 @@
   pointer-events: none;
 }
 
+/* Skeleton de login — linha vertical cinza (carregamento de sessão / loading.tsx) */
+.admin-login-page.admin-login-page--skeleton::after {
+  display: none;
+}
+
+.admin-login-skeleton-separator {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  width: 6px;
+  height: 80%;
+  transform: translateY(-50%);
+  background: #555555;
+  pointer-events: none;
+}
+
 .admin-login-panel {
   display: flex;
   align-items: center;
@@ -404,6 +421,10 @@
   }
 
   .admin-login-page::after {
+    display: none;
+  }
+
+  .admin-login-skeleton-separator {
     display: none;
   }
 

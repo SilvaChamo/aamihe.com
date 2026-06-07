@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import AdminLoginPage from '@/components/Admin/AdminLoginPage';
 import AdminLoginSkeleton from '@/components/Admin/AdminLoginSkeleton';
+import '@/components/Admin/admin-login-skeleton.css';
 import { SessionUserProvider } from '@/hooks/useSessionUser';
 import { getSessionProfile } from '@/lib/admin-auth';
 

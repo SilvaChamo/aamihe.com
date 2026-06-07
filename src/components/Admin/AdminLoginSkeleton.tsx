@@ -11,6 +11,7 @@ export default function AdminLoginSkeleton() {
       aria-label="A carregar página de login"
     >
       <div className="admin-login-left" role="img" aria-hidden="true" />
+      <span className="admin-login-skeleton-separator" aria-hidden="true" />
 
       <div className="admin-login-panel">
         <div className="admin-login-panel-inner">
