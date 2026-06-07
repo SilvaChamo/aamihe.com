@@ -7,6 +7,7 @@ import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { adminFetch } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
+import { useLanguage } from '@/context/LanguageContext';
 import './admin-wp.css';
 
 interface UserItem {
@@ -21,10 +22,109 @@ interface UserItem {
   alcunha?: string;
 }
 
+const copy = {
+  pt: {
+    title: 'Utilizadores',
+    addUser: 'Adicionar utilizador',
+    bulkActions: 'Ações por lotes',
+    actionDelete: 'Eliminar',
+    actionReset: 'Enviar reposição de palavra-passe',
+    apply: 'Aplicar',
+    changeRole: 'Mudar papel para…',
+    change: 'Alterar',
+    searchPlaceholder: 'Pesquisar utilizadores',
+    searchBtn: 'Pesquisar utilizadores',
+    colUsername: 'Nome de utilizador',
+    colName: 'Nome',
+    colAlcunha: 'Alcunha',
+    colEmail: 'E-mail',
+    colRole: 'Papel',
+    colArticles: 'Artigos',
+    selectAll: 'Selecionar todos',
+    selectUser: (u: string) => `Selecionar ${u}`,
+    editLink: 'Editar',
+    viewLink: 'Ver',
+    deleting: 'A eliminar…',
+    deleteBtn: 'Eliminar',
+    resetPassword: 'Enviar reposição de senha',
+    empty: 'Nenhum utilizador encontrado.',
+    items: (n: number) => `${n} ${n === 1 ? 'item' : 'itens'}`,
+    confirmDelete: (u: string) => `Tem a certeza que deseja eliminar o utilizador "${u}"? Esta ação não pode ser revertida.`,
+    confirmReset: (e: string) => `Enviar email de reposição de senha para "${e}"?`,
+    errDelete: 'Erro ao eliminar utilizador: ',
+    errLoad: 'Erro ao carregar utilizadores:',
+  },
+  fr: {
+    title: 'Utilisateurs',
+    addUser: 'Ajouter un utilisateur',
+    bulkActions: 'Actions groupées',
+    actionDelete: 'Supprimer',
+    actionReset: 'Envoyer une réinitialisation de mot de passe',
+    apply: 'Appliquer',
+    changeRole: 'Changer le rôle en…',
+    change: 'Modifier',
+    searchPlaceholder: 'Rechercher des utilisateurs',
+    searchBtn: 'Rechercher des utilisateurs',
+    colUsername: "Nom d'utilisateur",
+    colName: 'Nom',
+    colAlcunha: 'Surnom',
+    colEmail: 'E-mail',
+    colRole: 'Rôle',
+    colArticles: 'Articles',
+    selectAll: 'Sélectionner tout',
+    selectUser: (u: string) => `Sélectionner ${u}`,
+    editLink: 'Modifier',
+    viewLink: 'Voir',
+    deleting: 'Suppression…',
+    deleteBtn: 'Supprimer',
+    resetPassword: 'Envoyer une réinitialisation de mot de passe',
+    empty: 'Aucun utilisateur trouvé.',
+    items: (n: number) => `${n} élément${n !== 1 ? 's' : ''}`,
+    confirmDelete: (u: string) => `Êtes-vous sûr de vouloir supprimer l'utilisateur "${u}" ? Cette action est irréversible.`,
+    confirmReset: (e: string) => `Envoyer un e-mail de réinitialisation de mot de passe à "${e}" ?`,
+    errDelete: "Erreur lors de la suppression de l'utilisateur : ",
+    errLoad: 'Erreur lors du chargement des utilisateurs :',
+  },
+  en: {
+    title: 'Users',
+    addUser: 'Add user',
+    bulkActions: 'Bulk actions',
+    actionDelete: 'Delete',
+    actionReset: 'Send password reset',
+    apply: 'Apply',
+    changeRole: 'Change role to…',
+    change: 'Change',
+    searchPlaceholder: 'Search users',
+    searchBtn: 'Search users',
+    colUsername: 'Username',
+    colName: 'Name',
+    colAlcunha: 'Nickname',
+    colEmail: 'E-mail',
+    colRole: 'Role',
+    colArticles: 'Articles',
+    selectAll: 'Select all',
+    selectUser: (u: string) => `Select ${u}`,
+    editLink: 'Edit',
+    viewLink: 'View',
+    deleting: 'Deleting…',
+    deleteBtn: 'Delete',
+    resetPassword: 'Send password reset',
+    empty: 'No users found.',
+    items: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
+    confirmDelete: (u: string) => `Are you sure you want to delete user "${u}"? This action cannot be undone.`,
+    confirmReset: (e: string) => `Send password reset email to "${e}"?`,
+    errDelete: 'Error deleting user: ',
+    errLoad: 'Error loading users:',
+  },
+} as const;
+
 const ROLES = ['Administrador', 'Editor', 'Actor', 'Contribuidor'];
 
 export default function UsersListPage() {
   const base = useAdminBase();
+  const { locale } = useLanguage();
+  const t = copy[locale];
+
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +138,7 @@ export default function UsersListPage() {
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);
     } catch (err: unknown) {
-      console.error('Erro ao carregar utilizadores:', err instanceof Error ? err.message : err);
+      console.error(t.errLoad, err instanceof Error ? err.message : err);
     } finally {
       setLoading(false);
     }
@@ -50,18 +150,11 @@ export default function UsersListPage() {
 
   const filteredUsers = users.filter((user) => {
     const q = searchQuery.toLowerCase();
-    return (
-      user.username.toLowerCase().includes(q) || user.email.toLowerCase().includes(q)
-    );
+    return user.username.toLowerCase().includes(q) || user.email.toLowerCase().includes(q);
   });
 
   const handleDelete = async (user: UserItem) => {
-    if (
-      !confirm(
-        `Tem a certeza que deseja eliminar o utilizador "${user.username}"? Esta ação não pode ser revertida.`
-      )
-    )
-      return;
+    if (!confirm(t.confirmDelete(user.username))) return;
     setDeletingId(user.id);
     try {
       const res = await fetch('/api/admin/users/delete', {
@@ -75,14 +168,14 @@ export default function UsersListPage() {
       }
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
     } catch (err: unknown) {
-      alert('Erro ao eliminar utilizador: ' + (err instanceof Error ? err.message : 'Erro'));
+      alert(t.errDelete + (err instanceof Error ? err.message : 'Erro'));
     } finally {
       setDeletingId(null);
     }
   };
 
   const handleResetPassword = async (user: UserItem) => {
-    if (!confirm(`Enviar email de reposição de senha para "${user.email}"?`)) return;
+    if (!confirm(t.confirmReset(user.email))) return;
     try {
       const res = await adminFetch('/api/admin/users/reset-password', {
         method: 'POST',
@@ -100,24 +193,24 @@ export default function UsersListPage() {
   return (
     <div className="wp-admin-page">
       <div className="wp-page-header wp-page-header--users-title">
-        <h1>Utilizadores</h1>
+        <h1>{t.title}</h1>
         <Link href={`${base}/utilizadores/novo`} className="wp-btn wp-btn-outline">
-          Adicionar utilizador
+          {t.addUser}
         </Link>
       </div>
 
       <div className="wp-list-toolbar">
         <div className="wp-list-toolbar-left">
-          <select className="wp-select" defaultValue="" aria-label="Ações por lotes">
-            <option value="">Ações por lotes</option>
-            <option value="delete">Eliminar</option>
-            <option value="reset">Enviar reposição de palavra-passe</option>
+          <select className="wp-select" defaultValue="" aria-label={t.bulkActions}>
+            <option value="">{t.bulkActions}</option>
+            <option value="delete">{t.actionDelete}</option>
+            <option value="reset">{t.actionReset}</option>
           </select>
           <button type="button" className="wp-btn">
-            Aplicar
+            {t.apply}
           </button>
-          <select className="wp-select" defaultValue="" aria-label="Mudar papel">
-            <option value="">Mudar papel para…</option>
+          <select className="wp-select" defaultValue="" aria-label={t.changeRole}>
+            <option value="">{t.changeRole}</option>
             {ROLES.map((r) => (
               <option key={r} value={r}>
                 {r}
@@ -125,7 +218,7 @@ export default function UsersListPage() {
             ))}
           </select>
           <button type="button" className="wp-btn">
-            Alterar
+            {t.change}
           </button>
         </div>
         <div className="wp-list-toolbar-right">
@@ -133,12 +226,12 @@ export default function UsersListPage() {
             <input
               type="search"
               className="wp-input"
-              placeholder="Pesquisar utilizadores"
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button type="button" className="wp-btn">
-              Pesquisar utilizadores
+              {t.searchBtn}
             </button>
           </div>
         </div>
@@ -149,32 +242,30 @@ export default function UsersListPage() {
           <thead>
             <tr>
               <th className="check-column">
-                <input type="checkbox" aria-label="Selecionar todos" />
+                <input type="checkbox" aria-label={t.selectAll} />
               </th>
-              <th>Nome de utilizador</th>
-              <th>Nome</th>
-              <th>Alcunha</th>
-              <th>E-mail</th>
-              <th>Papel</th>
-              <th style={{ textAlign: 'center' }}>Artigos</th>
+              <th>{t.colUsername}</th>
+              <th>{t.colName}</th>
+              <th>{t.colAlcunha}</th>
+              <th>{t.colEmail}</th>
+              <th>{t.colRole}</th>
+              <th style={{ textAlign: 'center' }}>{t.colArticles}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <SkeletonTableRow key={i} columns={7} />
-              ))
+              Array.from({ length: 5 }).map((_, i) => <SkeletonTableRow key={i} columns={7} />)
             ) : filteredUsers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="wp-empty">
-                  Nenhum utilizador encontrado.
+                  {t.empty}
                 </td>
               </tr>
             ) : (
               filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="check-column">
-                    <input type="checkbox" aria-label={`Selecionar ${user.username}`} />
+                    <input type="checkbox" aria-label={t.selectUser(user.username)} />
                   </td>
                   <td className="username-cell">
                     <div className="wp-user-cell">
@@ -184,16 +275,13 @@ export default function UsersListPage() {
                         className="wp-avatar"
                       />
                       <div>
-                        <Link
-                          href={`${base}/utilizadores/editar/${user.id}`}
-                          className="wp-username-link"
-                        >
+                        <Link href={`${base}/utilizadores/editar/${user.id}`} className="wp-username-link">
                           {user.username}
                         </Link>
                         <div className="wp-row-actions">
-                          <Link href={`${base}/utilizadores/editar/${user.id}`}>Editar</Link>
+                          <Link href={`${base}/utilizadores/editar/${user.id}`}>{t.editLink}</Link>
                           <span className="sep">|</span>
-                          <Link href={`${base}/utilizadores/ver/${user.id}`}>Ver</Link>
+                          <Link href={`${base}/utilizadores/ver/${user.id}`}>{t.viewLink}</Link>
                           {!user.isAdmin && (
                             <>
                               <span className="sep">|</span>
@@ -203,13 +291,13 @@ export default function UsersListPage() {
                                 disabled={deletingId === user.id}
                                 onClick={() => handleDelete(user)}
                               >
-                                {deletingId === user.id ? 'A eliminar…' : 'Eliminar'}
+                                {deletingId === user.id ? t.deleting : t.deleteBtn}
                               </button>
                             </>
                           )}
                           <span className="sep">|</span>
                           <button type="button" onClick={() => handleResetPassword(user)}>
-                            Enviar reposição de senha
+                            {t.resetPassword}
                           </button>
                         </div>
                       </div>
@@ -232,9 +320,7 @@ export default function UsersListPage() {
       </div>
 
       {!loading && (
-        <p className="wp-list-footer">
-          {filteredUsers.length} {filteredUsers.length === 1 ? 'item' : 'itens'}
-        </p>
+        <p className="wp-list-footer">{t.items(filteredUsers.length)}</p>
       )}
     </div>
   );

@@ -27,6 +27,8 @@ export type SubscriberMenuKey = (typeof SUBSCRIBER_MENU_KEYS)[number];
 
 export type SubmenuPrivilegeItem = {
   key: string;
+  /** Chave de tradução no adminShellCopy.submenu; se omitida usa `key`. */
+  labelKey?: string;
   label: string;
   hrefSuffix: string;
 };
@@ -44,15 +46,15 @@ export const STAFF_SUBMENU_ITEMS: Partial<Record<StaffMenuKey, readonly SubmenuP
     { key: 'videos', label: 'Vídeos', hrefSuffix: '/media/videos' },
   ],
   utilizadores: [
-    { key: 'list', label: 'Todos os Utilizadores', hrefSuffix: '/utilizadores' },
+    { key: 'list', labelKey: 'todosUtilizadores', label: 'Todos os Utilizadores', hrefSuffix: '/utilizadores' },
     { key: 'subscritores', label: 'Subscritores Conferência', hrefSuffix: '/utilizadores/subscritores' },
-    { key: 'novo', label: 'Adicionar Novo', hrefSuffix: '/utilizadores/novo' },
+    { key: 'novo', labelKey: 'novoUtilizador', label: 'Adicionar Novo', hrefSuffix: '/utilizadores/novo' },
   ],
   definicoes: [
     { key: 'site', label: 'Configurações do Site', hrefSuffix: '/definicoes' },
-    { key: 'noticias', label: 'Notícias', hrefSuffix: '/definicoes/noticias' },
-    { key: 'utilizadores', label: 'Utilizadores', hrefSuffix: '/definicoes/utilizadores' },
-    { key: 'media', label: 'Media', hrefSuffix: '/definicoes/media' },
+    { key: 'noticias', labelKey: 'noticiasDef', label: 'Notícias', hrefSuffix: '/definicoes/noticias' },
+    { key: 'utilizadores', labelKey: 'utilizadoresDef', label: 'Utilizadores', hrefSuffix: '/definicoes/utilizadores' },
+    { key: 'media', labelKey: 'mediaDef', label: 'Media', hrefSuffix: '/definicoes/media' },
     { key: 'seguranca', label: 'Segurança', hrefSuffix: '/definicoes/seguranca' },
     { key: 'backup', label: 'Backup', hrefSuffix: '/definicoes/backup' },
     { key: 'api', label: 'API & Integrações', hrefSuffix: '/definicoes/api' },
@@ -258,7 +260,7 @@ export function buildStaffSubmenuEntries(
     .map((item) => ({
       label: item.label,
       href: `${menuBase}${item.hrefSuffix}`,
-      subKey: item.key,
+      subKey: item.labelKey ?? item.key,
     }));
 }
 
@@ -273,7 +275,7 @@ export function buildSubscriberAdminExtraSubmenuEntries(
     .map((item) => ({
       label: item.label,
       href: `${menuBase}${item.hrefSuffix}`,
-      subKey: item.key,
+      subKey: item.labelKey ?? item.key,
     }));
 }
 
