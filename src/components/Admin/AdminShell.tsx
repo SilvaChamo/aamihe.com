@@ -199,6 +199,19 @@ function staffMenuIcon(key: StaffMenuKey): React.ElementType {
   return icons[key];
 }
 
+function resolvePanelRoleLabel(
+  sessionLoading: boolean,
+  user: ReturnType<typeof useSessionUser>['user'],
+  isAdminSecret: boolean,
+  isSubscriber: boolean,
+  isAdmin: boolean,
+): string {
+  if (sessionLoading) return '';
+  if (isAdminSecret || isAdmin || user?.role === 'Administrador') return 'Administrador';
+  if (isSubscriber || user?.role === 'Subscritor') return 'Subscritor';
+  return 'Autor';
+}
+
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -231,6 +244,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         : null;
 
   const showAccountFooter = sessionLoading || !!loggedUserLabel;
+  const panelRoleLabel = resolvePanelRoleLabel(
+    sessionLoading,
+    user,
+    isAdminSecret,
+    isSubscriber,
+    isAdmin,
+  );
 
   React.useEffect(() => {
     if (sessionLoading || !privilegesReady) return;
@@ -461,6 +481,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <div className="admin-shell">
       <header className="admin-brand-bar">
         <div className="admin-brand-left">
+          {panelRoleLabel ? (
+            <span className="admin-brand-role">{panelRoleLabel}</span>
+          ) : null}
           <span className="admin-brand-title">AAMIHE</span>
         </div>
         <div className="admin-brand-right">

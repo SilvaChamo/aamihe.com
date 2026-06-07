@@ -4,18 +4,22 @@
 
 /* Variáveis só dentro de Definições — não alteram --primary global (sidebar castanha) */
 .settings-container {
-  --settings-primary: #2271b1;
-  --settings-primary-dark: #135e96;
+  --settings-primary: var(--primary, #561713);
+  --settings-primary-dark: var(--primary-hover, #3a100d);
+  --settings-accent: var(--accent, #cca876);
+  --settings-action: var(--site-action, #02af00);
+  --settings-action-hover: #028a00;
   --danger: #d63638;
-  --success: #00a32a;
+  --success: var(--site-action, #02af00);
   --warning: #f0b849;
-  --bg-page: #f0f0f1;
+  --bg-page: #f4f4f4;
   --bg-panel: #ffffff;
-  --border: #c3c4c7;
+  --bg-panel-head: #faf6f3;
+  --border: #e8ddd4;
   --text-main: #1d2327;
   --text-muted: #50575e;
-  --radius: 4px;
-  --shadow: 0 1px 3px rgba(0,0,0,.1);
+  --radius: 7px;
+  --shadow: 0 1px 3px rgba(86, 23, 19, 0.08);
   padding: 24px;
   color: var(--text-main);
   font-family: inherit;
@@ -113,7 +117,7 @@
 .settings-panel-header {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-  background: #f6f7f7;
+  background: var(--bg-panel-head);
   border-radius: var(--radius) var(--radius) 0 0;
 }
 
@@ -131,6 +135,7 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+  color: var(--settings-primary);
 }
 
 .settings-panel-body {
@@ -257,7 +262,7 @@
 }
 
 .ios-toggle-switch input:checked + .ios-toggle-slider {
-  background: var(--settings-primary);
+  background: var(--settings-action);
 }
 
 .ios-toggle-switch input:checked + .ios-toggle-slider::before {
@@ -314,7 +319,7 @@
 }
 
 .btn-save-settings:hover:not(:disabled) {
-  background: var(--settings-primary-dark);
+  background: var(--site-action-hover, #995b00);
 }
 
 .btn-save-settings:disabled {
@@ -431,7 +436,7 @@
   transition: background .15s;
 }
 
-.btn-backup-now:hover { background: var(--settings-primary-dark); }
+.btn-backup-now:hover { background: var(--site-action-hover, #995b00); }
 .btn-backup-now svg { width: 17px; height: 17px; }
 
 .badge-backup-type {
@@ -513,8 +518,8 @@
 }
 
 .format-pill-btn:hover {
-  background: #e8f0fa;
-  border-color: var(--settings-primary);
+  background: #f5ede3;
+  border-color: var(--settings-accent);
   color: var(--settings-primary);
 }
 
@@ -533,7 +538,7 @@
 
 .range-slider {
   flex: 1;
-  accent-color: var(--settings-primary);
+  accent-color: var(--settings-action);
   height: 4px;
   cursor: pointer;
 }

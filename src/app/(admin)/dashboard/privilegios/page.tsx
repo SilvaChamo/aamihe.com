@@ -59,6 +59,22 @@ function ToggleRow({
   );
 }
 
+function PrivilegesCollapse({
+  open,
+  className = '',
+  children,
+}: {
+  open: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`privileges-collapse${open ? ' is-open' : ''}${className ? ` ${className}` : ''}`}>
+      <div className="privileges-collapse-inner">{children}</div>
+    </div>
+  );
+}
+
 function MenuPrivilegeGroup({
   title,
   checked,
@@ -106,7 +122,11 @@ function MenuPrivilegeGroup({
           <span className="ios-toggle-slider" />
         </label>
       </div>
-      {hasChildren && open ? <div className="privileges-children">{children}</div> : null}
+      {hasChildren ? (
+        <PrivilegesCollapse open={open}>
+          <div className="privileges-children">{children}</div>
+        </PrivilegesCollapse>
+      ) : null}
     </div>
   );
 }
@@ -149,11 +169,11 @@ function AdminExtrasSection({
           <span className="ios-toggle-slider" />
         </label>
       </div>
-      {open ? (
+      <PrivilegesCollapse open={open}>
         <div className={`privileges-admin-extras-body${enabled ? '' : ' is-disabled'}`}>
           {children}
         </div>
-      ) : null}
+      </PrivilegesCollapse>
     </div>
   );
 }
