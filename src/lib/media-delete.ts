@@ -1,11 +1,23 @@
 import path from 'node:path';
-import { readdir, unlink } from 'node:fs/promises';
-import { canDeleteMedia, isSupabaseStorageUrl, mediaUniqueBasename } from '@/lib/media-catalog-key';
-import { findMediaRecordById } from '@/lib/media-registry';
-import { deleteBlobFile, deleteLocalPublicFile, isVercelBlobUrl } from '@/lib/media-storage';
+import { canDeleteMedia, isSupabaseStorageUrl } from '@/lib/media-catalog-key';
+import { findMediaRecordById, invalidateGalleryCatalogCache } from '@/lib/media-registry';
+import {
+  deleteBlobFile,
+  deleteLocalPublicFile,
+  isVercelBlobUrl,
+  movePublicFileToTrash,
+  restorePublicFileFromTrash,
+} from '@/lib/media-storage';
 import { isLocalMediaPath } from '@/lib/media-catalog-key';
 import type { SiteMediaRecord } from '@/lib/site-media';
-import { deleteSupabaseMedia, deleteSupabaseMediaRelated, getSupabaseMediaByUrl } from '@/lib/supabase-media';
+import {
+  addTrashedMedia,
+  getTrashedMedia,
+  listTrashedMedia,
+  removeTrashedMedia,
+  type TrashedMediaRecord,
+} from '@/lib/media-trash-store';
+import { deleteSupabaseMedia, getSupabaseMediaByUrl } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 
 export type MediaDeleteInput = {
@@ -34,48 +46,53 @@ async function resolveMediaRecord(input: MediaDeleteInput): Promise<SiteMediaRec
   const byId = await findMediaRecordById(input.id);
   if (byId) return byId;
 
+  if (input.url?.trim()) {
+    const url = input.url.trim();
+    return {
+      id: input.id,
+      site_slug: 'aamihe',
+      title: path.basename(url),
+      url,
+      mime_type: 'image/jpeg',
+      category: 'imagens',
+      subcategory: 'Galeria',
+      source: 'upload',
+      published: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   return null;
 }
 
-export async function deleteGalleryFilesByBasename(urlOrBasename: string): Promise<number> {
-  const key = urlOrBasename.includes('/')
-    ? mediaUniqueBasename(urlOrBasename)
-    : mediaUniqueBasename(`/gallery/${urlOrBasename}`);
-  if (!key) return 0;
-
-  const galleryDir = path.join(process.cwd(), 'public', 'gallery');
-  let removed = 0;
-
-  try {
-    const entries = await readdir(galleryDir);
-    for (const name of entries) {
-      const fileKey = mediaUniqueBasename(`/gallery/${name}`);
-      if (fileKey !== key && name.toLowerCase() !== key) continue;
-      try {
-        await unlink(path.join(galleryDir, name));
-        removed += 1;
-      } catch (error: unknown) {
-        const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
-        if (code !== 'ENOENT') throw error;
-      }
-    }
-  } catch (error: unknown) {
-    const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
-    if (code !== 'ENOENT') {
-      console.error('deleteGalleryFilesByBasename:', error);
-    }
-  }
-
-  return removed;
+function trashedIdFor(record: SiteMediaRecord, trashUrl: string): string {
+  return `trash_${record.id}_${path.basename(trashUrl)}`;
 }
 
+/** Move item para reciclagem (predefinido). permanent=true elimina de forma irreversível. */
 export async function deleteMediaItem(
   input: MediaDeleteInput,
+  options?: { permanent?: boolean },
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   const { id } = input;
 
   if (!id) {
     return { ok: false, error: 'ID em falta', status: 400 };
+  }
+
+  if (options?.permanent) {
+    const trashed = await getTrashedMedia(id);
+    if (!trashed) {
+      return { ok: false, error: 'Item não encontrado na reciclagem.', status: 404 };
+    }
+    await deleteLocalPublicFile(trashed.trash_path);
+    await removeTrashedMedia(id);
+    if (isSupabaseConfigured()) {
+      await deleteSupabaseMedia(trashed.id);
+    }
+    invalidateGalleryCatalogCache();
+    return { ok: true };
   }
 
   if (id.startsWith('wp_') || id.startsWith('doc_media_')) {
@@ -97,40 +114,41 @@ export async function deleteMediaItem(
   }
 
   const targetUrl = record.url;
-  const basename = mediaUniqueBasename(targetUrl);
 
   if (isLocalMediaPath(targetUrl)) {
-    const removed = await deleteLocalPublicFile(targetUrl);
-    if (!removed) {
+    const moved = await movePublicFileToTrash(targetUrl);
+    if (!moved) {
       return {
         ok: false,
-        error: 'Não foi possível eliminar o ficheiro no servidor.',
+        error: 'Não foi possível mover o ficheiro para a reciclagem.',
         status: 500,
       };
     }
-  }
 
-  if (isVercelBlobUrl(targetUrl)) {
+    const trashId = trashedIdFor(record, moved.trashUrl);
+    await addTrashedMedia({
+      id: trashId,
+      url: targetUrl,
+      trash_path: moved.trashUrl,
+      title: record.title,
+      mime_type: record.mime_type,
+      size: record.size,
+      subcategory: record.subcategory,
+      category: record.category,
+      source: record.source,
+      deleted_at: new Date().toISOString(),
+    });
+  } else if (isVercelBlobUrl(targetUrl)) {
     await deleteBlobFile(targetUrl);
   }
 
-  if (basename) {
-    await deleteGalleryFilesByBasename(basename);
-  }
-
   if (isSupabaseConfigured()) {
-    await deleteSupabaseMediaRelated(targetUrl);
-    if (input.id !== record.id) {
-      await deleteSupabaseMedia(input.id);
-    }
     const supabaseOk = await deleteSupabaseMedia(record.id);
-    const removedLocal = isLocalMediaPath(targetUrl);
-    const removedBlob = isVercelBlobUrl(targetUrl);
     if (
       !supabaseOk &&
       isSupabaseStorageUrl(record.url) &&
-      !removedLocal &&
-      !removedBlob
+      !isLocalMediaPath(targetUrl) &&
+      !isVercelBlobUrl(targetUrl)
     ) {
       return {
         ok: false,
@@ -140,7 +158,54 @@ export async function deleteMediaItem(
     }
   }
 
+  invalidateGalleryCatalogCache();
   return { ok: true };
+}
+
+export async function restoreMediaItem(
+  trashId: string,
+): Promise<{ ok: true; url: string } | { ok: false; error: string; status: number }> {
+  const trashed = await getTrashedMedia(trashId);
+  if (!trashed) {
+    return { ok: false, error: 'Item não encontrado na reciclagem.', status: 404 };
+  }
+
+  const restoredUrl = await restorePublicFileFromTrash(trashed.trash_path, trashed.url);
+  if (!restoredUrl) {
+    return { ok: false, error: 'Não foi possível restaurar o ficheiro.', status: 500 };
+  }
+
+  await removeTrashedMedia(trashId);
+  invalidateGalleryCatalogCache();
+  return { ok: true, url: restoredUrl };
+}
+
+export async function restoreMediaItems(
+  ids: string[],
+): Promise<{ restored: number; failed: { id: string; error: string }[]; urls: string[] }> {
+  const failed: { id: string; error: string }[] = [];
+  const urls: string[] = [];
+  let restored = 0;
+
+  for (const id of ids) {
+    const result = await restoreMediaItem(id);
+    if (result.ok) {
+      restored += 1;
+      urls.push(result.url);
+    } else {
+      failed.push({ id, error: result.error });
+    }
+  }
+
+  if (restored > 0) {
+    invalidateGalleryCatalogCache();
+  }
+
+  return { restored, failed, urls };
+}
+
+export async function listMediaTrash(): Promise<TrashedMediaRecord[]> {
+  return listTrashedMedia();
 }
 
 export async function deleteMediaItems(

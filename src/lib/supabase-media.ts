@@ -171,7 +171,6 @@ export async function deleteSupabaseMediaRelated(url: string): Promise<number> {
   const admin = getSupabaseAdmin();
   if (!admin || !url) return 0;
 
-  const basename = mediaUniqueBasename(url).toLowerCase();
   const catalogKey = mediaCatalogKey(url).toLowerCase();
 
   const { data: rows, error } = await admin.from('site_media').select('id, url, catalog_key, storage_path');
@@ -183,9 +182,7 @@ export async function deleteSupabaseMediaRelated(url: string): Promise<number> {
   const targets = (rows || []).filter((row) => {
     const rowUrl = row.url || '';
     if (rowUrl === url) return true;
-    if (basename && mediaUniqueBasename(rowUrl).toLowerCase() === basename) return true;
     const rowCatalog = (row.catalog_key || '').toLowerCase();
-    if (basename && rowCatalog === basename) return true;
     if (catalogKey && rowCatalog === catalogKey) return true;
     return false;
   });

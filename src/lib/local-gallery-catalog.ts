@@ -58,6 +58,7 @@ export async function collectGalleryImages(): Promise<SiteMediaRecord[]> {
       const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name === '.trash') continue;
         await walk(full, rel);
         continue;
       }

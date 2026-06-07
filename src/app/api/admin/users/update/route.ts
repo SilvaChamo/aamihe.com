@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUser, USER_ROLES, type UserRole } from '@/lib/users';
+import { updateUser } from '@/lib/users';
+import { USER_ROLES, type UserRole } from '@/lib/user-types';
 
 export async function POST(req: NextRequest) {
   try {

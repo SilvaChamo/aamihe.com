@@ -24,11 +24,14 @@ import {
   Video,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from 'lucide-react';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
 import { SkeletonMediaGrid } from '@/components/Admin/Skeleton';
 import { dispatchMediaUpdated } from '@/lib/media-events';
+import { useLanguage } from '@/context/LanguageContext';
+import { adminMediaCopy, tMessages } from '@/i18n/messages';
 import './MediaLibrary.css';
 
 interface MediaLibraryProps {
@@ -39,6 +42,21 @@ interface MediaLibraryProps {
   fullCatalog?: boolean;
   /** Filtro inicial nas páginas Biblioteca / Documentos / Vídeos */
   initialCategory?: MediaCategory;
+  /** Vista controlada pela secção (Biblioteca / Reciclagem) */
+  libraryView?: 'library' | 'trash';
+  onLibraryViewChange?: (view: 'library' | 'trash') => void;
+}
+
+interface TrashFile {
+  id: string;
+  name: string;
+  url: string;
+  trash_path: string;
+  deleted_at: string;
+  metadata?: {
+    size: number;
+    mimetype: string;
+  } | null;
 }
 
 interface MediaFile {
@@ -58,15 +76,14 @@ interface MediaFile {
   description?: string;
 }
 
-const TYPE_FILTERS: { value: 'all' | MediaCategory; label: string }[] = [
-  { value: 'imagens', label: 'Imagens' },
-  { value: 'documentos', label: 'Documentos' },
-  { value: 'videos', label: 'Vídeos' },
-  { value: 'all', label: 'Todos' },
-];
-
 /** 7 colunas × 7 linhas por página da grelha */
 const PAGE_BATCH = 49;
+
+function dateLocaleFor(locale: 'pt' | 'fr' | 'en'): string {
+  if (locale === 'fr') return 'fr-FR';
+  if (locale === 'en') return 'en-GB';
+  return 'pt-PT';
+}
 
 export default function MediaLibrary({
   onSelect,
@@ -74,7 +91,20 @@ export default function MediaLibrary({
   externalSearchQuery,
   fullCatalog,
   initialCategory,
+  libraryView: controlledLibraryView,
+  onLibraryViewChange,
 }: MediaLibraryProps) {
+  const { locale } = useLanguage();
+  const t = tMessages(adminMediaCopy, locale);
+  const typeFilters = useMemo(
+    (): { value: 'all' | MediaCategory; label: string }[] => [
+      { value: 'imagens', label: t.typeImages },
+      { value: 'documentos', label: t.typeDocuments },
+      { value: 'videos', label: t.typeVideos },
+      { value: 'all', label: t.typeAll },
+    ],
+    [t],
+  );
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null);
@@ -85,6 +115,19 @@ export default function MediaLibrary({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [internalLibraryView, setInternalLibraryView] = useState<'library' | 'trash'>('library');
+  const libraryView = controlledLibraryView ?? internalLibraryView;
+  const setLibraryView = (
+    value: 'library' | 'trash' | ((current: 'library' | 'trash') => 'library' | 'trash'),
+  ) => {
+    const next = typeof value === 'function' ? value(libraryView) : value;
+    if (onLibraryViewChange) {
+      onLibraryViewChange(next);
+    } else {
+      setInternalLibraryView(next);
+    }
+  };
+  const [trashItems, setTrashItems] = useState<TrashFile[]>([]);
   const [visibleCount, setVisibleCount] = useState(PAGE_BATCH);
   
   const [isEditingImage, setIsEditingImage] = useState(false);
@@ -115,6 +158,9 @@ export default function MediaLibrary({
   const [savingMetadata, setSavingMetadata] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [editRestoreBackup, setEditRestoreBackup] = useState<TrashFile | null>(null);
+  const [backupRefreshKey, setBackupRefreshKey] = useState(0);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const originalImageDimensions = useRef({ width: 0, height: 0 });
@@ -131,8 +177,11 @@ export default function MediaLibrary({
     return () => mediaQuery.removeEventListener('change', onChange);
   }, []);
 
-  const loadImages = async (filter: 'all' | MediaCategory = typeFilter) => {
-    setLoading(true);
+  const loadImages = async (
+    filter: 'all' | MediaCategory = typeFilter,
+    options?: { silent?: boolean },
+  ) => {
+    if (!options?.silent) setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filter !== 'all') params.set('category', filter);
@@ -167,15 +216,233 @@ export default function MediaLibrary({
       console.error(err);
       setFiles([]);
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     setVisibleCount(PAGE_BATCH);
     setActiveFile(null);
-    void loadImages(typeFilter);
-  }, [typeFilter, fullCatalog]);
+    setIsBulkMode(false);
+    setSelectedIds(new Set());
+    if (libraryView === 'trash') {
+      void loadTrash();
+    } else {
+      void loadImages(typeFilter);
+    }
+  }, [typeFilter, fullCatalog, libraryView]);
+
+  const loadTrash = async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
+    try {
+      const res = await adminFetch('/api/admin/media/trash');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.items)) {
+        setTrashItems(
+          data.items.map(
+            (item: {
+              id: string;
+              url: string;
+              trash_path: string;
+              title: string;
+              mime_type?: string;
+              size?: number;
+              deleted_at: string;
+            }) => ({
+              id: item.id,
+              name: item.title,
+              url: item.url,
+              trash_path: item.trash_path,
+              deleted_at: item.deleted_at,
+              metadata: {
+                size: item.size || 0,
+                mimetype: item.mime_type || 'image/jpeg',
+              },
+            }),
+          ),
+        );
+      } else {
+        setTrashItems([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setTrashItems([]);
+    } finally {
+      if (!options?.silent) setLoading(false);
+    }
+  };
+
+  const restoreFromTrash = async (item: TrashFile) => {
+    setTrashItems((prev) => prev.filter((entry) => entry.id !== item.id));
+    try {
+      const res = await adminFetch('/api/admin/media/trash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restore', id: item.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || t.errRestore);
+      }
+      dispatchMediaUpdated();
+      void loadImages(typeFilter, { silent: true });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t.errRestore);
+      void loadTrash({ silent: true });
+    }
+  };
+
+  const purgeFromTrash = async (item: TrashFile) => {
+    if (!confirm(t.purgeConfirm)) return;
+    setTrashItems((prev) => prev.filter((entry) => entry.id !== item.id));
+    try {
+      const res = await adminFetch('/api/admin/media/trash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'purge', id: item.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || t.errDelete);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t.errDelete);
+      void loadTrash({ silent: true });
+    }
+  };
+
+  const restoreBulk = async () => {
+    if (selectedIds.size === 0) return;
+    const selectedItems = trashItems.filter((item) => selectedIds.has(item.id));
+    if (!selectedItems.length) {
+      alert(t.noneSelectedRestore);
+      return;
+    }
+    if (!confirm(t.restoreConfirm(selectedItems.length))) {
+      return;
+    }
+
+    const ids = selectedItems.map((item) => item.id);
+    setIsRestoring(true);
+    setTrashItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+    setSelectedIds(new Set());
+    setIsBulkMode(false);
+
+    try {
+      const res = await adminFetch('/api/admin/media/trash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restore', ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || Number(data.restored) === 0) {
+        throw new Error(data.error || t.errBulkRestore);
+      }
+      if (Array.isArray(data.failed) && data.failed.length > 0) {
+        alert(t.bulkRestorePartial(Number(data.restored), data.failed.length));
+      }
+      dispatchMediaUpdated();
+      void loadImages(typeFilter, { silent: true });
+      void loadTrash({ silent: true });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t.errBulkRestore);
+      void loadTrash({ silent: true });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleTrashItemClick = (item: TrashFile) => {
+    if (isBulkMode) {
+      toggleSelect(item.id);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !activeFile ||
+      resolveMediaCategory({
+        category: activeFile.category,
+        mime_type: activeFile.metadata?.mimetype,
+        url: activeFile.url,
+      }) !== 'imagens'
+    ) {
+      setEditRestoreBackup(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await adminFetch('/api/admin/media/trash');
+        const data = await res.json();
+        if (cancelled || !data.success || !Array.isArray(data.items)) {
+          if (!cancelled) setEditRestoreBackup(null);
+          return;
+        }
+        const match = data.items.find(
+          (item: { url: string }) => item.url.toLowerCase() === activeFile.url.toLowerCase(),
+        );
+        if (!match) {
+          setEditRestoreBackup(null);
+          return;
+        }
+        setEditRestoreBackup({
+          id: match.id,
+          name: match.title,
+          url: match.url,
+          trash_path: match.trash_path,
+          deleted_at: match.deleted_at,
+          metadata: {
+            size: match.size || 0,
+            mimetype: match.mime_type || 'image/jpeg',
+          },
+        });
+      } catch {
+        if (!cancelled) setEditRestoreBackup(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeFile?.id, activeFile?.url, backupRefreshKey]);
+
+  const resetEditValues = () => {
+    const { width, height } = originalImageDimensions.current;
+    if (width && height) {
+      setEditWidth(width);
+      setEditHeight(height);
+    }
+    setEditFormat('original');
+  };
+
+  const restoreOriginalImage = async () => {
+    if (!editRestoreBackup || !activeFile) return;
+    if (!confirm(t.restoreOriginalConfirm)) return;
+
+    setIsRestoring(true);
+    try {
+      const res = await adminFetch('/api/admin/media/trash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restore', id: editRestoreBackup.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || t.errRestore);
+      }
+      setEditRestoreBackup(null);
+      setIsEditingImage(false);
+      closeAttachmentDetails();
+      dispatchMediaUpdated();
+      void loadImages(typeFilter, { silent: true });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t.errRestore);
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   useEffect(() => {
     const onMediaUpdated = () => void loadImages(typeFilter);
@@ -191,8 +458,13 @@ export default function MediaLibrary({
     const { width: origW, height: origH } = originalImageDimensions.current;
     if (!origW || !origH) return;
     const baseSize = activeFile.metadata?.size || 0;
-    const scale = (editWidth * editHeight) / (origW * origH);
-    let est = baseSize * scale;
+    const pixelRatio = (editWidth * editHeight) / (origW * origH);
+    let est = baseSize * pixelRatio;
+    if (pixelRatio > 1) {
+      est *= 1 + (pixelRatio - 1) * 0.45;
+    } else if (pixelRatio < 1) {
+      est *= 0.55 + pixelRatio * 0.45;
+    }
     if (editFormat === 'webp') est *= 0.72;
     else if (editFormat === 'jpeg') est *= 0.95;
     setEstimatedSize(est > 0 ? est : null);
@@ -216,6 +488,19 @@ export default function MediaLibrary({
     });
   }, [files, searchQuery, externalSearchQuery, typeFilter, isModal, onSelect]);
 
+  const filteredTrash = useMemo(() => {
+    const query = (externalSearchQuery || searchQuery).toLowerCase();
+    return trashItems.filter((item) => {
+      const matchesSearch =
+        !query ||
+        item.name.toLowerCase().includes(query) ||
+        item.url.toLowerCase().includes(query);
+      return matchesSearch;
+    });
+  }, [trashItems, searchQuery, externalSearchQuery]);
+
+  const paginatedTrash = useMemo(() => filteredTrash.slice(0, visibleCount), [filteredTrash, visibleCount]);
+
   const paginatedFiles = useMemo(() => {
     return filteredFiles.slice(0, visibleCount);
   }, [filteredFiles, visibleCount]);
@@ -234,7 +519,7 @@ export default function MediaLibrary({
   );
 
   const isSameMediaFile = (a: MediaFile, b: MediaFile) =>
-    a.id === b.id || mediaCatalogKey(a.url) === mediaCatalogKey(b.url);
+    a.id === b.id || a.url.toLowerCase() === b.url.toLowerCase();
 
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -350,7 +635,7 @@ export default function MediaLibrary({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Erro ao guardar metadados');
+        throw new Error(data.error || t.errSaveMetadata);
       }
       setFiles((prev) =>
         prev.map((f) =>
@@ -362,12 +647,23 @@ export default function MediaLibrary({
                 caption: metadata.caption,
                 description: metadata.description,
               }
-            : f
-        )
+            : f,
+        ),
+      );
+      setActiveFile((prev) =>
+        prev && prev.id === activeFile.id && prev.url === activeFile.url
+          ? {
+              ...prev,
+              name: metadata.title || prev.name,
+              alt_text: metadata.alt_text,
+              caption: metadata.caption,
+              description: metadata.description,
+            }
+          : prev,
       );
       dispatchMediaUpdated();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao guardar metadados');
+      alert(err instanceof Error ? err.message : t.errSaveMetadata);
     } finally {
       setSavingMetadata(false);
     }
@@ -382,7 +678,7 @@ export default function MediaLibrary({
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Erro ao eliminar');
+        throw new Error(data.error || t.errDeleteSingle);
       }
       return;
     }
@@ -396,41 +692,37 @@ export default function MediaLibrary({
     });
     const data = await res.json();
     if (!res.ok || Number(data.deleted) === 0) {
-      throw new Error(data.error || 'Erro ao eliminar em massa');
+      throw new Error(data.error || t.errBulkDeleteApi);
     }
     if (Array.isArray(data.failed) && data.failed.length > 0) {
-      alert(
-        `${data.deleted} eliminado(s). ${data.failed.length} item(ns) não foi/foram eliminado(s) (arquivo legado ou erro).`
-      );
+      alert(t.bulkDeletePartial(Number(data.deleted), data.failed.length));
     }
   };
 
   const removeDeletedFromState = (deleted: MediaFile[]) => {
-    const keys = new Set(deleted.map((f) => mediaCatalogKey(f.url)));
     const ids = new Set(deleted.map((f) => f.id));
-    setFiles((prev) => prev.filter((f) => !ids.has(f.id) && !keys.has(mediaCatalogKey(f.url))));
+    const urls = new Set(deleted.map((f) => f.url.toLowerCase()));
+    setFiles((prev) => prev.filter((f) => !ids.has(f.id) && !urls.has(f.url.toLowerCase())));
   };
 
   const deleteSingle = async (file: MediaFile) => {
     if (!canDeleteMedia(file)) {
-      alert('Este item do arquivo legado não pode ser eliminado aqui.');
+      alert(t.legacyNoDelete);
       return;
     }
-    if (!confirm('Eliminar este item permanentemente?')) return;
+    if (!confirm(t.moveToTrashConfirm)) return;
     const closeEditor = activeFile ? isSameMediaFile(activeFile, file) : false;
     const closePreviewModal = previewImage ? isSameMediaFile(previewImage, file) : false;
-    setLoading(true);
+    removeDeletedFromState([file]);
+    if (closeEditor) closeAttachmentDetails();
+    if (closePreviewModal) closePreview();
     try {
       await requestDelete([file]);
-      removeDeletedFromState([file]);
-      if (closeEditor) closeAttachmentDetails();
-      if (closePreviewModal) closePreview();
       dispatchMediaUpdated();
-      await loadImages();
+      void loadImages(typeFilter, { silent: true });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao eliminar');
-    } finally {
-      setLoading(false);
+      alert(err instanceof Error ? err.message : t.errDeleteSingle);
+      void loadImages(typeFilter, { silent: true });
     }
   };
 
@@ -439,31 +731,29 @@ export default function MediaLibrary({
     const ids = Array.from(selectedIds);
     const selectedFiles = files.filter((f) => ids.includes(f.id));
     if (!selectedFiles.length) {
-      alert('Nenhum item seleccionado para eliminar.');
+      alert(t.noneSelectedDelete);
       return;
     }
-    if (!confirm(`Eliminar ${selectedFiles.length} item(ns)?`)) {
+    if (!confirm(t.moveToTrashBulkConfirm(selectedFiles.length))) {
       return;
     }
-    setLoading(true);
+    removeDeletedFromState(selectedFiles);
+    setSelectedIds(new Set());
+    setIsBulkMode(false);
     try {
       await requestDelete(selectedFiles);
-      removeDeletedFromState(selectedFiles);
-      setSelectedIds(new Set());
-      setIsBulkMode(false);
-      await loadImages();
+      dispatchMediaUpdated();
+      void loadImages(typeFilter, { silent: true });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao eliminar em massa');
-      await loadImages();
-    } finally {
-      setLoading(false);
+      alert(err instanceof Error ? err.message : t.errBulkDelete);
+      void loadImages(typeFilter, { silent: true });
     }
   };
 
   const applyImageEdits = () => {
     if (!activeFile) return;
     if (!editWidth || !editHeight) {
-      alert('Indique largura e altura válidas.');
+      alert(t.invalidDimensions);
       return;
     }
     setSaveMode('replace');
@@ -485,9 +775,8 @@ export default function MediaLibrary({
     setProcessingImage(true);
 
     try {
-      const res = await fetch('/api/admin/media/edit', {
+      const res = await adminFetch('/api/admin/media/edit', {
         method: 'POST',
-        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: activeFile.id,
@@ -498,24 +787,31 @@ export default function MediaLibrary({
           replace,
           fileName: activeFile.name,
           title: metadata.title,
+          alt_text: metadata.alt_text,
+          caption: metadata.caption,
+          description: metadata.description,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        const msg = data.error || 'Erro ao guardar imagem';
+        const msg = data.error || t.errSave;
         throw new Error(
-          msg.includes('eliminar') ? 'Não foi possível guardar a imagem. Tente «Guardar como novo».' : msg
+          msg.includes('eliminar') || msg.toLowerCase().includes('delete') ? t.saveImageTryNew : msg
         );
       }
 
       setIsSaveConfirmOpen(false);
       setPendingEdit(null);
       setIsEditingImage(false);
-      closeAttachmentDetails();
+      if (replace) {
+        setBackupRefreshKey((key) => key + 1);
+      } else {
+        closeAttachmentDetails();
+      }
       dispatchMediaUpdated();
-      await loadImages();
+      await loadImages(typeFilter, { silent: true });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao guardar');
+      alert(err instanceof Error ? err.message : t.errSave);
     } finally {
       setProcessingImage(false);
     }
@@ -531,7 +827,7 @@ export default function MediaLibrary({
       await loadImages();
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Erro ao carregar ficheiros. Tente novamente.');
+      alert(err instanceof Error ? err.message : t.errUpload);
     } finally {
       setIsUploading(false);
       e.target.value = '';
@@ -540,9 +836,7 @@ export default function MediaLibrary({
 
   const runCatalogCleanup = async () => {
     if (
-      !confirm(
-        'Limpar duplicados na base de dados?\n\nMantém uma entrada por foto (alinhada aos ficheiros em /gallery). Remove o resto.'
-      )
+      !confirm(t.cleanupConfirm)
     ) {
       return;
     }
@@ -555,13 +849,13 @@ export default function MediaLibrary({
       });
       const data = await res.json();
       if (!data.success) {
-        alert(data.error || 'Erro na limpeza');
+        alert(data.error || t.errCleanup);
         return;
       }
-      alert(data.message || 'Limpeza concluída.');
+      alert(data.message || t.cleanupDone);
       await loadImages();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro na limpeza');
+      alert(err instanceof Error ? err.message : t.errCleanup);
     } finally {
       setIsCleaning(false);
     }
@@ -579,7 +873,7 @@ export default function MediaLibrary({
     if (!iso) return '—';
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('pt-PT', {
+    return d.toLocaleDateString(dateLocaleFor(locale), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -590,7 +884,7 @@ export default function MediaLibrary({
     const url = getPublicUrl(file);
     try {
       await navigator.clipboard.writeText(url);
-      alert('URL copiada.');
+      alert(t.urlCopied);
     } catch {
       alert(url);
     }
@@ -607,7 +901,7 @@ export default function MediaLibrary({
             type="button"
             className={`media-toolbar-button ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
-            aria-label="Vista em lista"
+            aria-label={t.listView}
           >
             <ListIcon className="media-toolbar-icon" />
           </button>
@@ -615,7 +909,7 @@ export default function MediaLibrary({
             type="button"
             className={`media-toolbar-button ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
-            aria-label="Vista em grelha"
+            aria-label={t.gridView}
           >
             <LayoutGrid className="media-toolbar-icon" />
           </button>
@@ -631,37 +925,80 @@ export default function MediaLibrary({
           <button
             type="button"
             className="media-upload-button"
-            disabled={isUploading}
+            disabled={isUploading || libraryView === 'trash'}
             onClick={() => uploadInputRef.current?.click()}
           >
             <Upload className="media-toolbar-icon" />
-            {isUploading ? 'A carregar...' : 'Carregar ficheiros'}
+            {isUploading ? t.uploading : t.uploadFiles}
           </button>
 
           {fullCatalog && !isModal ? (
+            <button
+              type="button"
+              className={`media-bulk-button ${libraryView === 'trash' ? 'active' : ''}`}
+              onClick={() => {
+                setLibraryView((current) => (current === 'trash' ? 'library' : 'trash'));
+                setVisibleCount(PAGE_BATCH);
+                setIsBulkMode(false);
+                setSelectedIds(new Set());
+              }}
+            >
+              {libraryView === 'trash' ? t.library : t.recycleBin}
+            </button>
+          ) : null}
+
+          {libraryView === 'library' && fullCatalog && !isModal ? (
             <button
               type="button"
               className="media-bulk-button"
               disabled={isCleaning || isUploading}
               onClick={() => void runCatalogCleanup()}
             >
-              {isCleaning ? 'A limpar…' : 'Limpar duplicados'}
+              {isCleaning ? t.cleaning : t.cleanupDuplicates}
             </button>
           ) : null}
 
-          {!isBulkMode ? (
+          {libraryView === 'library' && !isBulkMode ? (
             <button 
               onClick={() => setIsBulkMode(true)}
               className="media-bulk-button"
             >
-              Seleção em massa
+              {t.bulkSelect}
             </button>
-          ) : (
+          ) : libraryView === 'library' ? (
             <div className="media-bulk-actions">
-              <button onClick={deleteBulk} className="media-bulk-delete">Eliminar ({selectedIds.size})</button>
-              <button onClick={() => { setIsBulkMode(false); setSelectedIds(new Set()); }} className="media-bulk-cancel">Cancelar</button>
+              <button onClick={deleteBulk} className="media-bulk-delete">{t.deleteCount(selectedIds.size)}</button>
+              <button onClick={() => { setIsBulkMode(false); setSelectedIds(new Set()); }} className="media-bulk-cancel">{t.cancel}</button>
             </div>
-          )}
+          ) : libraryView === 'trash' && !isBulkMode ? (
+            <button
+              type="button"
+              onClick={() => setIsBulkMode(true)}
+              className="media-bulk-button"
+              disabled={isRestoring || trashItems.length === 0}
+            >
+              {t.bulkSelect}
+            </button>
+          ) : libraryView === 'trash' ? (
+            <div className="media-bulk-actions">
+              <button
+                type="button"
+                onClick={() => void restoreBulk()}
+                className="media-bulk-restore"
+                disabled={isRestoring || selectedIds.size === 0}
+              >
+                {isRestoring ? t.restoring : t.restoreCount(selectedIds.size)}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsBulkMode(false); setSelectedIds(new Set()); }}
+                className="media-bulk-cancel"
+                disabled={isRestoring}
+              >
+                {t.cancel}
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className="media-toolbar-right">
@@ -672,21 +1009,23 @@ export default function MediaLibrary({
               setTypeFilter(e.target.value as 'all' | MediaCategory);
               setVisibleCount(PAGE_BATCH);
             }}
-            aria-label="Filtrar por tipo"
+            aria-label={t.filterByType}
           >
-            {TYPE_FILTERS.map((option) => (
+            {typeFilters.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
-          <div className="media-count">{filteredFiles.length} itens</div>
+          <div className="media-count">
+            {t.itemsCount(libraryView === 'trash' ? filteredTrash.length : filteredFiles.length)}
+          </div>
           {!externalSearchQuery && (
             <div className="media-search">
               <Search className="media-search-icon" />
               <input 
                 type="text" 
-                placeholder="Pesquisar..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -702,9 +1041,71 @@ export default function MediaLibrary({
       <div className="media-content">
         {/* Grid Principal */}
         <div className="media-grid-container">
-          {loading && files.length === 0 ? (
+          {libraryView === 'trash' ? (
+            loading && trashItems.length === 0 ? (
+              <p className="media-loading-hint">{t.loadingTrash}</p>
+            ) : paginatedTrash.length === 0 ? (
+              <p className="media-empty-trash">{t.emptyTrash}</p>
+            ) : (
+              <div className="media-grid media-grid--trash">
+                {paginatedTrash.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleTrashItemClick(item)}
+                    className={`media-item media-item--trash${selectedIds.has(item.id) ? ' selected' : ''}${isBulkMode ? ' media-item--trash-selectable' : ''}`}
+                  >
+                    <div className="media-item--trash-image-wrap">
+                      <img
+                        src={item.trash_path}
+                        className="media-item-image"
+                        alt=""
+                        loading="lazy"
+                      />
+                      {selectedIds.has(item.id) && (
+                        <div className="media-item-check"><Check className="media-check-icon" /></div>
+                      )}
+                    </div>
+                    <div className="media-trash-meta">
+                      <span className="media-trash-name">{item.name}</span>
+                      <span className="media-trash-date">
+                        {new Date(item.deleted_at).toLocaleString(dateLocaleFor(locale))}
+                      </span>
+                    </div>
+                    {!isBulkMode ? (
+                      <div className="media-trash-actions">
+                        <button
+                          type="button"
+                          className="media-glass-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void restoreFromTrash(item);
+                          }}
+                          title={t.restore}
+                        >
+                          <RotateCcw className="media-action-icon" />
+                          <span>{t.restore}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="media-glass-button media-glass-button--danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void purgeFromTrash(item);
+                          }}
+                          title={t.deletePermanent}
+                        >
+                          <Trash2 className="media-action-icon" />
+                          <span>{t.delete}</span>
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )
+          ) : loading && files.length === 0 ? (
             isMobileViewport ? (
-              <p className="media-loading-hint">A carregar…</p>
+              <p className="media-loading-hint">{t.loading}</p>
             ) : (
               <SkeletonMediaGrid count={8} />
             )
@@ -728,7 +1129,7 @@ export default function MediaLibrary({
                   )}
                   {isModal && onSelect && (
                     <div className="media-item-overlay">
-                      <span className="media-select-text">Selecionar</span>
+                      <span className="media-select-text">{t.select}</span>
                     </div>
                   )}
                   {!(isModal && onSelect) && (
@@ -740,7 +1141,7 @@ export default function MediaLibrary({
                           void openDetails(file, true);
                         }}
                         className="media-action-button"
-                        title="Editar"
+                        title={t.edit}
                       >
                         <Edit3 className="media-action-icon" />
                       </button>
@@ -752,7 +1153,7 @@ export default function MediaLibrary({
                             void deleteSingle(file);
                           }}
                           className="media-action-button media-action-button--danger"
-                          title="Eliminar"
+                          title={t.delete}
                         >
                           <Trash2 className="media-action-icon" />
                         </button>
@@ -776,7 +1177,7 @@ export default function MediaLibrary({
                     checked={selectedIds.has(file.id)}
                     onChange={() => toggleSelect(file.id)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={`Selecionar ${file.name}`}
+                    aria-label={t.selectItem(file.name)}
                   />
                   <div className="media-list-thumb">
                     {fileDisplayKind(file) === 'imagens' ? (
@@ -801,7 +1202,7 @@ export default function MediaLibrary({
                         void openDetails(file, true);
                       }}
                       className="media-action-button media-action-button--list"
-                      title="Editar"
+                      title={t.edit}
                     >
                       <Edit3 className="media-action-icon" />
                     </button>
@@ -813,7 +1214,7 @@ export default function MediaLibrary({
                           void deleteSingle(file);
                         }}
                         className="media-action-button media-action-button--list media-action-button--danger"
-                        title="Eliminar"
+                        title={t.delete}
                       >
                         <Trash2 className="media-action-icon" />
                       </button>
@@ -824,14 +1225,18 @@ export default function MediaLibrary({
             </div>
           )}
           
-          {!loading && visibleCount < filteredFiles.length && (
+          {!loading &&
+            visibleCount <
+              (libraryView === 'trash' ? filteredTrash.length : filteredFiles.length) && (
             <div className="media-load-more">
               <button
                 type="button"
                 onClick={() => setVisibleCount((prev) => prev + PAGE_BATCH)}
                 className="media-load-more-button"
               >
-                Carregar mais ({filteredFiles.length - visibleCount} restantes)
+                {t.loadMore(
+                  (libraryView === 'trash' ? filteredTrash.length : filteredFiles.length) - visibleCount,
+                )}
               </button>
             </div>
           )}
@@ -843,8 +1248,8 @@ export default function MediaLibrary({
       {activeFile && !isBulkMode && (
         <div className="media-attachment-modal" role="dialog" aria-modal="true" aria-labelledby="media-attachment-title">
           <header className="media-attachment-header">
-            <h2 id="media-attachment-title" className="media-attachment-title">Detalhes do anexo</h2>
-            <button type="button" onClick={closeAttachmentDetails} className="media-attachment-close" aria-label="Fechar">
+            <h2 id="media-attachment-title" className="media-attachment-title">{t.attachmentTitle}</h2>
+            <button type="button" onClick={closeAttachmentDetails} className="media-attachment-close" aria-label={t.close}>
               <X className="media-close-icon" />
             </button>
           </header>
@@ -854,13 +1259,13 @@ export default function MediaLibrary({
               {isEditingImage && fileDisplayKind(activeFile) === 'imagens' ? (
                 <div className="media-edit-card">
                   <div className="media-edit-card-header">
-                    <h3 className="media-edit-card-title">Ferramentas de Edição</h3>
+                    <h3 className="media-edit-card-title">{t.editTools}</h3>
                     <button
                       type="button"
                       className="media-edit-card-back"
                       onClick={() => setIsEditingImage(false)}
                     >
-                      Voltar aos detalhes
+                      {t.backToDetails}
                     </button>
                   </div>
 
@@ -875,10 +1280,10 @@ export default function MediaLibrary({
 
                     <div className="media-edit-card-controls">
                       <div className="media-edit-control-block">
-                        <h4 className="media-edit-control-title">Redimensionar</h4>
+                        <h4 className="media-edit-control-title">{t.resize}</h4>
                         <div className="media-editor-scale">
                           <div className="media-editor-scale-input">
-                            <span className="media-scale-label">Largura</span>
+                            <span className="media-scale-label">{t.width}</span>
                             <input
                               type="number"
                               value={editWidth}
@@ -888,7 +1293,7 @@ export default function MediaLibrary({
                           </div>
                           <span className="media-scale-x" aria-hidden>×</span>
                           <div className="media-editor-scale-input">
-                            <span className="media-scale-label">Altura</span>
+                            <span className="media-scale-label">{t.height}</span>
                             <input
                               type="number"
                               value={editHeight}
@@ -921,18 +1326,18 @@ export default function MediaLibrary({
                         </div>
                         <div className="media-edit-size-info">
                           <p>
-                            <span className="media-edit-size-label">Tamanho atual:</span>{' '}
+                            <span className="media-edit-size-label">{t.currentSize}</span>{' '}
                             {formatSize(activeFile.metadata?.size)}
                           </p>
                           <p className="media-edit-size-estimate">
-                            <span className="media-edit-size-label">Tamanho final estimado:</span>{' '}
+                            <span className="media-edit-size-label">{t.estimatedSize}</span>{' '}
                             {estimatedSize != null ? formatSize(Math.round(estimatedSize)) : '—'}
                           </p>
                         </div>
                       </div>
 
                       <div className="media-edit-control-block">
-                        <h4 className="media-edit-control-title">Formato e Otimização</h4>
+                        <h4 className="media-edit-control-title">{t.formatOptimization}</h4>
                         <div className="media-editor-formats">
                           <label className="media-format-label">
                             <input
@@ -940,15 +1345,15 @@ export default function MediaLibrary({
                               checked={editFormat === 'original'}
                               onChange={() => setEditFormat('original')}
                             />
-                            <span>Manter original ({activeFile.metadata?.mimetype || 'image/jpeg'})</span>
+                            <span>{t.keepOriginal(activeFile.metadata?.mimetype || 'image/jpeg')}</span>
                           </label>
                           <label className="media-format-label">
                             <input type="radio" checked={editFormat === 'webp'} onChange={() => setEditFormat('webp')} />
-                            <span className="media-format-webp">Converter para WebP (Otimizado para Web)</span>
+                            <span className="media-format-webp">{t.convertWebp}</span>
                           </label>
                           <label className="media-format-label">
                             <input type="radio" checked={editFormat === 'jpeg'} onChange={() => setEditFormat('jpeg')} />
-                            <span>Converter para JPEG</span>
+                            <span>{t.convertJpeg}</span>
                           </label>
                         </div>
                       </div>
@@ -960,14 +1365,33 @@ export default function MediaLibrary({
                           disabled={processingImage}
                           className="media-attachment-primary-btn"
                         >
-                          {processingImage ? 'A processar…' : 'Guardar Alterações'}
+                          {processingImage ? t.processing : t.saveChanges}
                         </button>
+                        <button
+                          type="button"
+                          onClick={resetEditValues}
+                          className="media-edit-reset-btn"
+                          disabled={processingImage}
+                        >
+                          {t.resetEditValues}
+                        </button>
+                        {editRestoreBackup ? (
+                          <button
+                            type="button"
+                            onClick={() => void restoreOriginalImage()}
+                            className="media-edit-restore-btn"
+                            disabled={processingImage || isRestoring}
+                          >
+                            <RotateCcw className="media-action-icon" aria-hidden />
+                            {t.restoreOriginalImage}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => setIsEditingImage(false)}
                           className="media-edit-cancel-btn"
                         >
-                          Cancelar
+                          {t.cancel}
                         </button>
                       </div>
                     </div>
@@ -999,9 +1423,20 @@ export default function MediaLibrary({
                         className="media-attachment-primary-btn"
                         onClick={() => setIsEditingImage(true)}
                       >
-                        Editar imagem
+                        {t.editImage}
                       </button>
                     )}
+                    {editRestoreBackup && fileDisplayKind(activeFile) === 'imagens' ? (
+                      <button
+                        type="button"
+                        className="media-attachment-restore-btn"
+                        disabled={isRestoring}
+                        onClick={() => void restoreOriginalImage()}
+                      >
+                        <RotateCcw className="media-action-icon" aria-hidden />
+                        {t.restoreOriginalImage}
+                      </button>
+                    ) : null}
                     <a
                       href={getPublicUrl(activeFile)}
                       target="_blank"
@@ -1009,7 +1444,7 @@ export default function MediaLibrary({
                       className="media-attachment-secondary-btn"
                     >
                       <ExternalLink className="media-action-icon" aria-hidden />
-                      Ver ficheiro completo
+                      {t.viewFullFile}
                     </a>
                   </div>
                 </>
@@ -1020,26 +1455,26 @@ export default function MediaLibrary({
               <div className="media-attachment-sidebar-scroll">
                 <dl className="media-attachment-meta">
                   <div className="media-attachment-meta-row">
-                    <dt>Carregado em</dt>
+                    <dt>{t.uploadedAt}</dt>
                     <dd>{formatUploadedAt(activeFile.created_at)}</dd>
                   </div>
                   <div className="media-attachment-meta-row">
-                    <dt>Nome</dt>
+                    <dt>{t.name}</dt>
                     <dd>{activeFile.name}</dd>
                   </div>
                   <div className="media-attachment-meta-row">
-                    <dt>Tipo</dt>
+                    <dt>{t.type}</dt>
                     <dd>{activeFile.metadata?.mimetype || '—'}</dd>
                   </div>
                   <div className="media-attachment-meta-row">
-                    <dt>Tamanho</dt>
+                    <dt>{t.size}</dt>
                     <dd>{formatSize(activeFile.metadata?.size)}</dd>
                   </div>
                 </dl>
 
                 <div className="media-metadata">
                   <div>
-                    <label className="media-label" htmlFor="media-alt">Texto alternativo</label>
+                    <label className="media-label" htmlFor="media-alt">{t.altText}</label>
                     <textarea
                       id="media-alt"
                       value={metadata.alt_text}
@@ -1048,7 +1483,7 @@ export default function MediaLibrary({
                     />
                   </div>
                   <div>
-                    <label className="media-label" htmlFor="media-title">Título</label>
+                    <label className="media-label" htmlFor="media-title">{t.titleLabel}</label>
                     <input
                       id="media-title"
                       type="text"
@@ -1058,7 +1493,7 @@ export default function MediaLibrary({
                     />
                   </div>
                   <div>
-                    <label className="media-label" htmlFor="media-caption">Legenda</label>
+                    <label className="media-label" htmlFor="media-caption">{t.caption}</label>
                     <textarea
                       id="media-caption"
                       value={metadata.caption}
@@ -1067,7 +1502,7 @@ export default function MediaLibrary({
                     />
                   </div>
                   <div>
-                    <label className="media-label" htmlFor="media-description">Descrição</label>
+                    <label className="media-label" htmlFor="media-description">{t.description}</label>
                     <textarea
                       id="media-description"
                       value={metadata.description}
@@ -1076,7 +1511,7 @@ export default function MediaLibrary({
                     />
                   </div>
                   <div>
-                    <label className="media-label" htmlFor="media-file-url">URL do ficheiro</label>
+                    <label className="media-label" htmlFor="media-file-url">{t.fileUrl}</label>
                     <input
                       id="media-file-url"
                       type="text"
@@ -1090,7 +1525,7 @@ export default function MediaLibrary({
                       onClick={() => copyFileUrl(activeFile)}
                     >
                       <Copy className="media-action-icon" aria-hidden />
-                      Copiar URL
+                      {t.copyUrl}
                     </button>
                   </div>
                 </div>
@@ -1103,11 +1538,11 @@ export default function MediaLibrary({
                     className="media-attachment-delete-link"
                     onClick={() => void deleteSingle(activeFile)}
                   >
-                    Eliminar permanentemente
+                    {t.deletePermanent}
                   </button>
                 ) : (
                   <span className="media-attachment-delete-disabled">
-                    Este item não pode ser eliminado aqui.
+                    {t.cannotDeleteHere}
                   </span>
                 )}
                 <button
@@ -1116,7 +1551,7 @@ export default function MediaLibrary({
                   disabled={savingMetadata}
                   className="media-attachment-save-btn"
                 >
-                  {savingMetadata ? 'A guardar…' : 'Salvar'}
+                  {savingMetadata ? t.saving : t.save}
                 </button>
               </footer>
             </aside>
@@ -1130,70 +1565,84 @@ export default function MediaLibrary({
           className="media-preview-modal"
           role="dialog"
           aria-modal="true"
-          aria-label={`Pré-visualização — ${previewImage.name}`}
+          aria-label={t.previewAria(previewImage.name)}
           onClick={closePreview}
         >
           <div className="media-preview-content" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={closePreview} className="media-preview-close" aria-label="Fechar">
+            <button type="button" onClick={closePreview} className="media-preview-close" aria-label={t.close}>
               <X className="media-close-icon" />
             </button>
-            <div className="media-preview-stage">
-              <button
-                type="button"
-                className="media-preview-nav media-preview-nav--prev"
-                aria-label="Imagem anterior"
-                disabled={previewImageIndex <= 0}
-                onClick={() => shiftPreviewImage(-1)}
-              >
-                <ChevronLeft size={28} />
-              </button>
-              <img
-                src={getPublicUrl(previewImage)}
-                className="media-preview-full-image"
-                alt={previewImage.name}
-              />
-              <button
-                type="button"
-                className="media-preview-nav media-preview-nav--next"
-                aria-label="Imagem seguinte"
-                disabled={
-                  previewImageIndex < 0 ||
-                  previewImageIndex >= previewGalleryImages.length - 1
-                }
-                onClick={() => shiftPreviewImage(1)}
-              >
-                <ChevronRight size={28} />
-              </button>
-            </div>
-            <div className="media-preview-toolbar">
-              <div className="media-preview-info">
-                <h3 className="media-preview-title">{previewImage.name}</h3>
-                <p className="media-preview-meta">
-                  {formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}
-                </p>
-              </div>
-              <div className="media-preview-actions">
+            <div className="media-preview-outer">
+              {previewGalleryImages.length > 1 ? (
                 <button
                   type="button"
-                  className="media-glass-button"
-                  title="Editar"
-                  onClick={() => openEditFromPreview(previewImage)}
+                  className="media-preview-nav media-preview-nav--prev"
+                  aria-label={t.previousImage}
+                  disabled={previewImageIndex <= 0}
+                  onClick={() => shiftPreviewImage(-1)}
                 >
-                  <Edit3 className="media-action-icon" />
-                  <span>Editar</span>
+                  <ChevronLeft size={28} />
                 </button>
-                {canDeleteMedia(previewImage) && (
-                  <button
-                    type="button"
-                    className="media-glass-button media-glass-button--danger"
-                    title="Eliminar"
-                    onClick={() => void deleteSingle(previewImage)}
-                  >
-                    <Trash2 className="media-action-icon" />
-                    <span>Eliminar</span>
-                  </button>
-                )}
+              ) : (
+                <span className="media-preview-nav-spacer" aria-hidden />
+              )}
+
+              <div className="media-preview-frame">
+                <div className="media-preview-viewport">
+                  <img
+                    src={getPublicUrl(previewImage)}
+                    className="media-preview-full-image"
+                    alt={previewImage.name}
+                  />
+                </div>
+                <div className="media-preview-toolbar">
+                  <div className="media-preview-info">
+                    <h3 className="media-preview-title">{previewImage.name}</h3>
+                    <p className="media-preview-meta">
+                      {formatSize(previewImage.metadata?.size)} • {previewImage.metadata?.mimetype}
+                    </p>
+                  </div>
+                  <div className="media-preview-actions">
+                    <button
+                      type="button"
+                      className="media-glass-button"
+                      title={t.edit}
+                      onClick={() => openEditFromPreview(previewImage)}
+                    >
+                      <Edit3 className="media-action-icon" />
+                      <span>{t.edit}</span>
+                    </button>
+                    {canDeleteMedia(previewImage) && (
+                      <button
+                        type="button"
+                        className="media-glass-button media-glass-button--danger"
+                        title={t.delete}
+                        onClick={() => void deleteSingle(previewImage)}
+                      >
+                        <Trash2 className="media-action-icon" />
+                        <span>{t.delete}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
+
+              {previewGalleryImages.length > 1 ? (
+                <button
+                  type="button"
+                  className="media-preview-nav media-preview-nav--next"
+                  aria-label={t.nextImage}
+                  disabled={
+                    previewImageIndex < 0 ||
+                    previewImageIndex >= previewGalleryImages.length - 1
+                  }
+                  onClick={() => shiftPreviewImage(1)}
+                >
+                  <ChevronRight size={28} />
+                </button>
+              ) : (
+                <span className="media-preview-nav-spacer" aria-hidden />
+              )}
             </div>
           </div>
         </div>
@@ -1204,10 +1653,10 @@ export default function MediaLibrary({
         <div className="media-save-confirm" role="dialog" aria-modal="true" aria-labelledby="media-save-confirm-title">
           <div className="media-save-confirm-dialog">
             <h3 id="media-save-confirm-title" className="media-save-confirm-title">
-              Como deseja guardar?
+              {t.saveConfirmTitle}
             </h3>
             <p className="media-save-confirm-text">
-              Selecione uma opção abaixo e clique em Guardar para aplicar as alterações à imagem.
+              {t.saveConfirmText}
             </p>
 
             <div className="media-save-confirm-options" role="radiogroup" aria-labelledby="media-save-confirm-title">
@@ -1221,9 +1670,9 @@ export default function MediaLibrary({
                   onChange={() => setSaveMode('replace')}
                 />
                 <span className="media-save-confirm-choice-label">
-                  <strong>Substituir original</strong>
+                  <strong>{t.replaceOriginal}</strong>
                   <span className="media-save-confirm-choice-desc">
-                    O ficheiro actual é substituído pela versão editada.
+                    {t.replaceOriginalDesc}
                   </span>
                 </span>
               </label>
@@ -1237,9 +1686,9 @@ export default function MediaLibrary({
                   onChange={() => setSaveMode('new')}
                 />
                 <span className="media-save-confirm-choice-label">
-                  <strong>Guardar como novo</strong>
+                  <strong>{t.saveAsNew}</strong>
                   <span className="media-save-confirm-choice-desc">
-                    Cria um novo ficheiro e mantém o original intacto.
+                    {t.saveAsNewDesc}
                   </span>
                 </span>
               </label>
@@ -1252,7 +1701,7 @@ export default function MediaLibrary({
                 disabled={processingImage}
                 className="media-save-confirm-cancel"
               >
-                Cancelar
+                {t.cancel}
               </button>
               <button
                 type="button"
@@ -1260,7 +1709,7 @@ export default function MediaLibrary({
                 disabled={processingImage}
                 className="media-save-confirm-submit"
               >
-                {processingImage ? 'A guardar…' : 'Guardar'}
+                {processingImage ? t.saving : t.save}
               </button>
             </div>
           </div>

@@ -39,7 +39,6 @@ import {
   isSubscriberDashboardPathAllowed,
   isSubscriberMenuEnabled,
   STAFF_MENU_HREFS,
-  STAFF_MENU_LABELS,
   STAFF_SUBMENU_ITEMS,
   SUBSCRIBER_ADMIN_EXTRA_KEYS,
   type StaffMenuKey,
@@ -49,6 +48,8 @@ import {
 import { resolveUserDisplayName } from '@/lib/user-types';
 import { staffDashboardPathToAdmin } from '@/lib/admin-permissions';
 import { useAdminBase } from '@/lib/admin-base';
+import { useLanguage } from '@/context/LanguageContext';
+import { adminShellCopy, tMessages } from '@/i18n/messages';
 import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
 import './AdminShell.css';
 import './admin-buttons.css';
@@ -68,6 +69,7 @@ interface MenuItem {
   submenu?: SubmenuEntry[];
   badge?: number;
   badgeLabel?: string;
+  badgeAriaLabel?: string;
 }
 
 function getActiveSubmenuHref(pathname: string, submenu: SubmenuEntry[]): string | null {
@@ -89,6 +91,7 @@ interface SidebarItemProps {
   onToggle?: () => void;
   badge?: number;
   badgeLabel?: string;
+  badgeAriaLabel?: string;
 }
 
 const SidebarItem = ({
@@ -103,6 +106,7 @@ const SidebarItem = ({
   onToggle,
   badge = 0,
   badgeLabel,
+  badgeAriaLabel,
 }: SidebarItemProps) => {
   const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
@@ -116,7 +120,7 @@ const SidebarItem = ({
         {badgeLabel ? (
           <span className="sidebar-new-badge">{badgeLabel}</span>
         ) : badge != null && badge > 0 ? (
-          <span className="sidebar-notify-badge" aria-label={`${badge} notificações por ler`}>
+          <span className="sidebar-notify-badge" aria-label={badgeAriaLabel || `${badge}`}>
             {badge > 99 ? '99+' : badge}
           </span>
         ) : null}
@@ -206,17 +210,39 @@ function resolvePanelRoleLabel(
   isAdminSecret: boolean,
   isSubscriber: boolean,
   isAdmin: boolean,
+  roles: { administrator: string; subscriber: string; author: string },
 ): string {
   if (sessionLoading) return '';
-  if (isAdminSecret || isAdmin || user?.role === 'Administrador') return 'Administrador';
-  if (isSubscriber || user?.role === 'Subscritor') return 'Subscritor';
-  return 'Autor';
+  if (isAdminSecret || isAdmin || user?.role === 'Administrador') return roles.administrator;
+  if (isSubscriber || user?.role === 'Subscritor') return roles.subscriber;
+  return roles.author;
 }
+
+const STAFF_MENU_I18N: Record<StaffMenuKey, keyof typeof adminShellCopy.pt.menu> = {
+  dashboard: 'dashboard',
+  noticias: 'noticias',
+  multimedia: 'multimedia',
+  resumos: 'resumos',
+  utilizadores: 'utilizadores',
+  'enviar-email': 'enviarEmail',
+  definicoes: 'definicoes',
+  estatisticas: 'estatisticas',
+};
+
+const SUBSCRIBER_MENU_I18N: Record<SubscriberMenuKey, keyof typeof adminShellCopy.pt.menu> = {
+  dashboard: 'dashboard',
+  'minha-conta': 'minhaConta',
+  resumos: 'resumos',
+  notificacoes: 'notificacoes',
+  'definicoes-conta': 'definicoesConta',
+};
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const base = useAdminBase();
+  const { locale } = useLanguage();
+  const shell = tMessages(adminShellCopy, locale);
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
   const { unread: subscriberUnread } = useSubscriberNotifications();
   const { canManageNews, canManageUsers, canViewNews, isAdmin } = useAdminPermissions();
@@ -252,7 +278,24 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     isAdminSecret,
     isSubscriber,
     isAdmin,
+    {
+      administrator: shell.administrator,
+      subscriber: shell.subscriber,
+      author: shell.author,
+    },
   );
+
+  const translateSubmenu = (entries: SubmenuEntry[]): SubmenuEntry[] =>
+    entries.map((entry) => ({
+      ...entry,
+      label:
+        entry.subKey && entry.subKey in shell.submenu
+          ? shell.submenu[entry.subKey as keyof typeof shell.submenu]
+          : entry.label,
+    }));
+
+  const staffMenuLabel = (key: StaffMenuKey) => shell.menu[STAFF_MENU_I18N[key]];
+  const subscriberMenuLabel = (key: SubscriberMenuKey) => shell.menu[SUBSCRIBER_MENU_I18N[key]];
 
   React.useEffect(() => {
     if (sessionLoading || !privilegesReady) return;
@@ -326,24 +369,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       : undefined;
 
   const newsSubmenu: SubmenuEntry[] = newsSubmenuItems
-    ? buildStaffSubmenuEntries('noticias', menuBase, privileges, isAdmin, newsSubmenuItems)
+    ? translateSubmenu(
+        buildStaffSubmenuEntries('noticias', menuBase, privileges, isAdmin, newsSubmenuItems),
+      )
     : [];
 
-  const multimediaSubmenu = buildStaffSubmenuEntries(
-    'multimedia',
-    menuBase,
-    privileges,
-    isAdmin,
+  const multimediaSubmenu = translateSubmenu(
+    buildStaffSubmenuEntries('multimedia', menuBase, privileges, isAdmin),
   );
 
-  const utilizadoresSubmenu = buildStaffSubmenuEntries(
-    'utilizadores',
-    menuBase,
-    privileges,
-    isAdmin,
+  const utilizadoresSubmenu = translateSubmenu(
+    buildStaffSubmenuEntries('utilizadores', menuBase, privileges, isAdmin),
   );
 
-  const definicoesSubmenu = buildStaffSubmenuEntries('definicoes', menuBase, privileges, isAdmin);
+  const definicoesSubmenu = translateSubmenu(
+    buildStaffSubmenuEntries('definicoes', menuBase, privileges, isAdmin),
+  );
 
   const subscriberExtraItems: MenuItem[] = SUBSCRIBER_ADMIN_EXTRA_KEYS.filter((key) =>
     isSubscriberAdminExtraEnabled(privileges, key),
@@ -352,27 +393,28 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return {
       href: `${menuBase}${STAFF_MENU_HREFS[key]}`,
       icon: staffMenuIcon(key),
-      label: STAFF_MENU_LABELS[key],
-      badgeLabel: 'Novo',
-      ...(submenu.length ? { submenu } : {}),
+      label: staffMenuLabel(key),
+      badgeLabel: shell.badgeNew,
+      ...(submenu.length ? { submenu: translateSubmenu(submenu) } : {}),
     };
   });
 
   const subscriberBaseItems: MenuItem[] = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', menuKey: 'dashboard' as SubscriberMenuKey },
-    { href: '/dashboard/minha-conta', icon: UserCircle, label: 'Minha conta', menuKey: 'minha-conta' as SubscriberMenuKey },
-    { href: '/dashboard/meus-documentos', icon: FileUp, label: 'Resumos', menuKey: 'resumos' as SubscriberMenuKey },
+    { href: '/dashboard', icon: LayoutDashboard, label: subscriberMenuLabel('dashboard'), menuKey: 'dashboard' as SubscriberMenuKey },
+    { href: '/dashboard/minha-conta', icon: UserCircle, label: subscriberMenuLabel('minha-conta'), menuKey: 'minha-conta' as SubscriberMenuKey },
+    { href: '/dashboard/meus-documentos', icon: FileUp, label: subscriberMenuLabel('resumos'), menuKey: 'resumos' as SubscriberMenuKey },
     {
       href: '/dashboard/notificacoes',
       icon: Bell,
-      label: 'Notificações',
+      label: subscriberMenuLabel('notificacoes'),
       menuKey: 'notificacoes' as SubscriberMenuKey,
       badge: subscriberUnread,
+      badgeAriaLabel: shell.notificationsUnread(subscriberUnread),
     },
     {
       href: '/dashboard/definicoes-conta',
       icon: Settings,
-      label: 'Definições',
+      label: subscriberMenuLabel('definicoes-conta'),
       menuKey: 'definicoes-conta' as SubscriberMenuKey,
     },
   ].filter((item) =>
@@ -385,7 +427,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {
           href: menuBase,
           icon: LayoutDashboard,
-          label: 'Dashboard',
+          label: staffMenuLabel('dashboard'),
           menuKey: 'dashboard' as StaffMenuKey,
         },
         ...(canViewNews
@@ -393,7 +435,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               {
                 href: `${menuBase}/noticias`,
                 icon: Newspaper,
-                label: 'Notícias',
+                label: staffMenuLabel('noticias'),
                 menuKey: 'noticias' as StaffMenuKey,
                 ...(newsSubmenu.length ? { submenu: newsSubmenu } : {}),
               },
@@ -402,14 +444,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {
           href: `${menuBase}/media`,
           icon: ImageIcon,
-          label: 'Multimédia',
+          label: staffMenuLabel('multimedia'),
           menuKey: 'multimedia' as StaffMenuKey,
           ...(multimediaSubmenu.length ? { submenu: multimediaSubmenu } : {}),
         },
         {
           href: `${menuBase}/documentos-gerais`,
           icon: FileUp,
-          label: 'Resumos',
+          label: staffMenuLabel('resumos'),
           menuKey: 'resumos' as StaffMenuKey,
         },
         ...(canManageUsers
@@ -417,7 +459,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               {
                 href: `${menuBase}/utilizadores`,
                 icon: Users,
-                label: 'Utilizadores',
+                label: staffMenuLabel('utilizadores'),
                 menuKey: 'utilizadores' as StaffMenuKey,
                 ...(utilizadoresSubmenu.length ? { submenu: utilizadoresSubmenu } : {}),
               },
@@ -426,20 +468,20 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {
           href: `${menuBase}/enviar-email/normal`,
           icon: Mail,
-          label: 'Enviar e-mail',
+          label: staffMenuLabel('enviar-email'),
           menuKey: 'enviar-email' as StaffMenuKey,
         },
         {
           href: `${menuBase}/definicoes`,
           icon: Settings,
-          label: 'Definições',
+          label: staffMenuLabel('definicoes'),
           menuKey: 'definicoes' as StaffMenuKey,
           ...(definicoesSubmenu.length ? { submenu: definicoesSubmenu } : {}),
         },
         {
           href: `${menuBase}/estatisticas`,
           icon: ChartColumnIncreasing,
-          label: 'Estatísticas',
+          label: staffMenuLabel('estatisticas'),
           menuKey: 'estatisticas' as StaffMenuKey,
         },
         ...(isAdmin
@@ -447,7 +489,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               {
                 href: `${menuBase}/privilegios`,
                 icon: Shield,
-                label: 'Privilégios',
+                label: shell.menu.privilegios,
               } as MenuItem,
             ]
           : []),
@@ -490,11 +532,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <div className="admin-brand-right">
           <Link href="/" target="_blank" className="admin-brand-action">
             <ExternalLink className="admin-brand-action-icon" />
-            Ver Site
+            {shell.viewSite}
           </Link>
           <button type="button" onClick={handleLogout} className="admin-brand-action">
             <LogOut className="admin-brand-action-icon" />
-            Sair
+            {shell.logout}
           </button>
         </div>
       </header>
@@ -525,6 +567,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                   label={item.label}
                   badge={item.badge}
                   badgeLabel={item.badgeLabel}
+                  badgeAriaLabel={item.badgeAriaLabel}
                   submenu={item.submenu}
                   active={isActive}
                   activeSubHref={activeSubHref}

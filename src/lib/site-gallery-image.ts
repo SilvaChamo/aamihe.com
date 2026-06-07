@@ -10,6 +10,7 @@ const urls = galleryUrls as string[];
 /** Galeria do site: resolve para ficheiro existente em public/gallery. */
 export function siteGalleryImage(localPath: string): string {
   const normalized = normalizeAssetUrl(localPath) ?? localPath;
+  if (normalized.includes('/.trash/')) return normalized;
   if (aliases[normalized]) return aliases[normalized];
   if (aliases[localPath]) return aliases[localPath];
   if (urls.includes(normalized)) return normalized;

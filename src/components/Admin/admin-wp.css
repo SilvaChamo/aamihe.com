@@ -32,6 +32,10 @@
   margin-bottom: 16px;
 }
 
+.wp-page-header--users-title h1 {
+  font-weight: 800;
+}
+
 .wp-page-header .wp-subtitle {
   width: 100%;
   margin: 0;
@@ -231,6 +235,12 @@
   gap: 6px;
 }
 
+.wp-list-toolbar-left .wp-btn {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 12px;
+}
+
 .wp-list-toolbar-right {
   display: flex;
   align-items: center;
@@ -257,18 +267,24 @@
 }
 
 .wp-search-group {
-  display: flex;
-  align-items: stretch;
+  display: inline-flex;
+  align-items: center;
 }
 
 .wp-search-group .wp-input {
   width: 200px;
+  height: 32px;
   border-radius: 3px 0 0 3px;
+  border-right: none;
 }
 
 .wp-search-group .wp-btn {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 12px;
   border-radius: 0 3px 3px 0;
-  border-left: none;
+  border-left: 1px solid #ccd0d4;
+  white-space: nowrap;
 }
 
 /* Tabela de utilizadores */

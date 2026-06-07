@@ -32,6 +32,10 @@ export function mediaCatalogKey(url: string): string {
     }
   }
 
+  if (trimmed.startsWith('/')) {
+    return trimmed.toLowerCase();
+  }
+
   return mediaUniqueBasename(trimmed);
 }
 
@@ -112,27 +116,44 @@ function pickPreferredMedia(existing: SiteMediaRecord, candidate: SiteMediaRecor
 }
 
 export function dedupeMediaRecords(items: SiteMediaRecord[]) {
-  const byId = new Map<string, SiteMediaRecord>();
+  const byUrl = new Map<string, SiteMediaRecord>();
   for (const item of items) {
-    const existing = byId.get(item.id);
+    const key = item.url.toLowerCase();
+    const existing = byUrl.get(key);
     if (!existing) {
-      byId.set(item.id, item);
+      byUrl.set(key, item);
       continue;
     }
-    byId.set(item.id, pickPreferredMedia(existing, item));
+    byUrl.set(key, pickPreferredMedia(existing, item));
   }
 
-  const byBasename = new Map<string, SiteMediaRecord>();
-  for (const item of byId.values()) {
-    const key = mediaUniqueBasename(item.url);
-    if (!key) continue;
-    const existing = byBasename.get(key);
-    if (!existing) {
-      byBasename.set(key, item);
+  const unique: SiteMediaRecord[] = [];
+  const basenameToIndex = new Map<string, number>();
+
+  for (const item of byUrl.values()) {
+    const baseKey = mediaUniqueBasename(item.url);
+    if (!baseKey) {
+      unique.push(item);
       continue;
     }
-    byBasename.set(key, pickPreferredMedia(existing, item));
+
+    const idx = basenameToIndex.get(baseKey);
+    if (idx === undefined) {
+      basenameToIndex.set(baseKey, unique.length);
+      unique.push(item);
+      continue;
+    }
+
+    const existing = unique[idx];
+    const existingIsThumb = isThumbnailUrl(existing.url);
+    const itemIsThumb = isThumbnailUrl(item.url);
+
+    if (existingIsThumb || itemIsThumb) {
+      unique[idx] = pickPreferredMedia(existing, item);
+    } else {
+      unique.push(item);
+    }
   }
 
-  return Array.from(byBasename.values());
+  return unique;
 }

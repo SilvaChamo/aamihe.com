@@ -15,6 +15,7 @@ import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { useLanguage } from '@/context/LanguageContext';
+import { adminDashboardCopy, tMessages } from '@/i18n/messages';
 import { PanelActivitySkeleton, PanelStatsSkeleton } from '@/components/Admin/PanelSkeleton';
 import './DashboardContent.css';
 
@@ -32,10 +33,13 @@ interface ActivityItem {
   type: 'news' | 'media' | 'document';
 }
 
+const DATE_LOCALE = { pt: 'pt-PT', fr: 'fr-FR', en: 'en-GB' } as const;
+
 export default function DashboardContent() {
   const base = useAdminBase();
   const { canManageNews } = useAdminPermissions();
   const { locale } = useLanguage();
+  const t = tMessages(adminDashboardCopy, locale);
   const [stats, setStats] = React.useState<Stats>({
     news: 0,
     media: 0,
@@ -43,85 +47,6 @@ export default function DashboardContent() {
     documents: 0,
   });
   const [statsLoading, setStatsLoading] = React.useState(true);
-
-  const copy = {
-    pt: {
-      welcomeTitle: 'Bem-vindo ao painel de administração',
-      welcomeSubtitle: 'Este é o painel de gestão do site AAMIHE.',
-      introTitle: 'Introdução',
-      manageDocs: 'Gerir Documentos',
-      addNews: 'Adicionar notícia',
-      nextSteps: 'Próximos passos',
-      reviewConf: 'Gerir notícias',
-      stats: 'Ver estatísticas do site',
-      moreActions: 'Mais acções',
-      sendEmail: 'Enviar e-mail',
-      addMedia: 'Adicionar multimédia',
-      siteConfig: 'Configurações do site',
-      conferenceSummary: 'Resumo da Conferência',
-      documents: 'Documentos',
-      subscribers: 'Subscritores',
-      submittedDocs: 'Documentos submetidos',
-      videos: 'Vídeos',
-      recent: 'Actividades Recentes',
-      noActivity: 'Nenhuma actividade recente encontrada.',
-      gallery: 'Galeria',
-      submissions: 'Submissões',
-      form: 'Formulário',
-      submitAbstract: 'Submeter resumo',
-    },
-    fr: {
-      welcomeTitle: "Bienvenue dans le panneau d'administration",
-      welcomeSubtitle: "Ceci est le panneau de gestion du site AAMIHE.",
-      introTitle: 'Introduction',
-      manageDocs: 'Gérer les documents',
-      addNews: 'Ajouter une actualité',
-      nextSteps: 'Prochaines étapes',
-      reviewConf: 'Gérer les actualités',
-      stats: 'Voir les statistiques du site',
-      moreActions: 'Plus dactions',
-      sendEmail: 'Envoyer un e-mail',
-      addMedia: 'Ajouter du multimédia',
-      siteConfig: 'Paramètres du site',
-      conferenceSummary: 'Résumé de la conférence',
-      documents: 'Documents',
-      subscribers: 'Abonnés',
-      submittedDocs: 'Documents soumis',
-      videos: 'Vidéos',
-      recent: 'Activités récentes',
-      noActivity: 'Aucune activité récente trouvée.',
-      gallery: 'Galerie',
-      submissions: 'Soumissions',
-      form: 'Formulaire',
-      submitAbstract: 'Soumettre un résumé',
-    },
-    en: {
-      welcomeTitle: 'Welcome to the admin dashboard',
-      welcomeSubtitle: 'This is the AAMIHE site management panel.',
-      introTitle: 'Introduction',
-      manageDocs: 'Manage Documents',
-      addNews: 'Add news',
-      nextSteps: 'Next steps',
-      reviewConf: 'Manage news',
-      stats: 'View site statistics',
-      moreActions: 'More actions',
-      sendEmail: 'Send email',
-      addMedia: 'Add media',
-      siteConfig: 'Site settings',
-      conferenceSummary: 'Conference summary',
-      documents: 'Documents',
-      subscribers: 'Subscribers',
-      submittedDocs: 'Submitted documents',
-      videos: 'Videos',
-      recent: 'Recent activity',
-      noActivity: 'No recent activity found.',
-      gallery: 'Gallery',
-      submissions: 'Submissions',
-      form: 'Form',
-      submitAbstract: 'Submit abstract',
-    },
-  } as const;
-  const t = copy[locale];
 
   React.useEffect(() => {
     let cancelled = false;
@@ -207,7 +132,7 @@ export default function DashboardContent() {
                 </li>
                 <li>
                   <Link href={`${base}/media`} className="dashboard-list-item">
-                    <Plus /> Biblioteca multimédia
+                    <Plus /> {t.mediaLibrary}
                   </Link>
                 </li>
               </ul>
@@ -225,7 +150,7 @@ export default function DashboardContent() {
                 </li>
                 <li>
                   <Link href={`${base}/documentos-gerais`} className="dashboard-list-item">
-                    <FileUp /> Resumos recebidos
+                    <FileUp /> {t.receivedSummaries}
                   </Link>
                 </li>
               </ul>
@@ -252,7 +177,7 @@ export default function DashboardContent() {
                     {recentActivities.slice(0, 4).map((activity) => (
                       <li key={activity.id} className="dashboard-activity-item">
                         <p className="dashboard-activity-date">
-                          {new Date(activity.date).toLocaleDateString('pt-PT', {
+                          {new Date(activity.date).toLocaleDateString(DATE_LOCALE[locale], {
                             day: 'numeric',
                             month: 'long',
                             hour: '2-digit',

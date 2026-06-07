@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { canListUsers, listUsersForViewer } from '@/lib/users-viewer';
+import { canListUsers, listUsersForViewer, type UserListScope } from '@/lib/users-viewer';
 
 export const dynamic = 'force-dynamic';
+
+function parseScope(raw: string | null): UserListScope {
+  return raw === 'subscribers' ? 'subscribers' : 'staff';
+}
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +20,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Acesso não autorizado.' }, { status: 403 });
     }
 
-    const users = await listUsersForViewer(viewer);
+    const scope = parseScope(new URL(request.url).searchParams.get('scope'));
+    const users = await listUsersForViewer(viewer, scope);
     return NextResponse.json({ users });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Erro ao listar utilizadores';

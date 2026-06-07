@@ -4,6 +4,7 @@ import { inferMediaCategory, inferMediaCategoryFromUrl } from '@/lib/site-media'
 import type { SiteDocumentRecord } from '@/lib/site-documents';
 import { mediaCatalogKey } from '@/lib/media-catalog-key';
 import { collectGalleryImages } from '@/lib/local-gallery-catalog';
+import { enrichMediaRecords, saveMediaMetadata } from '@/lib/media-metadata-store';
 import { upsertSupabaseMedia } from '@/lib/supabase-media';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import { randomUUID } from 'node:crypto';
@@ -48,12 +49,13 @@ function documentMediaRecords(documents: SiteDocumentRecord[]): SiteMediaRecord[
 
 /** Biblioteca admin — fonte: public/gallery (todas as imagens do projecto). */
 export async function buildAdminMediaCatalog(): Promise<SiteMediaRecord[]> {
-  return sortMediaCatalog(await collectGalleryImagesCached());
+  const items = await enrichMediaRecords(await collectGalleryImagesCached());
+  return sortMediaCatalog(items);
 }
 
 /** Galeria pública — public/gallery + PDFs gerais publicados. */
 export async function buildMediaCatalog(): Promise<SiteMediaRecord[]> {
-  const items: SiteMediaRecord[] = [...(await collectGalleryImages())];
+  const items: SiteMediaRecord[] = [...(await enrichMediaRecords(await collectGalleryImages()))];
 
   try {
     const publishedGeral = await listDocuments({ category: 'geral', published: true });
@@ -107,8 +109,23 @@ export async function upsertMediaRecord(
       storage_path: null,
       catalog_key: input.catalog_key ?? mediaCatalogKey(record.url),
     });
-    if (saved) return saved;
+    if (saved) {
+      await saveMediaMetadata(saved.id, saved.url, {
+        title: saved.title,
+        alt_text: saved.alt_text,
+        caption: saved.caption,
+        description: saved.description,
+      });
+      return { ...saved, ...record };
+    }
   }
+
+  await saveMediaMetadata(record.id, record.url, {
+    title: record.title,
+    alt_text: record.alt_text,
+    caption: record.caption,
+    description: record.description,
+  });
 
   return record;
 }

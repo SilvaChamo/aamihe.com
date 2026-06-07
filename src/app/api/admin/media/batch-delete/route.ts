@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deleteMediaItems, type MediaDeleteInput } from '@/lib/media-delete';
+import { invalidateGalleryCatalogCache } from '@/lib/media-registry';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,8 @@ export async function POST(request: Request) {
     }
 
     const { deleted, failed } = await deleteMediaItems(items);
+
+    invalidateGalleryCatalogCache();
 
     return NextResponse.json({
       success: failed.length === 0,

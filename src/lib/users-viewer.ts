@@ -4,8 +4,6 @@ import { getSupabaseAdmin } from '@/lib/supabase/server';
 
 const TABLE = 'aamihe_user_profiles';
 
-const STAFF_ROLES: UserRole[] = ['Administrador', 'Editor', 'Actor'];
-
 type ProfileRow = {
   id: string;
   username: string;
@@ -62,10 +60,22 @@ export function canListUsers(viewer: Pick<UserProfile, 'role' | 'isAdmin'>): boo
   return canViewStaffUsers(viewer) || viewer.role === 'Editor';
 }
 
-async function queryProfilesForViewer(viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>) {
+export type UserListScope = 'staff' | 'subscribers';
+
+const SUBSCRIBER_ROLE: UserRole = 'Subscritor';
+
+async function queryProfilesForViewer(
+  viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>,
+  scope: UserListScope,
+) {
   const admin = adminClient();
 
   if (viewer.role === 'Subscritor') {
+    if (scope === 'subscribers') {
+      const { data, error } = await admin.from(TABLE).select('*').eq('id', viewer.id).maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? [rowToListItem(data as ProfileRow)] : [];
+    }
     const { data, error } = await admin.from(TABLE).select('*').eq('id', viewer.id).maybeSingle();
     if (error) throw new Error(error.message);
     return data ? [rowToListItem(data as ProfileRow)] : [];
@@ -75,51 +85,101 @@ async function queryProfilesForViewer(viewer: Pick<UserProfile, 'id' | 'role' | 
     return [];
   }
 
-  if (viewer.role === 'Editor' && !canViewStaffUsers(viewer)) {
+  if (scope === 'subscribers') {
     const { data, error } = await admin
       .from(TABLE)
       .select('*')
-      .in('role', ['Subscritor', 'Contribuidor'])
+      .eq('role', SUBSCRIBER_ROLE)
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
     return (data as ProfileRow[]).map(rowToListItem);
   }
 
-  const { data, error } = await admin.from(TABLE).select('*').order('created_at', { ascending: false });
+  // scope === 'staff' — utilizadores principais (sem subscritores)
+  if (viewer.role === 'Editor' && !canViewStaffUsers(viewer)) {
+    const { data: selfRow, error: selfError } = await admin
+      .from(TABLE)
+      .select('*')
+      .eq('id', viewer.id)
+      .maybeSingle();
+    if (selfError) throw new Error(selfError.message);
+
+    const { data: contribuidores, error: contribError } = await admin
+      .from(TABLE)
+      .select('*')
+      .eq('role', 'Contribuidor')
+      .order('created_at', { ascending: false });
+    if (contribError) throw new Error(contribError.message);
+
+    const items: UserListItem[] = [];
+    if (selfRow) items.push(rowToListItem(selfRow as ProfileRow));
+    for (const row of (contribuidores as ProfileRow[]) || []) {
+      if (row.id !== viewer.id) items.push(rowToListItem(row));
+    }
+    return items;
+  }
+
+  const { data, error } = await admin
+    .from(TABLE)
+    .select('*')
+    .neq('role', SUBSCRIBER_ROLE)
+    .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return (data as ProfileRow[]).map(rowToListItem);
 }
 
-export async function listUsersForViewer(viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>) {
+export async function listUsersForViewer(
+  viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>,
+  scope: UserListScope = 'staff',
+) {
   if (!canListUsers(viewer)) {
     return [];
   }
-  return queryProfilesForViewer(viewer);
+  return queryProfilesForViewer(viewer, scope);
 }
 
-export async function countUsersForViewer(viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>) {
+export async function listSubscribersForViewer(viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>) {
+  return listUsersForViewer(viewer, 'subscribers');
+}
+
+export async function countUsersForViewer(
+  viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>,
+  scope: UserListScope = 'staff',
+) {
   if (!canListUsers(viewer)) return 0;
 
   const admin = adminClient();
 
   if (viewer.role === 'Subscritor') {
-    return 1;
+    return scope === 'subscribers' || scope === 'staff' ? 1 : 0;
   }
 
   if (viewer.role === 'Actor') {
     return 0;
   }
 
-  if (viewer.role === 'Editor' && !canViewStaffUsers(viewer)) {
+  if (scope === 'subscribers') {
     const { count, error } = await admin
       .from(TABLE)
       .select('id', { count: 'exact', head: true })
-      .in('role', ['Subscritor', 'Contribuidor']);
+      .eq('role', SUBSCRIBER_ROLE);
     if (error) throw new Error(error.message);
     return count || 0;
   }
 
-  const { count, error } = await admin.from(TABLE).select('id', { count: 'exact', head: true });
+  if (viewer.role === 'Editor' && !canViewStaffUsers(viewer)) {
+    const { count: contribCount, error: contribError } = await admin
+      .from(TABLE)
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'Contribuidor');
+    if (contribError) throw new Error(contribError.message);
+    return (contribCount || 0) + 1;
+  }
+
+  const { count, error } = await admin
+    .from(TABLE)
+    .select('id', { count: 'exact', head: true })
+    .neq('role', SUBSCRIBER_ROLE);
   if (error) throw new Error(error.message);
   return count || 0;
 }

@@ -1,15 +1,12 @@
 import type { User as AuthUser } from '@supabase/supabase-js';
 import {
   USER_ROLES,
-  isSubscriberRole,
   type UserListItem,
   type UserProfile,
   type UserRole,
 } from '@/lib/user-types';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
-
-export { USER_ROLES, isSubscriberRole, type UserListItem, type UserProfile, type UserRole };
 
 function normalizeAvatarUrl(url: string | null | undefined): string | null {
   return resolveAvatarUrl(url);

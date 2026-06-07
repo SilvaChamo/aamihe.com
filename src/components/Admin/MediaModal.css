@@ -307,19 +307,7 @@
   padding: 0;
 }
 
-@media (min-width: 640px) {
-  .media-library.modal .media-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 @media (min-width: 768px) {
-  .media-library.modal .media-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
   .media-library.modal .media-grid {
     grid-template-columns: repeat(7, 1fr);
   }

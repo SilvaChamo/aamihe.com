@@ -9,11 +9,70 @@
   margin-bottom: 24px;
 }
 
+.media-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .media-title {
   font-size: 23px;
   font-weight: 800;
   color: #1d2327;
   margin: 0;
+}
+
+.media-trash-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+  background: white;
+  color: #50575e;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.media-trash-toggle:hover,
+.media-trash-toggle.active {
+  color: #561713;
+  border-color: #561713;
+  background: #f6f7f7;
+}
+
+.media-trash-toggle-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.media-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #ccd0d4;
+  border-radius: 6px;
+  background: white;
+  color: #561713;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.media-back-button:hover {
+  border-color: #561713;
+  background: #f6f7f7;
+}
+
+.media-back-button-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .media-actions {
@@ -114,11 +173,7 @@
   border-bottom-color: #00a651;
 }
 
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-}
+/* Grelha da biblioteca: ver MediaLibrary.css (.media-library .media-grid) */
 
 .media-placeholder {
   grid-column: 1 / -1;

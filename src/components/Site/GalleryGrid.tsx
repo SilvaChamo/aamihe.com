@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Play } from 'lucide-react';
+import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import DocumentFilePreview from '@/components/Admin/DocumentFilePreview';
 import type { MediaCategory } from '@/lib/site-media';
 import { resolveMediaCategory } from '@/lib/resolve-media-category';
@@ -95,6 +95,7 @@ export default function GalleryGrid() {
   const [searchQuery, setSearchQuery] = useState('');
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const isPhotoGallery = typeFilter === 'imagens';
 
@@ -192,6 +193,63 @@ export default function GalleryGrid() {
     () => filtered.slice(0, visibleCount),
     [filtered, visibleCount],
   );
+
+  const photoItems = useMemo(
+    () =>
+      isPhotoGallery
+        ? visibleItems.filter((item) => resolveMediaCategory(item) === 'imagens')
+        : [],
+    [isPhotoGallery, visibleItems],
+  );
+
+  const lightboxItem =
+    lightboxIndex !== null && photoItems[lightboxIndex] ? photoItems[lightboxIndex] : null;
+
+  const openLightbox = (item: MediaItem) => {
+    const index = photoItems.findIndex((entry) => entry.id === item.id);
+    if (index >= 0) setLightboxIndex(index);
+  };
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const showPreviousPhoto = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || photoItems.length < 2) return current;
+      return (current - 1 + photoItems.length) % photoItems.length;
+    });
+  }, [photoItems.length]);
+
+  const showNextPhoto = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || photoItems.length < 2) return current;
+      return (current + 1) % photoItems.length;
+    });
+  }, [photoItems.length]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeLightbox();
+      if (event.key === 'ArrowLeft') showPreviousPhoto();
+      if (event.key === 'ArrowRight') showNextPhoto();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [lightboxIndex, closeLightbox, showPreviousPhoto, showNextPhoto]);
+
+  useEffect(() => {
+    if (lightboxIndex !== null && lightboxIndex >= photoItems.length) {
+      setLightboxIndex(photoItems.length ? photoItems.length - 1 : null);
+    }
+  }, [lightboxIndex, photoItems.length]);
 
   const handleTypeChange = (value: 'all' | MediaCategory) => {
     setTypeFilter(value);
@@ -322,12 +380,11 @@ export default function GalleryGrid() {
               if (isPhotoGallery && kind === 'imagens') {
                 return (
                   <article key={item.id} className="gallery-photo-tile">
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       className="gallery-photo-tile-link"
                       aria-label={item.title}
+                      onClick={() => openLightbox(item)}
                     >
                       {src ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -344,7 +401,7 @@ export default function GalleryGrid() {
                           ?
                         </div>
                       )}
-                    </a>
+                    </button>
                   </article>
                 );
               }
@@ -413,6 +470,67 @@ export default function GalleryGrid() {
           )}
         </>
       )}
+
+      {lightboxItem ? (
+        <div
+          className="gallery-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightboxItem.title}
+          onClick={closeLightbox}
+        >
+          <div className="gallery-lightbox-inner" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="gallery-lightbox-close"
+              onClick={closeLightbox}
+              aria-label={t.closePreview}
+            >
+              <X size={22} />
+            </button>
+
+            <div className="gallery-lightbox-outer">
+              {photoItems.length > 1 ? (
+                <button
+                  type="button"
+                  className="gallery-lightbox-nav gallery-lightbox-nav--prev"
+                  onClick={showPreviousPhoto}
+                  aria-label={t.previousImage}
+                >
+                  <ChevronLeft size={28} />
+                </button>
+              ) : (
+                <span className="gallery-lightbox-nav-spacer" aria-hidden />
+              )}
+
+              <div className="gallery-lightbox-frame">
+                <div className="gallery-lightbox-viewport">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={normalizeImageSrc(lightboxItem.url) || lightboxItem.url}
+                    alt={lightboxItem.title}
+                    className="gallery-lightbox-image"
+                  />
+                </div>
+                <p className="gallery-lightbox-caption">{lightboxItem.title}</p>
+              </div>
+
+              {photoItems.length > 1 ? (
+                <button
+                  type="button"
+                  className="gallery-lightbox-nav gallery-lightbox-nav--next"
+                  onClick={showNextPhoto}
+                  aria-label={t.nextImage}
+                >
+                  <ChevronRight size={28} />
+                </button>
+              ) : (
+                <span className="gallery-lightbox-nav-spacer" aria-hidden />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveSessionUser } from '@/lib/admin-session';
-import { createUser, USER_ROLES, type UserRole } from '@/lib/users';
+import { createUser } from '@/lib/users';
+import { USER_ROLES, type UserRole } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
 
 export async function POST(req: NextRequest) {

@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAdminBase } from '@/lib/admin-base';
-import { Mail, User } from 'lucide-react';
+import { adminFetch } from '@/lib/admin-auth';
+import { getGravatarUrl } from '@/lib/gravatar';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
+import { Mail } from 'lucide-react';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import './admin-wp.css';
 
@@ -14,71 +17,146 @@ type ConferenceDocument = {
   created_at: string;
 };
 
-type Subscriber = {
-  email: string;
+type SubscriberUser = {
+  id: string;
+  username: string;
   name: string;
+  email: string;
+  avatar: string | null;
   submissions: number;
-  lastSubmission: string;
+  lastSubmission: string | null;
 };
 
 export default function ConferenceSubscribersPage() {
   const base = useAdminBase();
-  const [documents, setDocuments] = useState<ConferenceDocument[]>([]);
+  const [subscribers, setSubscribers] = useState<SubscriberUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/admin/documents?category=conferencia');
-        const data = await res.json();
-        if (!cancelled) setDocuments(Array.isArray(data?.documents) ? data.documents : []);
-      } catch {
-        if (!cancelled) setDocuments([]);
-      } finally {
-        if (!cancelled) setLoading(false);
+  const loadSubscribers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [usersRes, docsRes] = await Promise.all([
+        adminFetch('/api/admin/users/list?scope=subscribers', { cache: 'no-store' }),
+        adminFetch('/api/admin/documents?category=conferencia', { cache: 'no-store' }),
+      ]);
+
+      const [usersData, docsData] = await Promise.all([usersRes.json(), docsRes.json()]);
+      if (!usersRes.ok) throw new Error(usersData.error || 'Erro ao carregar subscritores');
+
+      const documents: ConferenceDocument[] = Array.isArray(docsData?.documents)
+        ? docsData.documents
+        : [];
+      const submissionStats = new Map<string, { submissions: number; lastSubmission: string }>();
+
+      for (const doc of documents) {
+        const email = (doc.email || '').trim().toLowerCase();
+        if (!email) continue;
+        const existing = submissionStats.get(email);
+        if (!existing) {
+          submissionStats.set(email, { submissions: 1, lastSubmission: doc.created_at });
+          continue;
+        }
+        existing.submissions += 1;
+        if (new Date(doc.created_at).getTime() > new Date(existing.lastSubmission).getTime()) {
+          existing.lastSubmission = doc.created_at;
+        }
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+
+      const users = Array.isArray(usersData?.users) ? usersData.users : [];
+      const rows: SubscriberUser[] = users.map(
+        (user: {
+          id: string;
+          username: string;
+          name: string;
+          email: string;
+          avatar?: string | null;
+        }) => {
+          const emailKey = (user.email || '').trim().toLowerCase();
+          const stats = submissionStats.get(emailKey);
+          return {
+            id: user.id,
+            username: user.username,
+            name: user.name || user.username,
+            email: user.email,
+            avatar: user.avatar ?? null,
+            submissions: stats?.submissions ?? 0,
+            lastSubmission: stats?.lastSubmission ?? null,
+          };
+        },
+      );
+
+      rows.sort((a, b) => {
+        if (b.submissions !== a.submissions) return b.submissions - a.submissions;
+        return a.name.localeCompare(b.name, 'pt');
+      });
+
+      setSubscribers(rows);
+    } catch (err: unknown) {
+      console.error('Erro ao carregar subscritores:', err instanceof Error ? err.message : err);
+      setSubscribers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const subscribers = useMemo<Subscriber[]>(() => {
-    const map = new Map<string, Subscriber>();
-    for (const doc of documents) {
-      const email = (doc.email || '').trim().toLowerCase();
-      if (!email) continue;
-      const existing = map.get(email);
-      if (!existing) {
-        map.set(email, {
-          email,
-          name: doc.author?.trim() || 'Subscritor',
-          submissions: 1,
-          lastSubmission: doc.created_at,
-        });
-        continue;
-      }
-      existing.submissions += 1;
-      if (new Date(doc.created_at).getTime() > new Date(existing.lastSubmission).getTime()) {
-        existing.lastSubmission = doc.created_at;
-      }
-      if (!existing.name || existing.name === 'Subscritor') {
-        existing.name = doc.author?.trim() || existing.name;
-      }
-      map.set(email, existing);
-    }
-    return Array.from(map.values()).sort((a, b) => b.submissions - a.submissions);
-  }, [documents]);
+  useEffect(() => {
+    loadSubscribers();
+  }, [loadSubscribers]);
 
   const filteredSubscribers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return subscribers;
     return subscribers.filter(
-      (sub) => sub.email.toLowerCase().includes(q) || sub.name.toLowerCase().includes(q),
+      (sub) =>
+        sub.email.toLowerCase().includes(q) ||
+        sub.name.toLowerCase().includes(q) ||
+        sub.username.toLowerCase().includes(q),
     );
   }, [subscribers, searchQuery]);
+
+  const handleDelete = async (sub: SubscriberUser) => {
+    if (
+      !confirm(
+        `Tem a certeza que deseja eliminar o subscritor "${sub.name}"? Esta ação não pode ser revertida.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingId(sub.id);
+    try {
+      const res = await adminFetch('/api/admin/users/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sub.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSubscribers((prev) => prev.filter((item) => item.id !== sub.id));
+    } catch (err: unknown) {
+      alert('Erro ao eliminar subscritor: ' + (err instanceof Error ? err.message : 'Erro'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleResetPassword = async (sub: SubscriberUser) => {
+    if (!confirm(`Enviar email de reposição de senha para "${sub.email}"?`)) return;
+    try {
+      const res = await adminFetch('/api/admin/users/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: sub.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert(data.message || 'Email enviado.');
+    } catch (err: unknown) {
+      alert('Erro: ' + (err instanceof Error ? err.message : 'Erro'));
+    }
+  };
 
   return (
     <div className="wp-admin-page">
@@ -133,17 +211,52 @@ export default function ConferenceSubscribersPage() {
               </tr>
             ) : (
               filteredSubscribers.map((sub) => (
-                <tr key={sub.email}>
+                <tr key={sub.id}>
                   <td>
-                    <User size={14} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
-                    {sub.name}
+                    <div className="wp-user-cell">
+                      <img
+                        src={resolveAvatarUrl(sub.avatar) || getGravatarUrl(sub.email, 80)}
+                        alt=""
+                        className="wp-avatar"
+                      />
+                      <div>
+                        <Link
+                          href={`${base}/utilizadores/editar/${sub.id}`}
+                          className="wp-username-link"
+                        >
+                          {sub.name}
+                        </Link>
+                        <div className="wp-row-actions">
+                          <Link href={`${base}/utilizadores/editar/${sub.id}`}>Editar</Link>
+                          <span className="sep">|</span>
+                          <Link href={`${base}/utilizadores/ver/${sub.id}`}>Ver</Link>
+                          <span className="sep">|</span>
+                          <button
+                            type="button"
+                            className="delete"
+                            disabled={deletingId === sub.id}
+                            onClick={() => handleDelete(sub)}
+                          >
+                            {deletingId === sub.id ? 'A eliminar…' : 'Eliminar'}
+                          </button>
+                          <span className="sep">|</span>
+                          <button type="button" onClick={() => handleResetPassword(sub)}>
+                            Enviar reposição de senha
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <Mail size={14} style={{ marginRight: 6, verticalAlign: 'text-bottom' }} />
                     {sub.email}
                   </td>
                   <td style={{ textAlign: 'center' }}>{sub.submissions}</td>
-                  <td>{new Date(sub.lastSubmission).toLocaleString('pt-PT')}</td>
+                  <td>
+                    {sub.lastSubmission
+                      ? new Date(sub.lastSubmission).toLocaleString('pt-PT')
+                      : '—'}
+                  </td>
                 </tr>
               ))
             )}

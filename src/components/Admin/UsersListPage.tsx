@@ -21,22 +21,19 @@ interface UserItem {
   alcunha?: string;
 }
 
-const ROLES = ['Administrador', 'Editor', 'Actor', 'Subscritor', 'Contribuidor'];
-const ROLE_TABS = ['Todos', 'Administrador', 'Editor', 'Subscritor'] as const;
-type RoleTab = (typeof ROLE_TABS)[number];
+const ROLES = ['Administrador', 'Editor', 'Actor', 'Contribuidor'];
 
 export default function UsersListPage() {
   const base = useAdminBase();
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<RoleTab>('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await adminFetch('/api/admin/users/list', { cache: 'no-store' });
+      const res = await adminFetch('/api/admin/users/list?scope=staff', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);
@@ -52,17 +49,11 @@ export default function UsersListPage() {
   }, []);
 
   const filteredUsers = users.filter((user) => {
-    const matchesRole = filter === 'Todos' || user.role === filter;
     const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      user.username.toLowerCase().includes(q) || user.email.toLowerCase().includes(q);
-    return matchesRole && matchesSearch;
+    return (
+      user.username.toLowerCase().includes(q) || user.email.toLowerCase().includes(q)
+    );
   });
-
-  const getRoleCount = (role: RoleTab) => {
-    if (role === 'Todos') return users.length;
-    return users.filter((u) => u.role === role).length;
-  };
 
   const handleDelete = async (user: UserItem) => {
     if (
@@ -106,32 +97,14 @@ export default function UsersListPage() {
     }
   };
 
-  const roleFilters = ROLE_TABS;
-
   return (
     <div className="wp-admin-page">
-      <div className="wp-page-header">
+      <div className="wp-page-header wp-page-header--users-title">
         <h1>Utilizadores</h1>
         <Link href={`${base}/utilizadores/novo`} className="wp-btn wp-btn-outline">
           Adicionar utilizador
         </Link>
       </div>
-
-      <ul className="wp-subsubsub wp-role-tabs">
-        {roleFilters.map((role, index) => (
-          <li key={role}>
-            <button
-              type="button"
-              className={filter === role ? 'is-active' : ''}
-              onClick={() => setFilter(role)}
-              aria-pressed={filter === role}
-            >
-              {role} <span className="count">({getRoleCount(role)})</span>
-            </button>
-            {index < roleFilters.length - 1 ? <span className="wp-role-tab-sep" aria-hidden>|</span> : null}
-          </li>
-        ))}
-      </ul>
 
       <div className="wp-list-toolbar">
         <div className="wp-list-toolbar-left">

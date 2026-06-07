@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import path from 'node:path';
 import { fetchMediaBuffer } from '@/lib/fetch-media-buffer';
-import { buildAdminMediaCatalog, upsertMediaRecord } from '@/lib/media-registry';
+import { isLocalMediaPath } from '@/lib/media-catalog-key';
+import { buildAdminMediaCatalog, invalidateGalleryCatalogCache } from '@/lib/media-registry';
+import { saveMediaMetadata } from '@/lib/media-metadata-store';
 import type { ImageEditFormat } from '@/lib/resize-image-buffer';
 import { resizeImageBuffer } from '@/lib/resize-image-buffer';
+import { movePublicFileToTrash } from '@/lib/media-storage';
+import { addTrashedMedia } from '@/lib/media-trash-store';
 import { replaceExistingMediaFile, uploadFileToStore } from '@/lib/supabase-media';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +21,14 @@ type EditBody = {
   replace?: boolean;
   fileName?: string;
   title?: string;
+  alt_text?: string;
+  caption?: string;
+  description?: string;
 };
+
+function trashedIdFor(recordId: string, trashUrl: string): string {
+  return `trash_${recordId}_${path.basename(trashUrl)}`;
+}
 
 export async function POST(request: Request) {
   try {
@@ -57,6 +68,23 @@ export async function POST(request: Request) {
       if (!existing) {
         return NextResponse.json({ success: false, error: 'Item não encontrado.' }, { status: 404 });
       }
+      if (isLocalMediaPath(existing.url)) {
+        const moved = await movePublicFileToTrash(existing.url);
+        if (moved) {
+          await addTrashedMedia({
+            id: trashedIdFor(existing.id, moved.trashUrl),
+            url: existing.url,
+            trash_path: moved.trashUrl,
+            title: existing.title,
+            mime_type: existing.mime_type,
+            size: existing.size,
+            subcategory: existing.subcategory,
+            category: existing.category,
+            source: existing.source,
+            deleted_at: new Date().toISOString(),
+          });
+        }
+      }
       record = await replaceExistingMediaFile(
         existing,
         processed.buffer,
@@ -71,13 +99,24 @@ export async function POST(request: Request) {
         uploadName,
         processed.mimeType,
         'imagens',
-        'Upload',
+        existing?.subcategory || 'Galeria',
       );
       if (body.title?.trim()) {
         record = { ...record, title: body.title.trim() };
       }
-      record = await upsertMediaRecord(record);
     }
+
+    const metadataPayload = {
+      title: body.title?.trim() || record.title,
+      alt_text: typeof body.alt_text === 'string' ? body.alt_text : existing?.alt_text,
+      caption: typeof body.caption === 'string' ? body.caption : existing?.caption,
+      description: typeof body.description === 'string' ? body.description : existing?.description,
+    };
+
+    await saveMediaMetadata(record.id, record.url, metadataPayload);
+    record = { ...record, ...metadataPayload };
+
+    invalidateGalleryCatalogCache();
 
     return NextResponse.json({ success: true, media: record });
   } catch (error) {
