@@ -9,6 +9,7 @@ import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { PanelPageHeaderSkeleton } from '@/components/Admin/PanelSkeleton';
 import { useLanguage } from '@/context/LanguageContext';
+import { localizeNewsList } from '@/lib/news-i18n';
 import '@/app/(admin)/admin/noticias/admin-noticias.css';
 
 const copy = {
@@ -123,7 +124,8 @@ export default function NoticiasListPage() {
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
   const readOnly = !canManageNews;
 
-  const filteredNews = news.filter((item) =>
+  const localizedNews = localizeNewsList(news, locale);
+  const filteredNews = localizedNews.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
