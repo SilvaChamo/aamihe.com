@@ -8,12 +8,114 @@ import { useAdminBase } from '@/lib/admin-base';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { PanelPageHeaderSkeleton } from '@/components/Admin/PanelSkeleton';
+import { useLanguage } from '@/context/LanguageContext';
 import '@/app/(admin)/admin/noticias/admin-noticias.css';
+
+const copy = {
+  pt: {
+    title: 'Notícias',
+    addNew: 'Adicionar nova',
+    searchPlaceholder: 'Pesquisar notícias...',
+    bulkActions: 'Ações em massa',
+    edit: 'Editar',
+    moveToTrash: 'Mover para o lixo',
+    apply: 'Aplicar',
+    allDates: 'Todas as datas',
+    allCategories: 'Todas as categorias',
+    filter: 'Filtrar',
+    colTitle: 'Título',
+    colCategory: 'Categoria',
+    colDate: 'Data',
+    colStatus: 'Estado',
+    selectAll: 'Selecionar todas as notícias visíveis',
+    selectItem: (t: string) => `Selecionar ${t}`,
+    editLink: 'Editar',
+    quickEdit: 'Edição rápida',
+    trash: 'Lixo',
+    view: 'Ver',
+    viewSite: 'Ver no site',
+    published: 'Publicada',
+    draft: 'Rascunho',
+    statusPublished: 'Publicado',
+    none: 'Nenhuma notícia encontrada.',
+    items: (n: number) => `${n} itens`,
+    deleteConfirm: (t: string) => `Tem a certeza que deseja mover "${t}" para o lixo?`,
+    quickEditTitle: 'Edição Rápida',
+    cancel: 'Cancelar',
+    update: 'Atualizar',
+  },
+  fr: {
+    title: 'Actualités',
+    addNew: 'Ajouter',
+    searchPlaceholder: 'Rechercher des actualités...',
+    bulkActions: 'Actions groupées',
+    edit: 'Modifier',
+    moveToTrash: 'Mettre à la corbeille',
+    apply: 'Appliquer',
+    allDates: 'Toutes les dates',
+    allCategories: 'Toutes les catégories',
+    filter: 'Filtrer',
+    colTitle: 'Titre',
+    colCategory: 'Catégorie',
+    colDate: 'Date',
+    colStatus: 'État',
+    selectAll: 'Sélectionner toutes les actualités visibles',
+    selectItem: (t: string) => `Sélectionner ${t}`,
+    editLink: 'Modifier',
+    quickEdit: 'Modification rapide',
+    trash: 'Corbeille',
+    view: 'Voir',
+    viewSite: 'Voir sur le site',
+    published: 'Publié',
+    draft: 'Brouillon',
+    statusPublished: 'Publié',
+    none: 'Aucune actualité trouvée.',
+    items: (n: number) => `${n} éléments`,
+    deleteConfirm: (t: string) => `Êtes-vous sûr de vouloir mettre "${t}" à la corbeille ?`,
+    quickEditTitle: 'Modification rapide',
+    cancel: 'Annuler',
+    update: 'Mettre à jour',
+  },
+  en: {
+    title: 'News',
+    addNew: 'Add new',
+    searchPlaceholder: 'Search news...',
+    bulkActions: 'Bulk actions',
+    edit: 'Edit',
+    moveToTrash: 'Move to trash',
+    apply: 'Apply',
+    allDates: 'All dates',
+    allCategories: 'All categories',
+    filter: 'Filter',
+    colTitle: 'Title',
+    colCategory: 'Category',
+    colDate: 'Date',
+    colStatus: 'Status',
+    selectAll: 'Select all visible news',
+    selectItem: (t: string) => `Select ${t}`,
+    editLink: 'Edit',
+    quickEdit: 'Quick edit',
+    trash: 'Trash',
+    view: 'View',
+    viewSite: 'View on site',
+    published: 'Published',
+    draft: 'Draft',
+    statusPublished: 'Published',
+    none: 'No news found.',
+    items: (n: number) => `${n} items`,
+    deleteConfirm: (t: string) => `Are you sure you want to move "${t}" to the trash?`,
+    quickEditTitle: 'Quick Edit',
+    cancel: 'Cancel',
+    update: 'Update',
+  },
+} as const;
 
 export default function NoticiasListPage() {
   const base = useAdminBase();
   const { canManageNews, loading: permsLoading } = useAdminPermissions();
   const { news, deleteNews, updateNews, categories, loading } = useNews();
+  const { locale } = useLanguage();
+  const t = copy[locale];
   const [quickEditId, setQuickEditId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<NewsItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,7 +176,7 @@ export default function NoticiasListPage() {
   };
 
   const handleDelete = (id: number, title: string) => {
-    if (window.confirm(`Tem a certeza que deseja mover "${title}" para o lixo?`)) {
+    if (window.confirm(t.deleteConfirm(title))) {
       deleteNews(id);
     }
   };
@@ -103,17 +205,17 @@ export default function NoticiasListPage() {
     <div className="admin-news-container">
       <div className="admin-news-header">
         <div className="admin-news-title-group">
-          <h1 className="admin-news-title">Notícias</h1>
+          <h1 className="admin-news-title">{t.title}</h1>
           {canManageNews ? (
             <Link href={`${base}/noticias/nova`} className="btn-add-new">
-              Adicionar nova
+              {t.addNew}
             </Link>
           ) : null}
         </div>
         <div className="admin-news-search">
           <input
             type="text"
-            placeholder="Pesquisar notícias..."
+            placeholder={t.searchPlaceholder}
             className="wp-input"
             style={{ width: '200px' }}
             value={searchTerm}
@@ -126,26 +228,24 @@ export default function NoticiasListPage() {
         <div className="admin-news-toolbar">
           <div className="admin-news-filters">
             <select className="wp-select">
-              <option>Ações em massa</option>
-              <option>Editar</option>
-              <option>Mover para o lixo</option>
+              <option>{t.bulkActions}</option>
+              <option>{t.edit}</option>
+              <option>{t.moveToTrash}</option>
             </select>
             <button type="button" className="btn-apply">
-              Aplicar
+              {t.apply}
             </button>
             <select className="wp-select">
-              <option>Todas as datas</option>
+              <option>{t.allDates}</option>
             </select>
             <select className="wp-select">
-              <option>Todas as categorias</option>
+              <option>{t.allCategories}</option>
               {categories.map((cat) => (
-                <option key={cat.slug}>
-                  {cat.name}
-                </option>
+                <option key={cat.slug}>{cat.name}</option>
               ))}
             </select>
             <button type="button" className="btn-apply">
-              Filtrar
+              {t.filter}
             </button>
           </div>
         </div>
@@ -162,21 +262,21 @@ export default function NoticiasListPage() {
                     type="checkbox"
                     checked={allFilteredSelected}
                     onChange={toggleSelectAll}
-                    aria-label="Selecionar todas as notícias visíveis"
+                    aria-label={t.selectAll}
                   />
                 </th>
               ) : null}
-              <th className="col-title">Título</th>
-              <th className="col-cat">Categoria</th>
-              <th className="col-date">Data</th>
-              <th className="col-status">Estado</th>
+              <th className="col-title">{t.colTitle}</th>
+              <th className="col-cat">{t.colCategory}</th>
+              <th className="col-date">{t.colDate}</th>
+              <th className="col-status">{t.colStatus}</th>
             </tr>
           </thead>
           <tbody>
             {filteredNews.length === 0 ? (
               <tr>
                 <td colSpan={colSpan} style={{ padding: '20px', textAlign: 'center' }}>
-                  Nenhuma notícia encontrada.
+                  {t.none}
                 </td>
               </tr>
             ) : (
@@ -189,7 +289,7 @@ export default function NoticiasListPage() {
                           type="checkbox"
                           checked={selectedIds.has(item.id)}
                           onChange={() => toggleSelect(item.id)}
-                          aria-label={`Selecionar ${item.title}`}
+                          aria-label={t.selectItem(item.title)}
                         />
                       </td>
                     ) : null}
@@ -203,11 +303,11 @@ export default function NoticiasListPage() {
                           {!readOnly ? (
                             <div className="row-actions">
                               <span className="edit">
-                                <Link href={`${base}/noticias/editar/${item.id}`}>Editar</Link> |
+                                <Link href={`${base}/noticias/editar/${item.id}`}>{t.editLink}</Link> |
                               </span>
                               <span className="action-inline-edit">
                                 <button type="button" onClick={() => handleQuickEdit(item)}>
-                                  Edição rápida
+                                  {t.quickEdit}
                                 </button>{' '}
                                 |
                               </span>
@@ -217,13 +317,13 @@ export default function NoticiasListPage() {
                                   className="submitdelete"
                                   onClick={() => handleDelete(item.id, item.title)}
                                 >
-                                  Lixo
+                                  {t.trash}
                                 </button>{' '}
                                 |
                               </span>
                               <span className="view">
                                 <a href={`/noticias/${item.id}`} target="_blank" rel="noreferrer">
-                                  Ver
+                                  {t.view}
                                 </a>
                               </span>
                             </div>
@@ -231,7 +331,7 @@ export default function NoticiasListPage() {
                             <div className="row-actions">
                               <span className="view">
                                 <a href={`/noticias/${item.id}`} target="_blank" rel="noreferrer">
-                                  Ver no site
+                                  {t.viewSite}
                                 </a>
                               </span>
                             </div>
@@ -243,10 +343,10 @@ export default function NoticiasListPage() {
                     <td className="col-date">
                       {item.date}
                       <br />
-                      <span style={{ fontSize: '11px', color: '#8c8f94' }}>Publicada</span>
+                      <span style={{ fontSize: '11px', color: '#8c8f94' }}>{t.published}</span>
                     </td>
                     <td className="col-status">
-                      {item.status === 'draft' ? 'Rascunho' : 'Publicado'}
+                      {item.status === 'draft' ? t.draft : t.statusPublished}
                     </td>
                   </tr>
 
@@ -254,13 +354,13 @@ export default function NoticiasListPage() {
                     <tr className="quick-edit-row">
                       <td colSpan={colSpan}>
                         <div className="quick-edit-container">
-                          <span className="quick-edit-title">Edição Rápida</span>
+                          <span className="quick-edit-title">{t.quickEditTitle}</span>
                           <div className="quick-edit-footer">
                             <button type="button" className="btn-cancel" onClick={() => setQuickEditId(null)}>
-                              Cancelar
+                              {t.cancel}
                             </button>
                             <button type="button" className="btn-save" onClick={saveQuickEdit}>
-                              Atualizar
+                              {t.update}
                             </button>
                           </div>
                         </div>
@@ -275,7 +375,7 @@ export default function NoticiasListPage() {
       </div>
 
       <div style={{ marginTop: '10px', fontSize: '13px', color: '#50575e' }}>
-        {filteredNews.length} itens
+        {t.items(filteredNews.length)}
       </div>
     </div>
   );
