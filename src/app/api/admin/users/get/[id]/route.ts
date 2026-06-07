@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { canViewStaffUsers, getUserById } from '@/lib/users';
+import { canViewStaffUsers } from '@/lib/users-viewer';
+import { getUserById } from '@/lib/users';
 
 export async function GET(
   request: Request,

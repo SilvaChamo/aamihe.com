@@ -3,7 +3,7 @@ import { requireStaffSession } from '@/lib/admin-session';
 import { countDocuments } from '@/lib/aamihe-documents-store';
 import { countNewsFromSupabase } from '@/lib/supabase-content';
 import { countSupabaseMediaByCategory } from '@/lib/supabase-media';
-import { countUsersForViewer } from '@/lib/users';
+import { countUsersForViewer } from '@/lib/users-viewer';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import type { MediaCategory } from '@/lib/site-media';
 

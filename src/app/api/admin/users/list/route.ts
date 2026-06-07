@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { canListUsers, listUsersForViewer } from '@/lib/users';
+import { canListUsers, listUsersForViewer } from '@/lib/users-viewer';
 
 export const dynamic = 'force-dynamic';
 
