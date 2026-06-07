@@ -206,7 +206,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
   const { unread: subscriberUnread } = useSubscriberNotifications();
   const { canManageNews, canManageUsers, canViewNews, isAdmin } = useAdminPermissions();
-  const { privileges, loading: privilegesLoading } = useMenuPrivileges();
+  const { privileges, loading: privilegesLoading } = useMenuPrivileges(pathname);
   const showSubscriberNav = base === '/dashboard' && isSubscriber;
   const menuBase = '/dashboard';
   const privilegesReady = isAdmin || !privilegesLoading;

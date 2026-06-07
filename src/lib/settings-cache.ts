@@ -43,6 +43,12 @@ export function peekCachedSettings(): SettingsRecord | null {
   return cachedSettings;
 }
 
+export function seedSettingsCache(settings: SettingsRecord | null): void {
+  cachedSettings = settings;
+  writeStoredSettings(settings);
+  listeners.forEach((listener) => listener());
+}
+
 export function invalidateSettingsCache(): void {
   cachedSettings = null;
   inflight = null;
@@ -51,10 +57,9 @@ export function invalidateSettingsCache(): void {
 }
 
 export async function fetchSettingsCached(): Promise<SettingsRecord | null> {
-  if (cachedSettings) return cachedSettings;
   if (inflight) return inflight;
 
-  inflight = adminFetch('/api/admin/settings')
+  inflight = adminFetch('/api/admin/settings', { cache: 'no-store' })
     .then((r) => r.json())
     .then((data) => {
       const settings =

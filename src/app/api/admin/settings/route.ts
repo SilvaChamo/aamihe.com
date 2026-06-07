@@ -1,6 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-session';
-import { loadSiteSettings, saveSiteSettings } from '@/lib/supabase-settings';
+import { resolveMenuPrivileges } from '@/lib/menu-privileges';
+import { loadSiteSettings, saveSiteSettings, type SiteSettingsPayload } from '@/lib/supabase-settings';
+
+function mergeSiteSettings(
+  existing: SiteSettingsPayload,
+  body: Record<string, unknown>,
+): SiteSettingsPayload {
+  const merged: SiteSettingsPayload = { ...existing, ...(body as SiteSettingsPayload) };
+
+  if (body.menuPrivileges && typeof body.menuPrivileges === 'object') {
+    merged.menuPrivileges = resolveMenuPrivileges({
+      menuPrivileges: {
+        ...(existing.menuPrivileges ?? {}),
+        ...(body.menuPrivileges as SiteSettingsPayload['menuPrivileges']),
+      },
+    });
+  }
+
+  return merged;
+}
 
 export async function GET(request: Request) {
   const authError = await requireAdminAuth(request);
@@ -25,9 +44,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Pedido inválido.' }, { status: 400 });
   }
 
-  // Merge with existing settings
+  // Merge with existing settings (menuPrivileges com merge profundo)
   const existing = (await loadSiteSettings()) ?? {};
-  const merged = { ...existing, ...body };
+  const merged = mergeSiteSettings(existing, body);
 
   const ok = await saveSiteSettings(merged);
   if (!ok) {

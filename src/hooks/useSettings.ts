@@ -6,6 +6,7 @@ import {
   fetchSettingsCached,
   invalidateSettingsCache,
   peekCachedSettings,
+  seedSettingsCache,
 } from '@/lib/settings-cache';
 
 export type SettingsState = Record<string, unknown>;
@@ -51,7 +52,11 @@ export function useSettings<T extends SettingsState>(defaults: T) {
         if (!res.ok || !data.success) {
           setError(data.error || 'Erro ao guardar definições.');
         } else {
-          invalidateSettingsCache();
+          if (data.settings && typeof data.settings === 'object') {
+            seedSettingsCache(data.settings as Record<string, unknown>);
+          } else {
+            invalidateSettingsCache();
+          }
           setSavedAt(new Date());
         }
       } catch {

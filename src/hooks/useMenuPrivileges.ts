@@ -8,7 +8,7 @@ import {
 } from '@/lib/menu-privileges';
 import { fetchSettingsCached, peekCachedSettings, subscribeSettingsCache } from '@/lib/settings-cache';
 
-export function useMenuPrivileges() {
+export function useMenuPrivileges(pathname?: string) {
   const [privileges, setPrivileges] = useState<MenuPrivilegesConfig>(defaultMenuPrivileges);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +39,7 @@ export function useMenuPrivileges() {
       cancelled = true;
       unsubscribe();
     };
-  }, []);
+  }, [pathname]);
 
   return { privileges, loading };
 }

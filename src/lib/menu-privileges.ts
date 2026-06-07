@@ -96,6 +96,8 @@ export type MenuPrivilegesConfig = {
   editorSub?: Partial<Record<string, boolean>>;
   subscriber?: Partial<Record<SubscriberMenuKey, boolean>>;
   subscriberSub?: Partial<Record<string, boolean>>;
+  /** Activa a secção «Opções do administrador» no painel subscritor. */
+  subscriberAdminExtrasEnabled?: boolean;
   subscriberAdminExtras?: Partial<Record<SubscriberAdminExtraKey, boolean>>;
   subscriberAdminExtrasSub?: Partial<Record<string, boolean>>;
 };
@@ -148,6 +150,7 @@ export function defaultMenuPrivileges(): MenuPrivilegesConfig {
       boolean
     >,
     subscriberSub: defaultSubPrivileges(SUBSCRIBER_SUBMENU_ITEMS),
+    subscriberAdminExtrasEnabled: false,
     subscriberAdminExtras: Object.fromEntries(
       SUBSCRIBER_ADMIN_EXTRA_KEYS.map((k) => [k, false]),
     ) as Record<SubscriberAdminExtraKey, boolean>,
@@ -174,6 +177,7 @@ export function resolveMenuPrivileges(
     editorSub: { ...defaults.editorSub, ...raw.editorSub },
     subscriber: { ...defaults.subscriber, ...raw.subscriber },
     subscriberSub: { ...defaults.subscriberSub, ...raw.subscriberSub },
+    subscriberAdminExtrasEnabled: raw.subscriberAdminExtrasEnabled === true,
     subscriberAdminExtras: { ...defaults.subscriberAdminExtras, ...raw.subscriberAdminExtras },
     subscriberAdminExtrasSub: {
       ...defaults.subscriberAdminExtrasSub,
@@ -218,10 +222,17 @@ export function isSubscriberSubmenuEnabled(
   return privileges.subscriberSub?.[menuSubPrivilegeKey(parent, childKey)] !== false;
 }
 
+export function isSubscriberAdminExtrasSectionEnabled(
+  privileges: MenuPrivilegesConfig,
+): boolean {
+  return privileges.subscriberAdminExtrasEnabled === true;
+}
+
 export function isSubscriberAdminExtraEnabled(
   privileges: MenuPrivilegesConfig,
   key: SubscriberAdminExtraKey,
 ): boolean {
+  if (!isSubscriberAdminExtrasSectionEnabled(privileges)) return false;
   return privileges.subscriberAdminExtras?.[key] === true;
 }
 
@@ -330,6 +341,16 @@ export function isSubscriberDashboardPathAllowed(
   }
 
   for (const key of SUBSCRIBER_ADMIN_EXTRA_KEYS) {
+    if (!isSubscriberAdminExtrasSectionEnabled(privileges)) {
+      const subs = STAFF_SUBMENU_ITEMS[key] ?? [];
+      for (const sub of subs) {
+        if (pathMatchesDashboardSuffix(pathname, sub.hrefSuffix)) return false;
+      }
+      const href = STAFF_MENU_HREFS[key];
+      if (pathMatchesDashboardSuffix(pathname, href)) return false;
+      continue;
+    }
+
     const subs = STAFF_SUBMENU_ITEMS[key] ?? [];
     for (const sub of subs) {
       if (pathMatchesDashboardSuffix(pathname, sub.hrefSuffix)) {

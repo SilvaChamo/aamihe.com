@@ -97,6 +97,23 @@
   padding-bottom: 4px;
 }
 
+.privileges-section-master-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.privileges-admin-extras-body.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.privileges-row-disabled {
+  opacity: 0.55;
+}
+
+.ios-toggle-switch.is-disabled {
+  pointer-events: none;
+}
+
 .privileges-section-toggle {
   display: flex;
   align-items: center;
