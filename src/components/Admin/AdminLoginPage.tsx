@@ -3,6 +3,9 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+const SITE_HOST =
+  (process.env.NEXT_PUBLIC_SITE_URL || 'https://aamihe.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
 import { Eye, EyeOff } from 'lucide-react';
 import {
   requestPasswordReset,
@@ -349,6 +352,7 @@ function AdminLoginPageInner({
 
               {mode === 'login' ? (
                 <>
+                  <p className="admin-login-intro">Continuar para {SITE_HOST}</p>
                   <form className="admin-login-form" onSubmit={handleLogin}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
                     {success ? <div className="admin-login-success">{success}</div> : null}
@@ -408,8 +412,8 @@ function AdminLoginPageInner({
                         className="admin-login-google-icon-btn"
                         disabled={loadingGoogle || loading}
                         onClick={handleGoogleLogin}
-                        aria-label="Iniciar sessão com Google"
-                        title="Iniciar sessão com Google"
+                        aria-label={`Continuar para ${SITE_HOST} com Google`}
+                        title={`Continuar para ${SITE_HOST} com Google`}
                       >
                         {loadingGoogle ? (
                           <span className="admin-login-google-spinner" aria-hidden="true" />
@@ -432,7 +436,7 @@ function AdminLoginPageInner({
               ) : mode === 'new-password' ? (
                 <>
                   <p className="admin-login-intro">
-                    Defina a nova senha para a sua conta AAMIHE.
+                    Defina a nova senha para a sua conta AAMIHE ({SITE_HOST}).
                   </p>
                   <form className="admin-login-form" onSubmit={handleConfirmNewPassword}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
@@ -589,7 +593,7 @@ function AdminLoginPageInner({
               ) : (
                 <>
                   <p className="admin-login-intro">
-                    Indique o email da sua conta. Enviaremos um link para repor a senha.
+                    Indique o email da sua conta AAMIHE ({SITE_HOST}). Enviaremos um link para repor a senha.
                   </p>
                   <form className="admin-login-form" onSubmit={handleResetPassword}>
                     {error ? <div className="admin-login-error">{error}</div> : null}
@@ -634,7 +638,7 @@ function AdminLoginPageInner({
             </div>
 
             <p className="admin-login-back">
-              <Link href="/">&larr; Ir para AAMIHE</Link>
+              <Link href="/">&larr; Ir para {SITE_HOST}</Link>
             </p>
           </div>
         </div>

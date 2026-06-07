@@ -1,13 +1,11 @@
 import { getSupabaseAdmin } from '@/lib/supabase/server';
-import { getPublicSiteOrigin } from '@/lib/site-url';
+import { getPublicSiteHost, getPublicSiteOrigin } from '@/lib/site-url';
 import { getSmtpConfigStatus, sendSmtpMail } from '@/lib/smtp-mail';
 
-/** Na Vercel, mail.aamihe.com:587 no Hetzner costuma dar ETIMEDOUT — o email sai pelo GoTrue no VPS. */
 function useSiteSmtpForPasswordReset(): boolean {
   const forced = process.env.PASSWORD_RESET_USE_SITE_SMTP?.trim().toLowerCase();
   if (forced === 'true') return true;
   if (forced === 'false') return false;
-  if (process.env.VERCEL) return false;
   return getSmtpConfigStatus().configured;
 }
 
@@ -66,17 +64,18 @@ async function sendRecoveryEmailViaSmtp(email: string, actionLink: string): Prom
     );
   }
 
+  const siteHost = getPublicSiteHost();
   const from = process.env.SITE_EMAIL_FROM?.trim() || 'AAMIHE <noreply@aamihe.com>';
-  const subject = 'Repor senha — AAMIHE';
+  const subject = `Repor senha — ${siteHost}`;
   const text = [
-    'Recebeu este email porque foi pedida a reposição da senha da sua conta AAMIHE.',
+    `Recebeu este email porque foi pedida a reposição da senha da sua conta AAMIHE (${siteHost}).`,
     '',
     'Abra o link abaixo (válido por tempo limitado):',
     actionLink,
     '',
     'Se não fez este pedido, ignore este email.',
     '',
-    '— AAMIHE',
+    `— AAMIHE (${siteHost})`,
   ].join('\n');
 
   await sendSmtpMail({
@@ -84,8 +83,8 @@ async function sendRecoveryEmailViaSmtp(email: string, actionLink: string): Prom
     to: [email],
     subject,
     text,
-    html: `<p>Recebeu este email porque foi pedida a reposição da senha da sua conta <strong>AAMIHE</strong>.</p>
-<p><a href="${actionLink}">Repor senha</a></p>
+    html: `<p>Recebeu este email porque foi pedida a reposição da senha da sua conta <strong>AAMIHE (${siteHost})</strong>.</p>
+<p><a href="${actionLink}">Repor senha — ${siteHost}</a></p>
 <p>Se o botão não funcionar, copie este endereço para o browser:<br /><a href="${actionLink}">${actionLink}</a></p>
 <p>Se não fez este pedido, ignore este email.</p>`,
   });

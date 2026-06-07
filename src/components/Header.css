@@ -302,7 +302,7 @@
   height: 38px;
   padding: 0 16px;
   border-radius: var(--site-btn-radius);
-  background-color: var(--site-action);
+  background-color: var(--site-action-hover);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -525,6 +525,6 @@
 }
 
 .login-btn:hover {
-  background-color: var(--site-action-hover);
+  background-color: var(--site-action);
   color: #fff;
 }

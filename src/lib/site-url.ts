@@ -11,3 +11,12 @@ export function getPublicSiteOrigin(request?: Request): string {
   if (request) return new URL(request.url).origin;
   return 'https://aamihe.com';
 }
+
+/** Host público do site (ex.: aamihe.com). */
+export function getPublicSiteHost(): string {
+  try {
+    return new URL(getPublicSiteOrigin()).hostname;
+  } catch {
+    return 'aamihe.com';
+  }
+}
