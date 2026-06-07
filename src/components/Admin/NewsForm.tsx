@@ -20,10 +20,95 @@ interface NewsFormProps {
 
 const localeLabels = { pt: 'Português', fr: 'Français', en: 'English' } as const;
 
+const formCopy = {
+  pt: {
+    titleAdd: 'Adicionar nova notícia',
+    titleEdit: 'Editar notícia',
+    editingIn: 'A editar em:',
+    translationNote: ' (versão traduzida; o português é a língua principal do site)',
+    placeholderTitle: 'Adicionar título',
+    placeholderContent: 'Escreva o conteúdo da notícia aqui...',
+    panelExcerpt: 'Excerto (Resumo)',
+    placeholderSummary: 'Uma breve descrição para a Home Page...',
+    panelFeaturedImage: 'Imagem de destaque',
+    featuredImageAria: 'Imagem de destaque',
+    featuredImageBtn: 'Imagem de destaque',
+    removeImage: 'Remover imagem',
+    panelPublish: 'Publicar',
+    statusLabel: 'Estado:',
+    published: 'Publicado',
+    draft: 'Rascunho',
+    visibilityLabel: 'Visibilidade:',
+    public: 'Público',
+    dateLabel: 'Data:',
+    moveToTrash: 'Mover para o lixo',
+    saving: 'A guardar...',
+    update: 'Atualizar',
+    publish: 'Publicar',
+    panelCategories: 'Categorias',
+    errSave: 'Erro ao guardar notícia',
+  },
+  fr: {
+    titleAdd: 'Ajouter une actualité',
+    titleEdit: "Modifier l'actualité",
+    editingIn: 'Édition en :',
+    translationNote: ' (version traduite ; le portugais est la langue principale du site)',
+    placeholderTitle: 'Ajouter un titre',
+    placeholderContent: "Écrivez le contenu de l'actualité ici...",
+    panelExcerpt: 'Extrait (Résumé)',
+    placeholderSummary: "Une brève description pour la page d'accueil...",
+    panelFeaturedImage: 'Image mise en avant',
+    featuredImageAria: 'Image mise en avant',
+    featuredImageBtn: 'Image mise en avant',
+    removeImage: "Supprimer l'image",
+    panelPublish: 'Publier',
+    statusLabel: 'État :',
+    published: 'Publié',
+    draft: 'Brouillon',
+    visibilityLabel: 'Visibilité :',
+    public: 'Public',
+    dateLabel: 'Date :',
+    moveToTrash: 'Mettre à la corbeille',
+    saving: 'Enregistrement...',
+    update: 'Mettre à jour',
+    publish: 'Publier',
+    panelCategories: 'Catégories',
+    errSave: "Erreur lors de l'enregistrement",
+  },
+  en: {
+    titleAdd: 'Add new news',
+    titleEdit: 'Edit news',
+    editingIn: 'Editing in:',
+    translationNote: ' (translated version; Portuguese is the site\'s main language)',
+    placeholderTitle: 'Add title',
+    placeholderContent: 'Write the news content here...',
+    panelExcerpt: 'Excerpt (Summary)',
+    placeholderSummary: 'A brief description for the Home Page...',
+    panelFeaturedImage: 'Featured image',
+    featuredImageAria: 'Featured image',
+    featuredImageBtn: 'Featured image',
+    removeImage: 'Remove image',
+    panelPublish: 'Publish',
+    statusLabel: 'Status:',
+    published: 'Published',
+    draft: 'Draft',
+    visibilityLabel: 'Visibility:',
+    public: 'Public',
+    dateLabel: 'Date:',
+    moveToTrash: 'Move to trash',
+    saving: 'Saving...',
+    update: 'Update',
+    publish: 'Publish',
+    panelCategories: 'Categories',
+    errSave: 'Error saving news',
+  },
+} as const;
+
 export default function NewsForm({ initialData, isEdit = false }: NewsFormProps) {
   const router = useRouter();
   const base = useAdminBase();
   const { locale } = useLanguage();
+  const f = formCopy[locale];
   const { addNews, updateNews, categories, getNewsById } = useNews();
   const [loading, setLoading] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
@@ -100,7 +185,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
       router.push(`${base}/noticias`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Erro ao guardar notícia');
+      alert(err instanceof Error ? err.message : f.errSave);
     } finally {
       setLoading(false);
     }
@@ -109,10 +194,10 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
   return (
     <div className="news-form-container">
       <div className="news-form-header">
-        <h1>{isEdit ? 'Editar notícia' : 'Adicionar nova notícia'}</h1>
+        <h1>{isEdit ? f.titleEdit : f.titleAdd}</h1>
         <p className="news-form-locale-hint">
-          A editar em: <strong>{localeLabels[locale]}</strong>
-          {locale !== 'pt' ? ' (versão traduzida; o português é a língua principal do site)' : ''}
+          {f.editingIn} <strong>{localeLabels[locale]}</strong>
+          {locale !== 'pt' ? f.translationNote : ''}
         </p>
       </div>
 
@@ -120,7 +205,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
         <div className="news-form-main">
           <input
             type="text"
-            placeholder="Adicionar título"
+            placeholder={f.placeholderTitle}
             className="news-form-title-input"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -132,13 +217,13 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
               key={initialData?.id || 'new'}
               value={formData.content}
               onChange={(val) => setFormData({ ...formData, content: val })}
-              placeholder="Escreva o conteúdo da notícia aqui..."
+              placeholder={f.placeholderContent}
             />
           </div>
 
           <div className="news-form-panel">
             <div className="news-form-panel-header">
-              <h2>Excerto (Resumo)</h2>
+              <h2>{f.panelExcerpt}</h2>
               <ChevronUp size={16} />
             </div>
             <div className="news-form-panel-body">
@@ -147,7 +232,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                 rows={3}
                 value={formData.summary}
                 onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                placeholder="Uma breve descrição para a Home Page..."
+                placeholder={f.placeholderSummary}
               />
             </div>
           </div>
@@ -156,7 +241,7 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
         <div className="news-form-sidebar">
           <div className="news-form-panel">
             <div className="news-form-panel-header">
-              <h2>Imagem de destaque</h2>
+              <h2>{f.panelFeaturedImage}</h2>
               <ChevronUp size={16} />
             </div>
             <div className="news-form-panel-body">
@@ -166,25 +251,21 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
                     type="button"
                     className="news-form-image-trigger"
                     onClick={openFeaturedImagePicker}
-                    aria-label="Imagem de destaque"
+                    aria-label={f.featuredImageAria}
                   >
-                    <img
-                      src={formData.image}
-                      alt=""
-                      className="news-form-image-preview"
-                    />
+                    <img src={formData.image} alt="" className="news-form-image-preview" />
                   </button>
                   <button
                     type="button"
                     className="news-form-link news-form-link-danger"
                     onClick={() => applyFeaturedImage('')}
                   >
-                    Remover imagem
+                    {f.removeImage}
                   </button>
                 </div>
               ) : (
                 <button type="button" className="news-form-link" onClick={openFeaturedImagePicker}>
-                  Imagem de destaque
+                  {f.featuredImageBtn}
                 </button>
               )}
             </div>
@@ -192,38 +273,38 @@ export default function NewsForm({ initialData, isEdit = false }: NewsFormProps)
 
           <div className="news-form-panel">
             <div className="news-form-panel-header">
-              <h2>Publicar</h2>
+              <h2>{f.panelPublish}</h2>
               <ChevronUp size={16} />
             </div>
             <div className="news-form-panel-body">
               <div className="news-form-meta">
                 <div className="news-form-meta-row">
                   <Key size={16} />
-                  <span>Estado: <strong>{formData.status === 'published' ? 'Publicado' : 'Rascunho'}</strong></span>
+                  <span>{f.statusLabel} <strong>{formData.status === 'published' ? f.published : f.draft}</strong></span>
                 </div>
                 <div className="news-form-meta-row">
                   <Eye size={16} />
-                  <span>Visibilidade: <strong>Público</strong></span>
+                  <span>{f.visibilityLabel} <strong>{f.public}</strong></span>
                 </div>
                 <div className="news-form-meta-row">
                   <Calendar size={16} />
-                  <span>Data: <strong>{formData.date}</strong></span>
+                  <span>{f.dateLabel} <strong>{formData.date}</strong></span>
                 </div>
               </div>
             </div>
             <div className="news-form-panel-footer">
               <button type="button" className="news-form-link news-form-link-danger" onClick={() => router.push(`${base}/noticias`)}>
-                Mover para o lixo
+                {f.moveToTrash}
               </button>
               <button type="submit" className="news-form-submit" disabled={loading}>
-                {loading ? 'A guardar...' : (isEdit ? 'Atualizar' : 'Publicar')}
+                {loading ? f.saving : (isEdit ? f.update : f.publish)}
               </button>
             </div>
           </div>
 
           <div className="news-form-panel">
             <div className="news-form-panel-header">
-              <h2>Categorias</h2>
+              <h2>{f.panelCategories}</h2>
               <ChevronUp size={16} />
             </div>
             <div className="news-form-panel-body news-form-panel-body--categories">
