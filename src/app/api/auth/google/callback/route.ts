@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { exchangeGoogleCode } from '@/lib/google-oauth';
+import { createSupabaseSessionForEmail, verifyGoogleIdToken } from '@/lib/google-session';
 import { clearStaleSupabaseAuthCookiesFromRequest } from '@/lib/supabase-auth-cookies';
 import { GOOGLE_OAUTH_STATE_COOKIE } from '@/lib/google-oauth-state';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
@@ -64,24 +65,39 @@ export async function GET(request: Request) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error: signInError } = await supabase.auth.signInWithIdToken({
-    provider: 'google',
-    token: tokens.id_token,
-  });
+  const verified = await verifyGoogleIdToken(tokens.id_token);
+  if ('error' in verified) {
+    return loginRedirect(request, 'google_token', verified.error);
+  }
 
-  if (signInError || !data.user) {
+  const profile = await findUserByLogin(verified.email);
+  if (!profile) {
+    return loginRedirect(request, 'no_aamihe_access', NO_ACCESS_MSG);
+  }
+
+  let sessionData: Awaited<ReturnType<typeof createSupabaseSessionForEmail>>;
+  try {
+    sessionData = await createSupabaseSessionForEmail(verified.email);
+  } catch (err: unknown) {
     return loginRedirect(
       request,
       'google_supabase',
-      safeErrorMessage(signInError?.message, 'Erro ao criar sessão AAMIHE.'),
+      safeErrorMessage(err instanceof Error ? err.message : '', 'Erro ao criar sessão AAMIHE.'),
     );
   }
 
-  const profile = await findUserByLogin(data.user.email || '');
-  if (!profile) {
-    await supabase.auth.signOut();
-    return loginRedirect(request, 'no_aamihe_access', NO_ACCESS_MSG);
+  const supabase = await createSupabaseServerClient();
+  const { error: setSessionError } = await supabase.auth.setSession({
+    access_token: sessionData.session!.access_token,
+    refresh_token: sessionData.session!.refresh_token,
+  });
+
+  if (setSessionError) {
+    return loginRedirect(
+      request,
+      'google_supabase',
+      safeErrorMessage(setSessionError.message, 'Erro ao criar sessão AAMIHE.'),
+    );
   }
 
   const defaultTarget = '/dashboard';
