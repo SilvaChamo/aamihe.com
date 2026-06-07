@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { SiteGeneralConfigProvider } from '@/context/SiteGeneralConfigProvider';
 import { NewsProvider } from '@/context/NewsContext';
 import ScrollRevealHandler from '@/components/ScrollRevealHandler';
 import HtmlLangUpdater from '@/components/HtmlLangUpdater';
@@ -48,15 +49,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           `}
         </Script>
         <LanguageProvider>
-          <NewsProvider>
-            <ScrollRevealHandler />
-            <HtmlLangUpdater />
-            <SupabaseCookieSanitizer />
-            <SiteHeadSync />
-            <SiteMaintenanceGate>
-              <div className="site-root">{children}</div>
-            </SiteMaintenanceGate>
-          </NewsProvider>
+          <SiteGeneralConfigProvider>
+            <NewsProvider>
+              <ScrollRevealHandler />
+              <HtmlLangUpdater />
+              <SupabaseCookieSanitizer />
+              <SiteHeadSync />
+              <SiteMaintenanceGate>
+                <div className="site-root">{children}</div>
+              </SiteMaintenanceGate>
+            </NewsProvider>
+          </SiteGeneralConfigProvider>
         </LanguageProvider>
       </body>
     </html>

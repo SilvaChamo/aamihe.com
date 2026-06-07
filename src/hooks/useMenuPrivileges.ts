@@ -8,9 +8,12 @@ import {
 } from '@/lib/menu-privileges';
 import { fetchSettingsCached, peekCachedSettings, subscribeSettingsCache } from '@/lib/settings-cache';
 
-export function useMenuPrivileges(pathname?: string) {
-  const [privileges, setPrivileges] = useState<MenuPrivilegesConfig>(defaultMenuPrivileges);
-  const [loading, setLoading] = useState(true);
+export function useMenuPrivileges() {
+  const [privileges, setPrivileges] = useState<MenuPrivilegesConfig>(() => {
+    const cached = peekCachedSettings();
+    return cached ? resolveMenuPrivileges(cached as never) : defaultMenuPrivileges();
+  });
+  const [loading, setLoading] = useState(() => !peekCachedSettings());
 
   useEffect(() => {
     let cancelled = false;
@@ -19,27 +22,22 @@ export function useMenuPrivileges(pathname?: string) {
       if (!cancelled) setPrivileges(resolveMenuPrivileges(settings as never));
     };
 
-    const cached = peekCachedSettings();
-    if (cached) {
-      apply(cached);
-      setLoading(false);
-    }
+    fetchSettingsCached()
+      .then(apply)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    const load = () => {
-      fetchSettingsCached()
-        .then(apply)
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    };
+    const unsubscribe = subscribeSettingsCache(() => {
+      const cached = peekCachedSettings();
+      if (cached) apply(cached);
+    });
 
-    load();
-    const unsubscribe = subscribeSettingsCache(load);
     return () => {
       cancelled = true;
       unsubscribe();
     };
-  }, [pathname]);
+  }, []);
 
   return { privileges, loading };
 }

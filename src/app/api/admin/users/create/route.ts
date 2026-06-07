@@ -39,6 +39,20 @@ export async function POST(req: NextRequest) {
     }
 
     const safeRole: UserRole = USER_ROLES.includes(role) ? role : 'Subscritor';
+    const viewer = session.user;
+
+    if (isSubscriberRole(viewer.role)) {
+      return NextResponse.json({ error: 'Acesso não autorizado.' }, { status: 403 });
+    }
+
+    if (viewer.role === 'Editor' && !viewer.isAdmin) {
+      if (safeRole === 'Administrador' || safeRole === 'Editor' || safeRole === 'Actor') {
+        return NextResponse.json(
+          { error: 'Editores só podem criar subscritores e contribuidores.' },
+          { status: 403 },
+        );
+      }
+    }
 
     const user = await createUser({
       username,

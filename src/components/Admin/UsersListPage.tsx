@@ -36,7 +36,7 @@ export default function UsersListPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/users/list');
+      const res = await adminFetch('/api/admin/users/list', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);

@@ -3,6 +3,7 @@ import { requireStaffSession } from '@/lib/admin-session';
 import { countDocuments } from '@/lib/aamihe-documents-store';
 import { countNewsFromSupabase } from '@/lib/supabase-content';
 import { countSupabaseMediaByCategory } from '@/lib/supabase-media';
+import { countUsersForViewer } from '@/lib/users';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
 import type { MediaCategory } from '@/lib/site-media';
 
@@ -15,10 +16,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const [remoteCounts, newsCount, documentCount] = await Promise.all([
+    const [remoteCounts, newsCount, documentCount, usersCount] = await Promise.all([
       isSupabaseConfigured() ? countSupabaseMediaByCategory() : Promise.resolve(null),
       countNewsFromSupabase(),
       countDocuments(),
+      countUsersForViewer(auth.session.user),
     ]);
 
     const mediaCounts: Record<MediaCategory, number> = remoteCounts ?? {
@@ -34,6 +36,7 @@ export async function GET(request: Request) {
         media: mediaCounts.imagens,
         videos: mediaCounts.videos,
         documents: documentCount,
+        users: usersCount,
       },
     });
   } catch (error) {

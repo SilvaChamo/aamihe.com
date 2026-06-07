@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useSiteGeneralConfig } from '@/hooks/useSiteGeneralConfig';
+import { useSiteGeneralConfig } from '@/context/SiteGeneralConfigProvider';
 import MaintenanceScreen from '@/components/Site/MaintenanceScreen';
 
 function isAdminOrApiPath(pathname: string): boolean {

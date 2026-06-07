@@ -14,6 +14,12 @@ export type SiteSettingsPayload = {
   contactPhone?: string;
   address?: string;
   googleAnalyticsId?: string;
+  googleAnalytics?: {
+    refreshToken?: string;
+    propertyId?: string;
+    connectedEmail?: string;
+    connectedAt?: string;
+  };
   maintenanceMode?: boolean;
   maintenanceImageUrl?: string;
   socialLinks?: SocialLinksConfig;

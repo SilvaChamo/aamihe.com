@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { useSiteGeneralConfig } from '@/hooks/useSiteGeneralConfig';
+import { useSiteGeneralConfig } from '@/context/SiteGeneralConfigProvider';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 
 function isAdminPath(pathname: string): boolean {

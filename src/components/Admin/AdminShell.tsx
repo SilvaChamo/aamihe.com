@@ -29,6 +29,7 @@ import { useSessionUser } from '@/hooks/useSessionUser';
 import { useSubscriberNotifications } from '@/hooks/useSubscriberNotifications';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { useMenuPrivileges } from '@/hooks/useMenuPrivileges';
+import { peekCachedSettings } from '@/lib/settings-cache';
 import {
   buildStaffSubmenuEntries,
   buildSubscriberAdminExtraSubmenuEntries,
@@ -219,10 +220,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
   const { unread: subscriberUnread } = useSubscriberNotifications();
   const { canManageNews, canManageUsers, canViewNews, isAdmin } = useAdminPermissions();
-  const { privileges, loading: privilegesLoading } = useMenuPrivileges(pathname);
+  const { privileges, loading: privilegesLoading } = useMenuPrivileges();
   const showSubscriberNav = base === '/dashboard' && isSubscriber;
   const menuBase = '/dashboard';
-  const privilegesReady = isAdmin || !privilegesLoading;
+  const hasCachedPrivileges = Boolean(peekCachedSettings());
+  const privilegesReady = isAdmin || !privilegesLoading || hasCachedPrivileges;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 

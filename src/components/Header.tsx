@@ -9,7 +9,7 @@ import { buildSiteSearchIndex } from '@/data/site-search-index';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import { searchSiteContent, type SiteSearchResult } from '@/lib/site-search';
 import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
-import { useSiteGeneralConfig } from '@/hooks/useSiteGeneralConfig';
+import { useSiteGeneralConfig } from '@/context/SiteGeneralConfigProvider';
 import { DEFAULT_LOGO_URL } from '@/lib/site-general-config';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import '@/components/Blog/BlogLayout.css';

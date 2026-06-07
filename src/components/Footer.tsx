@@ -6,7 +6,7 @@ import { useState, type FormEvent } from 'react';
 import FormAntiSpam from '@/components/FormAntiSpam';
 import { validateSpamFromForm } from '@/lib/form-spam-guard';
 import { useLanguage } from '@/context/LanguageContext';
-import { useSiteGeneralConfig } from '@/hooks/useSiteGeneralConfig';
+import { useSiteGeneralConfig } from '@/context/SiteGeneralConfigProvider';
 import { DEFAULT_LOGO_URL } from '@/lib/site-general-config';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import './Footer.css';
