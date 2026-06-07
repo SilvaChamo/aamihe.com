@@ -9,6 +9,9 @@ import { buildSiteSearchIndex } from '@/data/site-search-index';
 import { useLocalizedNews } from '@/hooks/useLocalizedNews';
 import { searchSiteContent, type SiteSearchResult } from '@/lib/site-search';
 import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
+import { useSiteGeneralConfig } from '@/hooks/useSiteGeneralConfig';
+import { DEFAULT_LOGO_URL } from '@/lib/site-general-config';
+import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import '@/components/Blog/BlogLayout.css';
 import './Header.css';
 
@@ -114,6 +117,8 @@ export default function Header() {
 
   const t = translations[locale];
   const isHome = pathname === '/';
+  const { general } = useSiteGeneralConfig();
+  const logoSrc = resolveAvatarUrl(general.logoUrl) || DEFAULT_LOGO_URL;
 
   const searchIndex = useMemo(() => buildSiteSearchIndex(locale, news), [locale, news]);
 
@@ -308,12 +313,13 @@ export default function Header() {
         <div className="container main-nav-container">
           <Link href="/" className="logo">
             <Image
-              src="/Logo-Small.png.webp"
-              alt="AAMIHE Logo"
+              src={logoSrc}
+              alt={`${general.siteName} Logo`}
               width={150}
               height={42}
               className="logo-image"
               priority
+              unoptimized={logoSrc.startsWith('http')}
             />
           </Link>
           

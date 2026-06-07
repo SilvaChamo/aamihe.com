@@ -7,6 +7,8 @@ import { NewsProvider } from '@/context/NewsContext';
 import ScrollRevealHandler from '@/components/ScrollRevealHandler';
 import HtmlLangUpdater from '@/components/HtmlLangUpdater';
 import SupabaseCookieSanitizer from '@/components/SupabaseCookieSanitizer';
+import SiteMaintenanceGate from '@/components/Site/SiteMaintenanceGate';
+import SiteHeadSync from '@/components/Site/SiteHeadSync';
 import localFont from 'next/font/local';
 
 const robotoSlab = localFont({
@@ -50,7 +52,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <ScrollRevealHandler />
             <HtmlLangUpdater />
             <SupabaseCookieSanitizer />
-            <div className="site-root">{children}</div>
+            <SiteHeadSync />
+            <SiteMaintenanceGate>
+              <div className="site-root">{children}</div>
+            </SiteMaintenanceGate>
           </NewsProvider>
         </LanguageProvider>
       </body>

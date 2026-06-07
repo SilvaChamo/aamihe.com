@@ -1,4 +1,5 @@
 import type { SitePageConfig } from '@/lib/site-page-config';
+import type { FooterLinkConfig, SocialLinksConfig } from '@/lib/site-general-config';
 import { getSupabaseAdmin, isSupabaseConfigured } from '@/lib/supabase/server';
 
 export type SiteSettingsPayload = {
@@ -14,6 +15,9 @@ export type SiteSettingsPayload = {
   address?: string;
   googleAnalyticsId?: string;
   maintenanceMode?: boolean;
+  maintenanceImageUrl?: string;
+  socialLinks?: SocialLinksConfig;
+  footerLinks?: FooterLinkConfig[];
   // Noticias
   postsPerPage?: number;
   defaultCategory?: string;

@@ -1,0 +1,43 @@
+.maintenance-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f4f4;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.maintenance-screen-inner {
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+}
+
+.maintenance-screen-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 24px rgba(86, 23, 19, 0.12);
+}
+
+.maintenance-screen-image {
+  object-fit: cover;
+}
+
+.maintenance-screen-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #561713;
+}
+
+.maintenance-screen-message {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #50575e;
+}

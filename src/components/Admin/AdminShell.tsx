@@ -481,10 +481,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <div className="admin-shell">
       <header className="admin-brand-bar">
         <div className="admin-brand-left">
-          {panelRoleLabel ? (
-            <span className="admin-brand-role">{panelRoleLabel}</span>
-          ) : null}
-          <span className="admin-brand-title">AAMIHE</span>
+          <span className="admin-brand-title">
+            {panelRoleLabel ? `AAMIHE — ${panelRoleLabel}` : 'AAMIHE'}
+          </span>
         </div>
         <div className="admin-brand-right">
           <Link href="/" target="_blank" className="admin-brand-action">
