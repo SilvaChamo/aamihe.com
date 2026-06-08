@@ -202,5 +202,29 @@
     "category": "imagens",
     "source": "legacy",
     "deleted_at": "2026-06-07T15:38:12.636Z"
+  },
+  "trash_fs_8efb5ca6d5f2": {
+    "id": "trash_fs_8efb5ca6d5f2",
+    "url": "/gallery/login-bg.webp",
+    "trash_path": "/gallery/.trash/1780844278481-login-bg.webp",
+    "title": "login bg",
+    "mime_type": "image/webp",
+    "size": 125736,
+    "subcategory": "Galeria",
+    "category": "imagens",
+    "source": "legacy",
+    "deleted_at": "2026-06-07T14:57:58.481Z"
+  },
+  "trash_gallery_02c38fac9910_1780853074440-1780674415767-0462d0ab.jpg": {
+    "id": "trash_gallery_02c38fac9910_1780853074440-1780674415767-0462d0ab.jpg",
+    "url": "/gallery/1780674415767-0462d0ab.jpg",
+    "trash_path": "/gallery/.trash/1780853074440-1780674415767-0462d0ab.jpg",
+    "title": "1780674415767 0462d0ab",
+    "mime_type": "image/jpeg",
+    "size": 203995,
+    "subcategory": "Galeria",
+    "category": "imagens",
+    "source": "legacy",
+    "deleted_at": "2026-06-07T17:24:34.441Z"
   }
 }
