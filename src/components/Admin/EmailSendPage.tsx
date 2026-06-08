@@ -377,7 +377,7 @@ export default function EmailSendPage() {
   const normalSendButton = (
     <button
       type="submit"
-      className={`news-form-submit email-normal-send-btn${sending ? ' email-normal-send-btn--sending' : ''}`}
+      className={`email-normal-send-btn${sending ? ' email-normal-send-btn--sending' : ''}`}
       disabled={sendDisabled}
       aria-busy={sending}
     >
@@ -393,7 +393,7 @@ export default function EmailSendPage() {
   );
 
   const marketingSendButton = (
-    <button type="submit" className="news-form-submit email-normal-send-btn" disabled={sendDisabled}>
+    <button type="submit" className="email-normal-send-btn" disabled={sendDisabled}>
       {sending ? (
         <>
           <Loader2 size={14} className="wp-spin" style={{ marginRight: 6 }} />

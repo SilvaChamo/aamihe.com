@@ -37,7 +37,7 @@ const DATE_LOCALE = { pt: 'pt-PT', fr: 'fr-FR', en: 'en-GB' } as const;
 
 export default function DashboardContent() {
   const base = useAdminBase();
-  const { canManageNews } = useAdminPermissions();
+  const { canManageNews, canManageUsers, isAdmin } = useAdminPermissions();
   const { locale } = useLanguage();
   const t = tMessages(adminDashboardCopy, locale);
   const [stats, setStats] = React.useState<Stats>({
@@ -97,11 +97,18 @@ export default function DashboardContent() {
           </div>
           
           <div className="dashboard-grid">
-            {canManageNews ? (
+            {isAdmin && canManageNews ? (
               <div>
                 <h3 className="dashboard-section-title">{t.introTitle}</h3>
                 <Link href={`${base}/noticias/nova`} className="dashboard-button">
                   {t.addNews}
+                </Link>
+              </div>
+            ) : canManageUsers ? (
+              <div>
+                <h3 className="dashboard-section-title">{t.introTitle}</h3>
+                <Link href={`${base}/utilizadores/novo`} className="dashboard-button">
+                  {t.addUser}
                 </Link>
               </div>
             ) : null}

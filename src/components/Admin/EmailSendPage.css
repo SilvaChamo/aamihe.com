@@ -408,6 +408,7 @@
   height: auto;
   margin: 0;
   padding: 5px 18px;
+  border: none;
   border-radius: 0;
   white-space: nowrap;
   display: inline-flex;
@@ -415,6 +416,10 @@
   justify-content: center;
   gap: 8px;
   background: #00a651;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 .email-normal-send-btn--sending {
@@ -426,7 +431,12 @@
 }
 
 .email-normal-send-btn:hover:not(:disabled) {
-  background: #008c45;
+  background: #008f45;
+}
+
+.email-normal-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .email-send-page .email-sender-select {
