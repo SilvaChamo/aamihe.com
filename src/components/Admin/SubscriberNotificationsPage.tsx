@@ -32,7 +32,7 @@ export default function SubscriberNotificationsPage() {
           <div>
             <h1 className="docs-admin-title">Notificações</h1>
             <p className="docs-admin-intro">
-              Comunicações da comissão científica sobre os seus documentos enviados.
+              Comunicações da comissão científica sobre os seus resumos enviados.
             </p>
           </div>
           {hasUnread ? (
@@ -55,7 +55,7 @@ export default function SubscriberNotificationsPage() {
           <div className="docs-admin-empty-state">
             <Bell size={40} />
             <h2>Sem notificações</h2>
-            <p>Quando a comissão analisar os seus documentos, as respostas aparecerão aqui.</p>
+            <p>Quando a comissão analisar os seus resumos, as respostas aparecerão aqui.</p>
           </div>
         ) : (
           <ul className="subscriber-notifications-list">
@@ -80,7 +80,7 @@ export default function SubscriberNotificationsPage() {
                         if (!item.read) void markRead(item.id);
                       }}
                     >
-                      Ver documento
+                      Ver resumo
                     </Link>
                     {!item.read ? (
                       <button

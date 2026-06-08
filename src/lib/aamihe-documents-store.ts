@@ -159,6 +159,46 @@ export async function countDocuments(): Promise<number> {
   }
 }
 
+export async function countConferenceSummaries(): Promise<number> {
+  if (!hasDocumentsAdmin()) return 0;
+
+  try {
+    const { count, error } = await admin()
+      .from(TABLE)
+      .select('*', { count: 'exact', head: true })
+      .eq('category', 'conferencia');
+    if (error) {
+      console.error('[aamihe_documents] countConferenceSummaries:', error.message);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.error('[aamihe_documents] countConferenceSummaries failed:', err);
+    return 0;
+  }
+}
+
+/** Resumos recebidos à espera de revisão (estado «submitted»). */
+export async function countConferenceSummariesPendingReview(): Promise<number> {
+  if (!hasDocumentsAdmin()) return 0;
+
+  try {
+    const { count, error } = await admin()
+      .from(TABLE)
+      .select('*', { count: 'exact', head: true })
+      .eq('category', 'conferencia')
+      .or('review_status.eq.submitted,and(review_status.is.null,published.eq.false)');
+    if (error) {
+      console.error('[aamihe_documents] countConferenceSummariesPendingReview:', error.message);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.error('[aamihe_documents] countConferenceSummariesPendingReview failed:', err);
+    return 0;
+  }
+}
+
 export async function listDocumentsForUser(user: UserProfile): Promise<SiteDocumentRecord[]> {
   const email = user.email.trim().toLowerCase();
 

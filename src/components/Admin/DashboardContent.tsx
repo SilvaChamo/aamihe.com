@@ -14,6 +14,7 @@ import {
 import { useAdminBase } from '@/lib/admin-base';
 import { adminFetch } from '@/lib/admin-auth';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import { useStaffMenuAccess } from '@/hooks/useStaffMenuAccess';
 import { useLanguage } from '@/context/LanguageContext';
 import { adminDashboardCopy, tMessages } from '@/i18n/messages';
 import { PanelActivitySkeleton, PanelStatsSkeleton } from '@/components/Admin/PanelSkeleton';
@@ -24,6 +25,8 @@ interface Stats {
   media: number;
   videos: number;
   documents: number;
+  summaries: number;
+  summariesPendingReview: number;
 }
 
 interface ActivityItem {
@@ -38,6 +41,9 @@ const DATE_LOCALE = { pt: 'pt-PT', fr: 'fr-FR', en: 'en-GB' } as const;
 export default function DashboardContent() {
   const base = useAdminBase();
   const { canManageNews, canManageUsers, isAdmin } = useAdminPermissions();
+  const { canAccessSubmenu } = useStaffMenuAccess();
+  const canAddNews = canManageNews && canAccessSubmenu('noticias', 'nova');
+  const canAddUser = canManageUsers && canAccessSubmenu('utilizadores', 'novo');
   const { locale } = useLanguage();
   const t = tMessages(adminDashboardCopy, locale);
   const [stats, setStats] = React.useState<Stats>({
@@ -45,6 +51,8 @@ export default function DashboardContent() {
     media: 0,
     videos: 0,
     documents: 0,
+    summaries: 0,
+    summariesPendingReview: 0,
   });
   const [statsLoading, setStatsLoading] = React.useState(true);
 
@@ -64,12 +72,21 @@ export default function DashboardContent() {
             media: data.stats.media ?? 0,
             videos: data.stats.videos ?? 0,
             documents: data.stats.documents ?? 0,
+            summaries: data.stats.summaries ?? 0,
+            summariesPendingReview: data.stats.summariesPendingReview ?? 0,
           });
           return;
         }
       } catch {
         if (!cancelled) {
-          setStats({ news: 0, media: 0, videos: 0, documents: 0 });
+          setStats({
+            news: 0,
+            media: 0,
+            videos: 0,
+            documents: 0,
+            summaries: 0,
+            summariesPendingReview: 0,
+          });
         }
       } finally {
         if (!cancelled) setStatsLoading(false);
@@ -97,14 +114,14 @@ export default function DashboardContent() {
           </div>
           
           <div className="dashboard-grid">
-            {isAdmin && canManageNews ? (
+            {isAdmin && canAddNews ? (
               <div>
                 <h3 className="dashboard-section-title">{t.introTitle}</h3>
                 <Link href={`${base}/noticias/nova`} className="dashboard-button">
                   {t.addNews}
                 </Link>
               </div>
-            ) : canManageUsers ? (
+            ) : !isAdmin && canAddUser ? (
               <div>
                 <h3 className="dashboard-section-title">{t.introTitle}</h3>
                 <Link href={`${base}/utilizadores/novo`} className="dashboard-button">
@@ -209,15 +226,28 @@ export default function DashboardContent() {
             <div className="dashboard-stats-grid">
               <Link href={`${base}/documentos-gerais`} className="dashboard-stat-link">
                 <div className="dashboard-stat-card">
-                  <div className="dashboard-stat-icon blue">
+                  <div className="dashboard-stat-icon blue dashboard-stat-icon--badged">
                     <FileUp />
+                    {!statsLoading && stats.summariesPendingReview > 0 ? (
+                      <span
+                        className="dashboard-stat-badge"
+                        aria-label={t.summariesPendingAria(stats.summariesPendingReview)}
+                      >
+                        {stats.summariesPendingReview > 99
+                          ? '99+'
+                          : stats.summariesPendingReview}
+                      </span>
+                    ) : null}
                   </div>
                   <span className="dashboard-stat-value">
-                    {statsLoading ? '...' : stats.documents}
+                    {statsLoading ? '...' : stats.summaries}
                   </span>
-                  <span className="dashboard-stat-label">
-                    {t.documents}
-                  </span>
+                  <span className="dashboard-stat-label">{t.summaries}</span>
+                  {!statsLoading && stats.summariesPendingReview > 0 ? (
+                    <span className="dashboard-stat-detail dashboard-stat-detail--pending">
+                      {t.summariesPendingDetail(stats.summariesPendingReview)}
+                    </span>
+                  ) : null}
                 </div>
               </Link>
 

@@ -13,6 +13,12 @@ import {
   SUBSCRIBER_ADMIN_EXTRA_KEYS,
   defaultMenuPrivileges,
   menuSubPrivilegeKey,
+  patchStaffMenuToggle,
+  patchStaffSubToggle,
+  patchSubscriberAdminExtraSubToggle,
+  patchSubscriberAdminExtraToggle,
+  patchSubscriberMenuToggle,
+  patchSubscriberSubToggle,
   resolveMenuPrivileges,
   type MenuPrivilegesConfig,
   type StaffMenuKey,
@@ -186,42 +192,42 @@ export default function PrivilegiosPage() {
   const toggleStaff = (key: StaffMenuKey, enabled: boolean) => {
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        editor: { ...privileges?.editor, [key]: enabled },
-      },
+      menuPrivileges: patchStaffMenuToggle(privileges ?? defaultMenuPrivileges(), key, enabled),
     });
   };
 
   const toggleStaffSub = (parent: StaffMenuKey, childKey: string, enabled: boolean) => {
-    const subKey = menuSubPrivilegeKey(parent, childKey);
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        editorSub: { ...privileges?.editorSub, [subKey]: enabled },
-      },
+      menuPrivileges: patchStaffSubToggle(
+        privileges ?? defaultMenuPrivileges(),
+        parent,
+        childKey,
+        enabled,
+      ),
     });
   };
 
   const toggleSubscriber = (key: SubscriberMenuKey, enabled: boolean) => {
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        subscriber: { ...privileges?.subscriber, [key]: enabled },
-      },
+      menuPrivileges: patchSubscriberMenuToggle(
+        privileges ?? defaultMenuPrivileges(),
+        key,
+        enabled,
+      ),
     });
   };
 
   const toggleSubscriberSub = (parent: SubscriberMenuKey, childKey: string, enabled: boolean) => {
-    const subKey = menuSubPrivilegeKey(parent, childKey);
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        subscriberSub: { ...privileges?.subscriberSub, [subKey]: enabled },
-      },
+      menuPrivileges: patchSubscriberSubToggle(
+        privileges ?? defaultMenuPrivileges(),
+        parent,
+        childKey,
+        enabled,
+      ),
     });
   };
 
@@ -238,10 +244,11 @@ export default function PrivilegiosPage() {
   const toggleSubscriberAdminExtra = (key: SubscriberAdminExtraKey, enabled: boolean) => {
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        subscriberAdminExtras: { ...privileges?.subscriberAdminExtras, [key]: enabled },
-      },
+      menuPrivileges: patchSubscriberAdminExtraToggle(
+        privileges ?? defaultMenuPrivileges(),
+        key,
+        enabled,
+      ),
     });
   };
 
@@ -250,13 +257,14 @@ export default function PrivilegiosPage() {
     childKey: string,
     enabled: boolean,
   ) => {
-    const subKey = menuSubPrivilegeKey(parent, childKey);
     setSettings({
       ...settings,
-      menuPrivileges: {
-        ...privileges,
-        subscriberAdminExtrasSub: { ...privileges?.subscriberAdminExtrasSub, [subKey]: enabled },
-      },
+      menuPrivileges: patchSubscriberAdminExtraSubToggle(
+        privileges ?? defaultMenuPrivileges(),
+        parent,
+        childKey,
+        enabled,
+      ),
     });
   };
 
@@ -305,11 +313,12 @@ export default function PrivilegiosPage() {
             <div className="settings-panel-body">
               {STAFF_MENU_KEYS.map((key) => {
                 const children = STAFF_SUBMENU_ITEMS[key];
+                const parentEnabled = privileges?.editor?.[key] !== false;
                 return (
                   <MenuPrivilegeGroup
                     key={key}
                     title={STAFF_MENU_LABELS[key]}
-                    checked={privileges?.editor?.[key] !== false}
+                    checked={parentEnabled}
                     onToggle={(enabled) => toggleStaff(key, enabled)}
                   >
                     {children?.map((child) => (
@@ -317,10 +326,12 @@ export default function PrivilegiosPage() {
                         key={child.key}
                         title={child.label}
                         checked={
+                          parentEnabled &&
                           privileges?.editorSub?.[menuSubPrivilegeKey(key, child.key)] !== false
                         }
                         onChange={(enabled) => toggleStaffSub(key, child.key, enabled)}
                         nested
+                        disabled={!parentEnabled}
                       />
                     ))}
                   </MenuPrivilegeGroup>
@@ -338,11 +349,12 @@ export default function PrivilegiosPage() {
             <div className="settings-panel-body">
               {SUBSCRIBER_MENU_KEYS.map((key) => {
                 const children = SUBSCRIBER_SUBMENU_ITEMS[key];
+                const parentEnabled = privileges?.subscriber?.[key] !== false;
                 return (
                   <MenuPrivilegeGroup
                     key={key}
                     title={SUBSCRIBER_MENU_LABELS[key]}
-                    checked={privileges?.subscriber?.[key] !== false}
+                    checked={parentEnabled}
                     onToggle={(enabled) => toggleSubscriber(key, enabled)}
                   >
                     {children?.map((child) => (
@@ -350,11 +362,13 @@ export default function PrivilegiosPage() {
                         key={child.key}
                         title={child.label}
                         checked={
+                          parentEnabled &&
                           privileges?.subscriberSub?.[menuSubPrivilegeKey(key, child.key)] !==
-                          false
+                            false
                         }
                         onChange={(enabled) => toggleSubscriberSub(key, child.key, enabled)}
                         nested
+                        disabled={!parentEnabled}
                       />
                     ))}
                   </MenuPrivilegeGroup>
@@ -367,11 +381,12 @@ export default function PrivilegiosPage() {
               >
                 {SUBSCRIBER_ADMIN_EXTRA_KEYS.map((key) => {
                   const children = STAFF_SUBMENU_ITEMS[key];
+                  const parentEnabled = privileges?.subscriberAdminExtras?.[key] === true;
                   return (
                     <MenuPrivilegeGroup
                       key={key}
                       title={STAFF_MENU_LABELS[key]}
-                      checked={privileges?.subscriberAdminExtras?.[key] === true}
+                      checked={parentEnabled}
                       onToggle={(enabled) => toggleSubscriberAdminExtra(key, enabled)}
                       disabled={!adminExtrasEnabled}
                     >
@@ -380,6 +395,7 @@ export default function PrivilegiosPage() {
                           key={child.key}
                           title={child.label}
                           checked={
+                            parentEnabled &&
                             privileges?.subscriberAdminExtrasSub?.[
                               menuSubPrivilegeKey(key, child.key)
                             ] !== false
@@ -388,7 +404,7 @@ export default function PrivilegiosPage() {
                             toggleSubscriberAdminExtraSub(key, child.key, enabled)
                           }
                           nested
-                          disabled={!adminExtrasEnabled}
+                          disabled={!adminExtrasEnabled || !parentEnabled}
                         />
                       ))}
                     </MenuPrivilegeGroup>

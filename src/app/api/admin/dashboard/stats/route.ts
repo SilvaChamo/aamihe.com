@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireStaffSession } from '@/lib/admin-session';
-import { countDocuments } from '@/lib/aamihe-documents-store';
+import {
+  countConferenceSummaries,
+  countConferenceSummariesPendingReview,
+  countDocuments,
+} from '@/lib/aamihe-documents-store';
 import { countNewsFromSupabase } from '@/lib/supabase-content';
 import { countSupabaseMediaByCategory } from '@/lib/supabase-media';
 import { isSupabaseConfigured, getSupabaseAdmin } from '@/lib/supabase/server';
@@ -41,12 +45,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const [remoteCounts, newsCount, documentCount, usersCount] = await Promise.all([
-      isSupabaseConfigured() ? countSupabaseMediaByCategory() : Promise.resolve(null),
-      countNewsFromSupabase(),
-      countDocuments(),
-      countUsersForSession(auth.session.user),
-    ]);
+    const [remoteCounts, newsCount, documentCount, summariesCount, summariesPending, usersCount] =
+      await Promise.all([
+        isSupabaseConfigured() ? countSupabaseMediaByCategory() : Promise.resolve(null),
+        countNewsFromSupabase(),
+        countDocuments(),
+        countConferenceSummaries(),
+        countConferenceSummariesPendingReview(),
+        countUsersForSession(auth.session.user),
+      ]);
 
     const mediaCounts: Record<MediaCategory, number> = remoteCounts ?? {
       imagens: 0,
@@ -61,6 +68,8 @@ export async function GET(request: Request) {
         media: mediaCounts.imagens,
         videos: mediaCounts.videos,
         documents: documentCount,
+        summaries: summariesCount,
+        summariesPendingReview: summariesPending,
         users: usersCount,
       },
     });

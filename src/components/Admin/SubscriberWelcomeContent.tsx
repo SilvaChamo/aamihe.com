@@ -59,7 +59,7 @@ export default function SubscriberWelcomeContent() {
             <h1 className="dashboard-title">Bem-vindo, {displayName}</h1>
             <p className="dashboard-subtitle">
               Área reservada aos participantes da conferência AAMIHE. Submeta o resumo da sua
-              apresentação, consulte os seus documentos e gerir a sua conta.
+              apresentação, consulte os seus resumos e gerir a sua conta.
             </p>
           </div>
 
@@ -67,7 +67,7 @@ export default function SubscriberWelcomeContent() {
             <div>
               <h3 className="dashboard-section-title">Introdução</h3>
               <Link href="/dashboard/meus-documentos/novo" className="dashboard-button">
-                Enviar documento
+                Enviar resumo
               </Link>
             </div>
 
@@ -76,7 +76,7 @@ export default function SubscriberWelcomeContent() {
               <ul className="dashboard-list">
                 <li>
                   <Link href="/dashboard/meus-documentos" className="dashboard-list-item">
-                    <FileUp /> Ver os meus documentos
+                    <FileUp /> Ver os meus resumos
                   </Link>
                 </li>
                 <li>
@@ -112,7 +112,7 @@ export default function SubscriberWelcomeContent() {
                 </li>
                 <li>
                   <Link href="/dashboard/meus-documentos/novo" className="dashboard-list-item">
-                    <FileUp /> Enviar documento
+                    <FileUp /> Enviar resumo
                   </Link>
                 </li>
               </ul>
@@ -165,7 +165,7 @@ export default function SubscriberWelcomeContent() {
                   <span className="dashboard-stat-value">
                     {statsLoading ? '...' : documents.length}
                   </span>
-                  <span className="dashboard-stat-label">Documentos</span>
+                  <span className="dashboard-stat-label">Resumos enviados</span>
                 </div>
               </Link>
 

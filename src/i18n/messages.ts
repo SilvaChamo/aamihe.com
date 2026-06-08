@@ -760,7 +760,7 @@ export const adminShellCopy = {
       seguranca: 'Segurança',
       backup: 'Backup',
       api: 'API & Integrações',
-      lista: 'Meus documentos',
+      lista: 'Meus resumos',
       novoResumo: 'Novo resumo',
       submissao: 'Submissão resumo',
     },
@@ -805,7 +805,7 @@ export const adminShellCopy = {
       seguranca: 'Sécurité',
       backup: 'Sauvegarde',
       api: 'API et intégrations',
-      lista: 'Mes documents',
+      lista: 'Mes résumés',
       novoResumo: 'Nouveau résumé',
       submissao: 'Soumission résumé',
     },
@@ -850,7 +850,7 @@ export const adminShellCopy = {
       seguranca: 'Security',
       backup: 'Backup',
       api: 'API & integrations',
-      lista: 'My documents',
+      lista: 'My summaries',
       novoResumo: 'New summary',
       submissao: 'Submit summary',
     },
@@ -873,6 +873,11 @@ export const adminDashboardCopy = {
     conferenceSummary: 'Resumo da Conferência',
     subscribers: 'Subscritores',
     receivedSummaries: 'Resumos recebidos',
+    summaries: 'Resumos',
+    summariesPendingDetail: (n: number) =>
+      `${n} ${n === 1 ? 'pendente de revisão' : 'pendentes de revisão'}`,
+    summariesPendingAria: (n: number) =>
+      `${n} ${n === 1 ? 'resumo pendente de revisão' : 'resumos pendentes de revisão'}`,
     documents: 'Documentos',
     videos: 'Vídeos',
     recent: 'Actividades Recentes',
@@ -896,6 +901,11 @@ export const adminDashboardCopy = {
     conferenceSummary: 'Résumé de la conférence',
     subscribers: 'Abonnés',
     receivedSummaries: 'Résumés reçus',
+    summaries: 'Résumés',
+    summariesPendingDetail: (n: number) =>
+      `${n} en attente de révision`,
+    summariesPendingAria: (n: number) =>
+      `${n} résumé${n !== 1 ? 's' : ''} en attente de révision`,
     documents: 'Documents',
     videos: 'Vidéos',
     recent: 'Activités récentes',
@@ -919,6 +929,11 @@ export const adminDashboardCopy = {
     conferenceSummary: 'Conference summary',
     subscribers: 'Subscribers',
     receivedSummaries: 'Received summaries',
+    summaries: 'Summaries',
+    summariesPendingDetail: (n: number) =>
+      `${n} pending review`,
+    summariesPendingAria: (n: number) =>
+      `${n} summar${n === 1 ? 'y' : 'ies'} pending review`,
     documents: 'Documents',
     videos: 'Videos',
     recent: 'Recent activity',

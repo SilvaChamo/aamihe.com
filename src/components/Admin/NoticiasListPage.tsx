@@ -6,6 +6,7 @@ import { useNews } from '@/context/NewsContext';
 import type { NewsItem } from '@/data/news';
 import { useAdminBase } from '@/lib/admin-base';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import { useStaffMenuAccess } from '@/hooks/useStaffMenuAccess';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { PanelPageHeaderSkeleton } from '@/components/Admin/PanelSkeleton';
 import { useLanguage } from '@/context/LanguageContext';
@@ -114,6 +115,8 @@ const copy = {
 export default function NoticiasListPage() {
   const base = useAdminBase();
   const { canManageNews, loading: permsLoading } = useAdminPermissions();
+  const { canAccessSubmenu } = useStaffMenuAccess();
+  const canAddNews = canManageNews && canAccessSubmenu('noticias', 'nova');
   const { news, deleteNews, updateNews, categories, loading } = useNews();
   const { locale } = useLanguage();
   const t = copy[locale];
@@ -189,7 +192,7 @@ export default function NoticiasListPage() {
   if (isPageLoading) {
     return (
       <div className="admin-news-container">
-        <PanelPageHeaderSkeleton withAction={canManageNews} />
+        <PanelPageHeaderSkeleton withAction={canAddNews} />
         <div className="wp-table-container">
           <table className="wp-table">
             <tbody>
@@ -208,7 +211,7 @@ export default function NoticiasListPage() {
       <div className="admin-news-header">
         <div className="admin-news-title-group">
           <h1 className="admin-news-title">{t.title}</h1>
-          {canManageNews ? (
+          {canAddNews ? (
             <Link href={`${base}/noticias/nova`} className="btn-add-new">
               {t.addNew}
             </Link>

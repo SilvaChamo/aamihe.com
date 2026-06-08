@@ -54,7 +54,7 @@ export default function SubscriberDocumentsPage() {
       if (res.ok && data.success) {
         setDocuments((prev) => prev.filter((doc) => doc.id !== id));
       } else {
-        alert(data.error || 'Não foi possível eliminar o documento.');
+        alert(data.error || 'Não foi possível eliminar o resumo.');
       }
     } catch {
       alert('Erro de ligação. Tente novamente.');
@@ -67,14 +67,14 @@ export default function SubscriberDocumentsPage() {
     <div className="docs-admin-page">
       <div className="docs-admin-header">
         <div>
-          <h1 className="docs-admin-title">Documentos</h1>
+          <h1 className="docs-admin-title">Resumos</h1>
           <p className="docs-admin-intro">
             Consulte e gira as submissões que enviou para a conferência.
           </p>
         </div>
         <Link href="/dashboard/meus-documentos/novo" className="docs-admin-add">
           <Plus size={16} />
-          Enviar documento
+          Enviar resumo
         </Link>
       </div>
 
@@ -86,7 +86,7 @@ export default function SubscriberDocumentsPage() {
             <FileText size={40} />
             <h2>Nenhuma submissão encontrada</h2>
             <p>
-              Ainda não enviou nenhum documento. Clique em «Enviar documento» para submeter o
+              Ainda não enviou nenhum resumo. Clique em «Enviar resumo» para submeter o
               resumo da sua apresentação em PDF.
             </p>
           </div>

@@ -98,7 +98,7 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
       <div className="docs-admin-page">
         <div className="docs-admin-empty">
           <Loader2 className="wp-spin" size={28} aria-hidden />
-          <p>A carregar documento…</p>
+          <p>A carregar resumo…</p>
         </div>
       </div>
     );
@@ -107,9 +107,9 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
   if (!document) {
     return (
       <div className="docs-admin-page">
-        <p className="docs-admin-empty">Documento não encontrado.</p>
+        <p className="docs-admin-empty">Resumo não encontrado.</p>
         <Link href="/dashboard/meus-documentos" className="docs-admin-add">
-          Voltar aos documentos
+          Voltar aos resumos
         </Link>
       </div>
     );
@@ -121,9 +121,9 @@ export default function SubscriberDocumentEditPage({ id }: { id: string }) {
     <div className="docs-admin-page">
       <div className="docs-admin-header">
         <div>
-          <h1 className="docs-admin-title">Editar documento</h1>
+          <h1 className="docs-admin-title">Editar resumo</h1>
           <p className="docs-admin-intro">
-            <Link href="/dashboard/meus-documentos">Documentos</Link> &rsaquo; Editar
+            <Link href="/dashboard/meus-documentos">Resumos</Link> &rsaquo; Editar
           </p>
         </div>
       </div>

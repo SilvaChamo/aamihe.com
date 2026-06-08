@@ -7,6 +7,7 @@ import { useAdminBase } from '@/lib/admin-base';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { adminFetch } from '@/lib/admin-auth';
 import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import { useStaffMenuAccess } from '@/hooks/useStaffMenuAccess';
 import { useSessionUser } from '@/hooks/useSessionUser';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
@@ -130,6 +131,8 @@ export default function UsersListPage() {
   const t = copy[locale];
   const { loading: sessionLoading } = useSessionUser();
   const { canManageUsers } = useAdminPermissions();
+  const { canAccessSubmenu } = useStaffMenuAccess();
+  const canAddUser = canManageUsers && canAccessSubmenu('utilizadores', 'novo');
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -209,9 +212,11 @@ export default function UsersListPage() {
     <div className="wp-admin-page">
       <div className="wp-page-header wp-page-header--users-title">
         <h1>{t.title}</h1>
-        <Link href={`${base}/utilizadores/novo`} className="wp-btn wp-btn-outline">
-          {t.addUser}
-        </Link>
+        {canAddUser ? (
+          <Link href={`${base}/utilizadores/novo`} className="wp-btn wp-btn-outline">
+            {t.addUser}
+          </Link>
+        ) : null}
       </div>
 
       <div className="wp-list-toolbar">

@@ -65,7 +65,7 @@ export const SUBSCRIBER_SUBMENU_ITEMS: Partial<
   Record<SubscriberMenuKey, readonly SubmenuPrivilegeItem[]>
 > = {
   resumos: [
-    { key: 'lista', label: 'Meus documentos', hrefSuffix: '/meus-documentos' },
+    { key: 'lista', label: 'Meus resumos', hrefSuffix: '/meus-documentos' },
     { key: 'novo', label: 'Novo resumo', hrefSuffix: '/meus-documentos/novo' },
     { key: 'submissao', label: 'Submissão resumo', hrefSuffix: '/submissao-resumo' },
   ],
@@ -206,6 +206,140 @@ export function isStaffSubmenuEnabled(
   if (isAdmin) return true;
   if (!isStaffMenuEnabled(privileges, parent, isAdmin)) return false;
   return privileges.editorSub?.[menuSubPrivilegeKey(parent, childKey)] !== false;
+}
+
+/** Activa/desactiva menu staff e sincroniza todos os submenus do mesmo grupo. */
+export function patchStaffMenuToggle(
+  privileges: MenuPrivilegesConfig,
+  key: StaffMenuKey,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const editor = { ...privileges.editor, [key]: enabled };
+  const editorSub = { ...privileges.editorSub };
+  const children = STAFF_SUBMENU_ITEMS[key] ?? [];
+
+  for (const child of children) {
+    editorSub[menuSubPrivilegeKey(key, child.key)] = enabled;
+  }
+
+  return { ...privileges, editor, editorSub };
+}
+
+/** Activa/desactiva submenu staff; activar filho liga o pai; desactivar o último filho desliga o pai. */
+export function patchStaffSubToggle(
+  privileges: MenuPrivilegesConfig,
+  parent: StaffMenuKey,
+  childKey: string,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const subKey = menuSubPrivilegeKey(parent, childKey);
+  const editorSub = { ...privileges.editorSub, [subKey]: enabled };
+  const editor = { ...privileges.editor };
+
+  if (enabled) {
+    editor[parent] = true;
+  } else {
+    const siblings = STAFF_SUBMENU_ITEMS[parent] ?? [];
+    const anySiblingEnabled = siblings.some(
+      (item) =>
+        item.key !== childKey &&
+        editorSub[menuSubPrivilegeKey(parent, item.key)] !== false,
+    );
+    if (!anySiblingEnabled) {
+      editor[parent] = false;
+    }
+  }
+
+  return { ...privileges, editor, editorSub };
+}
+
+export function patchSubscriberMenuToggle(
+  privileges: MenuPrivilegesConfig,
+  key: SubscriberMenuKey,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const subscriber = { ...privileges.subscriber, [key]: enabled };
+  const subscriberSub = { ...privileges.subscriberSub };
+  const children = SUBSCRIBER_SUBMENU_ITEMS[key] ?? [];
+
+  for (const child of children) {
+    subscriberSub[menuSubPrivilegeKey(key, child.key)] = enabled;
+  }
+
+  return { ...privileges, subscriber, subscriberSub };
+}
+
+export function patchSubscriberSubToggle(
+  privileges: MenuPrivilegesConfig,
+  parent: SubscriberMenuKey,
+  childKey: string,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const subKey = menuSubPrivilegeKey(parent, childKey);
+  const subscriberSub = { ...privileges.subscriberSub, [subKey]: enabled };
+  const subscriber = { ...privileges.subscriber };
+
+  if (enabled) {
+    subscriber[parent] = true;
+  } else {
+    const siblings = SUBSCRIBER_SUBMENU_ITEMS[parent] ?? [];
+    const anySiblingEnabled = siblings.some(
+      (item) =>
+        item.key !== childKey &&
+        subscriberSub[menuSubPrivilegeKey(parent, item.key)] !== false,
+    );
+    if (!anySiblingEnabled) {
+      subscriber[parent] = false;
+    }
+  }
+
+  return { ...privileges, subscriber, subscriberSub };
+}
+
+export function patchSubscriberAdminExtraToggle(
+  privileges: MenuPrivilegesConfig,
+  key: SubscriberAdminExtraKey,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const subscriberAdminExtras = { ...privileges.subscriberAdminExtras, [key]: enabled };
+  const subscriberAdminExtrasSub = { ...privileges.subscriberAdminExtrasSub };
+  const children = STAFF_SUBMENU_ITEMS[key] ?? [];
+
+  for (const child of children) {
+    subscriberAdminExtrasSub[menuSubPrivilegeKey(key, child.key)] = enabled;
+  }
+
+  return { ...privileges, subscriberAdminExtras, subscriberAdminExtrasSub };
+}
+
+export function patchSubscriberAdminExtraSubToggle(
+  privileges: MenuPrivilegesConfig,
+  parent: SubscriberAdminExtraKey,
+  childKey: string,
+  enabled: boolean,
+): MenuPrivilegesConfig {
+  const subKey = menuSubPrivilegeKey(parent, childKey);
+  const subscriberAdminExtrasSub = {
+    ...privileges.subscriberAdminExtrasSub,
+    [subKey]: enabled,
+  };
+  const subscriberAdminExtras = { ...privileges.subscriberAdminExtras };
+
+  if (enabled) {
+    subscriberAdminExtras[parent] = true;
+  } else {
+    const siblings = STAFF_SUBMENU_ITEMS[parent] ?? [];
+    const anySiblingEnabled = siblings.some(
+      (item) =>
+        item.key !== childKey &&
+        subscriberAdminExtrasSub[menuSubPrivilegeKey(parent, item.key)] !== false,
+    );
+    if (!anySiblingEnabled) {
+      subscriberAdminExtras[parent] = false;
+    }
+  }
+
+  return { ...privileges, subscriberAdminExtras, subscriberAdminExtrasSub };
 }
 
 export function isSubscriberMenuEnabled(
