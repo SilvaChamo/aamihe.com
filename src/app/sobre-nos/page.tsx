@@ -11,7 +11,7 @@ import SobreOQueFazemos from '@/components/Site/SobreOQueFazemos';
 import { useLanguage } from '@/context/LanguageContext';
 import { sobrePageCopy } from '@/i18n/messages';
 import { scrollBelowSiteHeader } from '@/lib/scroll-page-top';
-import styles from './sobre-nos.module.css';
+import overlay from '@/components/Site/PageOverlayCard.module.css';
 
 const BANNER_IMAGE = '/Imagens/sobre-nos-banner.png';
 
@@ -30,7 +30,7 @@ export default function SobreNosPage() {
   return (
     <>
       <Header />
-      <main id="main" className={`site-main clr ${styles['sobre-main']}`} role="main">
+      <main id="main" className={`site-main clr ${overlay.main}`} role="main">
         <BlogPageBanner
           title={t.bannerTitle}
           breadcrumbLabel={t.breadcrumb}

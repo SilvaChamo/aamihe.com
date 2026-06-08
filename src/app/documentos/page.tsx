@@ -3,12 +3,16 @@
 import { useCallback, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BlogPageBanner from '@/components/Blog/BlogPageBanner';
 import ConferenceSubmissionForm from '@/components/Site/ConferenceSubmissionForm';
 import SiteDocumentsList from '@/components/Site/SiteDocumentsList';
 import { useLanguage } from '@/context/LanguageContext';
 import { CONFERENCIA_COPY } from '@/data/conferencia-content';
 import { conferenceDocumentsPageCopy } from '@/i18n/messages';
+import overlay from '@/components/Site/PageOverlayCard.module.css';
 import '@/app/documentos-gerais/documentos.css';
+
+const BANNER_IMAGE = '/images/IMG_Bg2.jpg';
 
 export default function DocumentosConferenciaPage() {
   const { locale } = useLanguage();
@@ -23,19 +27,17 @@ export default function DocumentosConferenciaPage() {
   return (
     <>
       <Header />
-      <main className="main-content">
-        <div className="hero">
+      <main id="main" className={`site-main clr ${overlay.main}`} role="main">
+        <BlogPageBanner title={pageCopy.pageTitle} imageUrl={BANNER_IMAGE} />
+        <section className={overlay.section} aria-label={pageCopy.pageTitle}>
           <div className="container">
-            <h1 className="hero-title">{pageCopy.pageTitle}</h1>
+            <div className={overlay.contentCard}>
+              <ConferenceSubmissionForm onSubmitted={handleSubmitted} labels={conferenceCopy.form} />
+              <h2 className="docs-section-title">{conferenceCopy.publishedTitle}</h2>
+              <SiteDocumentsList key={refreshKey} category="conferencia" />
+            </div>
           </div>
-        </div>
-        <div className="container section-container" style={{ gridTemplateColumns: '1fr' }}>
-          <div className="content-area">
-            <ConferenceSubmissionForm onSubmitted={handleSubmitted} labels={conferenceCopy.form} />
-            <h2 className="docs-section-title">{conferenceCopy.publishedTitle}</h2>
-            <SiteDocumentsList key={refreshKey} category="conferencia" />
-          </div>
-        </div>
+        </section>
       </main>
       <Footer />
     </>
