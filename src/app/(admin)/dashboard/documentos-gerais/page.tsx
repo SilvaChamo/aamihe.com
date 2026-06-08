@@ -1,3 +1,5 @@
-import { createAdminAliasRedirect } from '@/lib/create-admin-redirect-page';
+import ConferenceSubmissionsList from '@/components/Admin/ConferenceSubmissionsList';
 
-export default createAdminAliasRedirect('/dashboard/documentos-gerais');
+export default function DashboardDocumentosConferenciaPage() {
+  return <ConferenceSubmissionsList viewPath="/dashboard/documentos-gerais/ver" />;
+}

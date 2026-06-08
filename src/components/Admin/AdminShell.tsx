@@ -51,6 +51,7 @@ import { useAdminBase } from '@/lib/admin-base';
 import { useLanguage } from '@/context/LanguageContext';
 import { adminShellCopy, tMessages } from '@/i18n/messages';
 import AdminShellSkeleton from '@/components/Admin/AdminShellSkeleton';
+import { AdminPanelLoading } from '@/components/Admin/AdminPanelLoading';
 import './AdminShell.css';
 import './admin-buttons.css';
 
@@ -304,6 +305,54 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const staffMenuLabel = (key: StaffMenuKey) => shell.menu[STAFF_MENU_I18N[key]];
   const subscriberMenuLabel = (key: SubscriberMenuKey) => shell.menu[SUBSCRIBER_MENU_I18N[key]];
+
+  const dashboardPathAllowed = React.useMemo(() => {
+    if (sessionLoading || !privilegesReady) return true;
+
+    if (isSubscriber && pathname.startsWith('/admin')) return false;
+
+    if (isStaff && !isSubscriber) {
+      if (staffDashboardPathToAdmin(pathname)) return false;
+      if (
+        !isStaffDashboardPathAllowed(
+          pathname,
+          privileges,
+          isAdmin,
+          canViewNews,
+          canManageUsers,
+        )
+      ) {
+        return false;
+      }
+    }
+
+    if (!canManageNews && canViewNews) {
+      const blocked =
+        pathname.includes('/noticias/nova') ||
+        pathname.includes('/noticias/editar') ||
+        pathname.includes('/noticias/categorias') ||
+        pathname.includes('/noticias/etiquetas');
+      if (blocked) return false;
+    }
+
+    if (showSubscriberNav && !isSubscriberDashboardPathAllowed(pathname, privileges)) {
+      return false;
+    }
+
+    return true;
+  }, [
+    sessionLoading,
+    privilegesReady,
+    isSubscriber,
+    pathname,
+    isStaff,
+    privileges,
+    isAdmin,
+    canViewNews,
+    canManageUsers,
+    canManageNews,
+    showSubscriberNav,
+  ]);
 
   React.useEffect(() => {
     if (sessionLoading || !privilegesReady) return;
@@ -620,7 +669,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             )}
           </button>
 
-          <div className="admin-main-content">{children}</div>
+          <div className="admin-main-content">
+            {dashboardPathAllowed ? children : <AdminPanelLoading />}
+          </div>
         </main>
       </div>
     </div>
