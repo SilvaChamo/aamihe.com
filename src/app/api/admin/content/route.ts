@@ -1,33 +1,19 @@
 import { NextResponse } from 'next/server';
 import { listDocuments } from '@/lib/aamihe-documents-store';
-import { loadSiteContentFromSupabase, saveSiteContentToSupabase } from '@/lib/supabase-content';
+import { loadSiteNews } from '@/lib/load-site-news';
+import { saveSiteContentToSupabase } from '@/lib/supabase-content';
 import { isSupabaseConfigured } from '@/lib/supabase/server';
-import { newsCatalog } from '@/data/news-catalog';
-import { enrichNewsList } from '@/data/noticias/merge-catalog-translations';
 import { NEWS_CATEGORIES } from '@/data/news-categories';
+import { newsCatalog } from '@/data/news-catalog';
 import { resolveNewsItemImages } from '@/lib/resolve-news-images';
 import type { NewsItem } from '@/data/news';
-import type { NewsCategory } from '@/data/news-categories';
 
-async function bootstrapIfEmpty(news: NewsItem[], categories: NewsCategory[]) {
-  if (news.length > 0 || !isSupabaseConfigured()) {
-    return { news, categories, bootstrapped: false };
-  }
-
-  const resolvedNews = await resolveNewsItemImages(newsCatalog);
-  const payload = {
-    news: resolvedNews,
-    categories: categories.length ? categories : NEWS_CATEGORIES,
-    documents: [] as never[],
-  };
-
-  await saveSiteContentToSupabase(payload);
-  return { news: payload.news, categories: payload.categories, bootstrapped: true };
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    const fromSupabase = await loadSiteContentFromSupabase();
+    const loaded = await loadSiteNews({ bootstrapIfEmpty: true });
     let documents: Awaited<ReturnType<typeof listDocuments>> = [];
     try {
       documents = await listDocuments();
@@ -35,39 +21,34 @@ export async function GET() {
       console.warn('Documents list skipped:', docErr);
     }
 
-    let news = fromSupabase?.news?.length ? fromSupabase.news : [];
-    let categories = fromSupabase?.categories?.length ? fromSupabase.categories : NEWS_CATEGORIES;
-
-    const boot = await bootstrapIfEmpty(news, categories);
-    news = boot.news;
-    categories = boot.categories;
-
-    if (news.length === 0) {
-      news = newsCatalog;
-    }
-
-    news = enrichNewsList(await resolveNewsItemImages(news));
-
-    return NextResponse.json({
-      success: true,
-      supabase: isSupabaseConfigured(),
-      bootstrapped: boot.bootstrapped,
-      news,
-      categories,
-      documents,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        supabase: isSupabaseConfigured(),
+        source: loaded.source,
+        bootstrapped: loaded.bootstrapped,
+        news: loaded.news,
+        categories: loaded.categories,
+        documents,
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (error) {
     console.error(error);
     const fallbackNews = await resolveNewsItemImages(newsCatalog);
-    return NextResponse.json({
-      success: true,
-      supabase: false,
-      bootstrapped: false,
-      news: fallbackNews,
-      categories: NEWS_CATEGORIES,
-      documents: [],
-      fallback: true,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        supabase: false,
+        source: 'static',
+        bootstrapped: false,
+        news: fallbackNews,
+        categories: NEWS_CATEGORIES,
+        documents: [],
+        fallback: true,
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 }
 
@@ -76,11 +57,21 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const news = Array.isArray(body.news) ? (body.news as NewsItem[]) : [];
     const categories = Array.isArray(body.categories) ? body.categories : NEWS_CATEGORIES;
-    const documents = await listDocuments();
 
     const synced = await saveSiteContentToSupabase({ news, categories, documents: [] });
 
-    return NextResponse.json({ success: true, supabase: synced, count: news.length });
+    if (!synced) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Não foi possível guardar no Supabase. Verifique SUPABASE_SERVICE_ROLE_KEY no servidor.',
+        },
+        { status: 503 },
+      );
+    }
+
+    return NextResponse.json({ success: true, supabase: true, count: news.length });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ success: false, error: 'Erro ao guardar conteúdo' }, { status: 500 });

@@ -17,6 +17,7 @@ interface NewsContextType {
   categories: NewsCategory[];
   loading: boolean;
   ensureLoaded: () => Promise<void>;
+  reload: () => Promise<void>;
   addNews: (item: Omit<NewsItem, 'id'>) => void;
   updateNews: (id: number, updates: Partial<NewsItem>) => void;
   deleteNews: (id: number) => void;
@@ -35,24 +36,23 @@ interface NewsContextType {
 const NewsContext = createContext<NewsContextType | undefined>(undefined);
 
 async function pushContentToServer(news: NewsItem[], categories: NewsCategory[]) {
-  try {
-    const res = await fetch('/api/admin/content', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ news, categories }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      console.error('Erro ao sincronizar conteúdo:', data.error);
-    }
-  } catch (err) {
-    console.error('Erro ao sincronizar conteúdo com o servidor', err);
+  const res = await fetch('/api/admin/content', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ news, categories }),
+    cache: 'no-store',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.success) {
+    throw new Error(
+      typeof data.error === 'string' ? data.error : 'Erro ao sincronizar notícias com o servidor',
+    );
   }
 }
 
 async function loadResolvedCatalogFallback(): Promise<NewsItem[]> {
   try {
-    const res = await fetch('/api/public/news');
+    const res = await fetch('/api/public/news', { cache: 'no-store' });
     const data = await res.json();
     if (data.success && Array.isArray(data.news) && data.news.length > 0) {
       return data.news;
@@ -64,7 +64,7 @@ async function loadResolvedCatalogFallback(): Promise<NewsItem[]> {
 }
 
 async function loadContentFromServer(): Promise<{ news: NewsItem[]; categories: NewsCategory[] }> {
-  const res = await fetch('/api/admin/content');
+  const res = await fetch('/api/public/news', { cache: 'no-store' });
   const data = await res.json();
   if (!data.success) {
     throw new Error(data.error || 'Erro ao carregar notícias');
@@ -75,21 +75,40 @@ async function loadContentFromServer(): Promise<{ news: NewsItem[]; categories: 
   };
 }
 
+async function loadAdminContentFromServer(): Promise<{ news: NewsItem[]; categories: NewsCategory[] }> {
+  const res = await fetch('/api/admin/content', { cache: 'no-store' });
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Erro ao carregar notícias');
+  }
+  return {
+    news: Array.isArray(data.news) ? data.news : [],
+    categories: Array.isArray(data.categories) ? data.categories : NEWS_CATEGORIES,
+  };
+}
+
+function isAdminPath(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.location.pathname.startsWith('/dashboard') ||
+    window.location.pathname.startsWith('/admin')
+  );
+}
+
 export function NewsProvider({ children }: { children: React.ReactNode }) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<NewsCategory[]>(NEWS_CATEGORIES);
   const [loading, setLoading] = useState(false);
-  const loadStarted = useRef(false);
   const loadPromise = useRef<Promise<void> | null>(null);
 
-  const ensureLoaded = useCallback(() => {
-    if (loadStarted.current) return loadPromise.current ?? Promise.resolve();
-    loadStarted.current = true;
-    setLoading(true);
+  const fetchAndApply = useCallback(async (force = false) => {
+    if (!force && loadPromise.current) return loadPromise.current;
 
+    setLoading(true);
     loadPromise.current = (async () => {
       try {
-        const data = await loadContentFromServer();
+        const loader = isAdminPath() ? loadAdminContentFromServer : loadContentFromServer;
+        const data = await loader();
         setNews(data.news);
         setCategories(data.categories);
       } catch (err) {
@@ -98,22 +117,67 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         setCategories(NEWS_CATEGORIES);
       } finally {
         setLoading(false);
+        loadPromise.current = null;
       }
     })();
 
     return loadPromise.current;
   }, []);
 
+  const ensureLoaded = useCallback(() => {
+    if (news.length > 0 && !loading) return Promise.resolve();
+    return fetchAndApply();
+  }, [news.length, loading, fetchAndApply]);
+
+  const reload = useCallback(() => fetchAndApply(true), [fetchAndApply]);
+
+  useEffect(() => {
+    void fetchAndApply();
+  }, [fetchAndApply]);
+
+  useEffect(() => {
+    const onNewsUpdated = () => {
+      void reload();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void reload();
+      }
+    };
+
+    window.addEventListener('newsUpdated', onNewsUpdated);
+    window.addEventListener('newsCategoriesUpdated', onNewsUpdated);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      window.removeEventListener('newsUpdated', onNewsUpdated);
+      window.removeEventListener('newsCategoriesUpdated', onNewsUpdated);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [reload]);
+
   const saveNews = (updatedNews: NewsItem[]) => {
     setNews(updatedNews);
-    window.dispatchEvent(new Event('newsUpdated'));
-    void pushContentToServer(updatedNews, categories);
+    void pushContentToServer(updatedNews, categories)
+      .then(() => {
+        window.dispatchEvent(new Event('newsUpdated'));
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(err instanceof Error ? err.message : 'Erro ao guardar notícias.');
+      });
   };
 
   const saveCategories = (updatedCategories: NewsCategory[]) => {
     setCategories(updatedCategories);
-    window.dispatchEvent(new Event('newsCategoriesUpdated'));
-    void pushContentToServer(news, updatedCategories);
+    void pushContentToServer(news, updatedCategories)
+      .then(() => {
+        window.dispatchEvent(new Event('newsCategoriesUpdated'));
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(err instanceof Error ? err.message : 'Erro ao guardar categorias.');
+      });
   };
 
   const addNews = (item: Omit<NewsItem, 'id'>) => {
@@ -232,6 +296,7 @@ export function NewsProvider({ children }: { children: React.ReactNode }) {
         deleteCategory,
         getCategoryBySlug,
         ensureLoaded,
+        reload,
       }}
     >
       {children}
