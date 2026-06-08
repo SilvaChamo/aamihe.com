@@ -6,6 +6,16 @@ import type { SiteMediaRecord } from '@/lib/site-media';
 
 const NEWS_IMAGE_FALLBACK = '/gallery/Logo-Small.png.webp';
 
+/** Só remapeia caminhos legados WordPress; URLs já guardadas no painel mantêm-se. */
+function needsNewsImageResolution(image: string | undefined): boolean {
+  const trimmed = image?.trim();
+  if (!trimmed) return true;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true;
+  if (trimmed.startsWith('/images/') || trimmed.startsWith('/Imagens/')) return true;
+  if (/-\d+x\d+(?=\.[a-z0-9]+$)/i.test(trimmed) || trimmed.includes('-scaled')) return true;
+  return false;
+}
+
 type MediaLookup = {
   byCatalogKey: Map<string, SiteMediaRecord>;
   byBasename: Map<string, SiteMediaRecord>;
@@ -70,14 +80,22 @@ export async function resolveNewsImageUrl(
   return trimmed;
 }
 
-/** Notícias: melhor imagem disponível em public/gallery. */
+/** Notícias: melhor imagem disponível em public/gallery (só para caminhos legados). */
 export async function resolveNewsItemImages(news: NewsItem[]): Promise<NewsItem[]> {
   const lookup = await buildMediaLookup();
 
   return Promise.all(
-    news.map(async (item) => ({
-      ...item,
-      image: await resolveNewsImageUrl(item.image, item.title, lookup),
-    })),
+    news.map(async (item) => {
+      if (!needsNewsImageResolution(item.image)) {
+        return {
+          ...item,
+          image: item.image?.trim() || NEWS_IMAGE_FALLBACK,
+        };
+      }
+      return {
+        ...item,
+        image: await resolveNewsImageUrl(item.image, item.title, lookup),
+      };
+    }),
   );
 }

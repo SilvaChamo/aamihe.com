@@ -49,10 +49,8 @@ export async function loadSiteNews(options?: {
     source = 'static';
   }
 
-  news = await resolveNewsItemImages(news);
-
   if (source === 'static') {
-    news = enrichNewsList(news);
+    news = enrichNewsList(await resolveNewsItemImages(news));
   }
 
   return { news, categories, source, bootstrapped };
