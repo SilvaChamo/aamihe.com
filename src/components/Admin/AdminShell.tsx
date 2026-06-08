@@ -22,7 +22,7 @@ import {
   Mail,
   Shield,
 } from 'lucide-react';
-import { clearAdminSecret, getLoggedUsername } from '@/lib/admin-auth';
+import { clearAdminSecret, getLoggedUsername, getSessionProfile } from '@/lib/admin-auth';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { useSessionUser } from '@/hooks/useSessionUser';
@@ -251,6 +251,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { locale } = useLanguage();
   const shell = tMessages(adminShellCopy, locale);
   const { user, isAdminSecret, isSubscriber, isStaff, loading: sessionLoading } = useSessionUser();
+  const sessionProfile = user ?? getSessionProfile();
   const { unread: subscriberUnread } = useSubscriberNotifications();
   const { canManageNews, canManageUsers, canViewNews, isAdmin } = useAdminPermissions();
   const { privileges, loading: privilegesLoading } = useMenuPrivileges();
@@ -523,7 +524,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push('/dashboard/login');
   };
 
-  if ((sessionLoading && !user) || !privilegesReady) {
+  if ((sessionLoading && !sessionProfile) || !privilegesReady) {
     return (
       <AdminShellSkeleton
         variant={pathname.endsWith('/dashboard') ? 'dashboard' : 'default'}

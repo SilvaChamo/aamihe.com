@@ -17,7 +17,7 @@ export default function AdminAreaLoading() {
     pathname === '/login' ||
     pathname.startsWith('/login/');
 
-  if (!pathname || isLogin) {
+  if (isLogin) {
     return null;
   }
 

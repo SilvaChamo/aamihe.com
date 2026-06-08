@@ -66,14 +66,29 @@ export function setAdminSecret(_secret: string, _username?: string, profile?: Us
 
 let cachedAccessToken: string | null = null;
 let cachedTokenExpiresAtMs = 0;
+let tokenInflight: Promise<string | null> | null = null;
 
-async function getAccessToken(): Promise<string | null> {
+async function resolveAccessToken(): Promise<string | null> {
   const now = Date.now();
+  const supabase = getSupabaseBrowserClient();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    const expiresAtMs = session.expires_at ? session.expires_at * 1000 : now + 3_600_000;
+    if (now < expiresAtMs - 60_000) {
+      cachedAccessToken = session.access_token;
+      cachedTokenExpiresAtMs = expiresAtMs;
+      return cachedAccessToken;
+    }
+  }
+
   if (cachedAccessToken && now < cachedTokenExpiresAtMs - 60_000) {
     return cachedAccessToken;
   }
 
-  const supabase = getSupabaseBrowserClient();
   const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
   if (!refreshError && refreshed.session?.access_token) {
     cachedAccessToken = refreshed.session.access_token;
@@ -95,17 +110,30 @@ async function getAccessToken(): Promise<string | null> {
   }
 
   const {
-    data: { session },
+    data: { session: latestSession },
   } = await supabase.auth.getSession();
 
-  cachedAccessToken = session?.access_token ?? null;
-  cachedTokenExpiresAtMs = session?.expires_at ? session.expires_at * 1000 : now + 3_600_000;
+  cachedAccessToken = latestSession?.access_token ?? null;
+  cachedTokenExpiresAtMs = latestSession?.expires_at
+    ? latestSession.expires_at * 1000
+    : now + 3_600_000;
   return cachedAccessToken;
+}
+
+async function getAccessToken(): Promise<string | null> {
+  if (tokenInflight) return tokenInflight;
+
+  tokenInflight = resolveAccessToken().finally(() => {
+    tokenInflight = null;
+  });
+
+  return tokenInflight;
 }
 
 export function clearAdminAccessTokenCache() {
   cachedAccessToken = null;
   cachedTokenExpiresAtMs = 0;
+  tokenInflight = null;
 }
 
 export async function adminFetch(input: string, init: RequestInit = {}) {

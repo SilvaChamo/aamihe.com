@@ -54,7 +54,7 @@ export function SessionUserProvider({ children }: { children: ReactNode }) {
           const nextUser = (data.user as UserProfile | null) ?? null;
           setUser(nextUser);
           setSessionProfile(nextUser);
-        } else {
+        } else if (res.status === 401) {
           setUser(null);
           setIsAdminSecret(false);
           setSessionProfile(null);
