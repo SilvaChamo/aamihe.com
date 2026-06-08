@@ -75,6 +75,17 @@ async function getAccessToken(): Promise<string | null> {
 
   const supabase = getSupabaseBrowserClient();
   const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    cachedAccessToken = null;
+    cachedTokenExpiresAtMs = 0;
+    return null;
+  }
+
+  const {
     data: { session },
   } = await supabase.auth.getSession();
 

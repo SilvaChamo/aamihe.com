@@ -1,4 +1,5 @@
 import type { UserListItem, UserProfile, UserRole } from '@/lib/user-types';
+import { canManageUsers } from '@/lib/admin-permissions';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 
@@ -54,10 +55,15 @@ export function canViewStaffUsers(viewer: Pick<UserProfile, 'role' | 'isAdmin'>)
   return viewer.role === 'Administrador' || Boolean(viewer.isAdmin);
 }
 
-export function canListUsers(viewer: Pick<UserProfile, 'role' | 'isAdmin'>): boolean {
-  if (viewer.role === 'Actor') return false;
-  if (viewer.role === 'Subscritor') return false;
-  return canViewStaffUsers(viewer) || viewer.role === 'Editor';
+export function canListUsers(
+  viewer: Pick<UserProfile, 'role' | 'isAdmin'>,
+  scope: UserListScope = 'staff',
+): boolean {
+  if (viewer.role === 'Actor' || viewer.role === 'Contribuidor') return false;
+  if (scope === 'subscribers') {
+    return viewer.role === 'Subscritor' || canManageUsers(viewer.role) || Boolean(viewer.isAdmin);
+  }
+  return canManageUsers(viewer.role) || Boolean(viewer.isAdmin);
 }
 
 export type UserListScope = 'staff' | 'subscribers';
@@ -132,7 +138,7 @@ export async function listUsersForViewer(
   viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>,
   scope: UserListScope = 'staff',
 ) {
-  if (!canListUsers(viewer)) {
+  if (!canListUsers(viewer, scope)) {
     return [];
   }
   return queryProfilesForViewer(viewer, scope);
@@ -146,7 +152,7 @@ export async function countUsersForViewer(
   viewer: Pick<UserProfile, 'id' | 'role' | 'isAdmin'>,
   scope: UserListScope = 'staff',
 ) {
-  if (!canListUsers(viewer)) return 0;
+  if (!canListUsers(viewer, scope)) return 0;
 
   const admin = adminClient();
 

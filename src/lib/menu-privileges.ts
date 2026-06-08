@@ -293,6 +293,12 @@ export function isStaffDashboardPathAllowed(
 ): boolean {
   if (isAdmin) return true;
   if (pathname.startsWith('/dashboard/privilegios')) return false;
+  if (
+    !canManageUsers &&
+    (pathname === '/dashboard/utilizadores' || pathname.startsWith('/dashboard/utilizadores/'))
+  ) {
+    return false;
+  }
   if (pathname === '/dashboard' || pathname === '/dashboard/') {
     return isStaffMenuEnabled(privileges, 'dashboard', isAdmin);
   }
