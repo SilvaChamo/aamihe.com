@@ -163,6 +163,10 @@ function escapeIlike(value: string): string {
   return value.replace(/[%_\\]/g, '\\$&');
 }
 
+function isSupabaseHtmlError(message: string): boolean {
+  return /<!doctype|<html[\s>]/i.test(message);
+}
+
 async function fetchProfiles(
   admin: ReturnType<typeof adminClient>,
   apply: (query: ReturnType<ReturnType<typeof adminClient>['from']>) => PromiseLike<{
@@ -172,7 +176,12 @@ async function fetchProfiles(
 ): Promise<ProfileRow[]> {
   const { data, error } = await apply(admin.from(TABLE));
   if (error) {
-    console.error('[findUserByLogin]:', error.message);
+    console.error('[findUserByLogin]:', error.message.slice(0, 200));
+    if (isSupabaseHtmlError(error.message)) {
+      throw new Error(
+        'Serviço de autenticação indisponível. Verifique NEXT_PUBLIC_SUPABASE_URL no servidor.',
+      );
+    }
     throw new Error('Não foi possível validar as credenciais. Tente novamente em instantes.');
   }
   return (data || []) as ProfileRow[];
