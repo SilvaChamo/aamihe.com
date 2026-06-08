@@ -246,14 +246,13 @@ button.admin-brand-action {
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
-  transition: color 0.2s, background 0.2s, transform 0.2s ease;
+  transition: color 0.2s, background 0.2s;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-item-main:hover {
   color: var(--white);
   background: var(--primary-hover);
-  transform: translateX(6px);
 }
 
 .sidebar-item-main.active {
@@ -270,6 +269,11 @@ button.admin-brand-action {
   padding: 8px 16px;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-item-main:hover .sidebar-item-link {
+  transform: translateX(6px);
 }
 
 .sidebar-item-button {

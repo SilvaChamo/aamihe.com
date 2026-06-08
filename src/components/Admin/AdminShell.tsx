@@ -110,7 +110,15 @@ const SidebarItem = ({
 }: SidebarItemProps) => {
   const isChildActive = !!activeSubHref;
   const [isHovered, setIsHovered] = useState(false);
+  const suppressFlyoutRef = React.useRef(false);
   const mainClassName = ['sidebar-item-main', active ? 'active' : ''].filter(Boolean).join(' ');
+
+  const handleChevronToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    suppressFlyoutRef.current = true;
+    onToggle?.();
+  };
 
   const linkContent = (
     <>
@@ -132,7 +140,10 @@ const SidebarItem = ({
     <div
       className="sidebar-item"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        suppressFlyoutRef.current = false;
+      }}
     >
       <div className="sidebar-item-content">
         <div className={mainClassName}>
@@ -147,17 +158,13 @@ const SidebarItem = ({
           )}
           {submenu && (
             <ChevronDown
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (onToggle) onToggle();
-              }}
+              onClick={handleChevronToggle}
               className={`sidebar-chevron ${isOpen ? 'open' : ''}`}
             />
           )}
         </div>
 
-        {submenu && isHovered && !isOpen && (
+        {submenu && isHovered && !isOpen && !suppressFlyoutRef.current && (
           <div className="sidebar-flyout">
             <div className="sidebar-flyout-title">{label}</div>
             {submenu.map((item) => (
@@ -500,13 +507,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       );
 
   React.useEffect(() => {
+    if (!privilegesReady) return;
+
     for (const item of menuItems) {
       if (item.submenu?.length && getActiveSubmenuHref(pathname, item.submenu)) {
         setOpenSubmenu(item.label);
         return;
       }
     }
-  }, [pathname, menuItems]);
+    setOpenSubmenu(null);
+  }, [pathname, privilegesReady]);
 
   const handleLogout = () => {
     clearAdminSecret();
