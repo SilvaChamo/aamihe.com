@@ -246,21 +246,19 @@ button.admin-brand-action {
   align-items: center;
   justify-content: space-between;
   font-size: 14px;
-  transition: colors 0.2s;
-  border-left: 3px solid transparent;
+  transition: color 0.2s, background 0.2s, transform 0.2s ease;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-item-main:hover {
   color: var(--white);
   background: var(--primary-hover);
-  border-left-color: var(--accent);
+  transform: translateX(6px);
 }
 
 .sidebar-item-main.active {
   background: var(--accent);
   color: var(--primary);
-  border-left-color: var(--accent);
 }
 
 .sidebar-item-link {
@@ -388,26 +386,37 @@ button.admin-brand-action {
 
 .sidebar-flyout-item {
   display: block;
+  position: relative;
   padding: 6px 16px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  border-left: 3px solid transparent;
   margin-left: 10px;
-  transition: colors 0.2s;
+  transition: color 0.2s, transform 0.2s ease;
 }
 
 .sidebar-flyout-item:hover {
   color: var(--accent);
-  border-left-color: var(--accent);
   background: transparent;
+  transform: translateX(6px);
 }
 
 .sidebar-flyout-item.active {
   color: var(--accent);
-  border-left-color: var(--accent);
   background: transparent;
   font-weight: 600;
+}
+
+.sidebar-flyout-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.2em;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
 }
 
 /* Sidebar Submenu */
@@ -419,26 +428,37 @@ button.admin-brand-action {
 
 .sidebar-submenu-item {
   display: block;
+  position: relative;
   padding: 6px 16px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  border-left: 3px solid transparent;
   margin-left: 10px;
-  transition: colors 0.2s;
+  transition: color 0.2s, transform 0.2s ease;
 }
 
 .sidebar-submenu-item:hover {
   color: var(--accent);
-  border-left-color: var(--accent);
   background: transparent;
+  transform: translateX(6px);
 }
 
 .sidebar-submenu-item.active {
   color: var(--accent);
-  border-left-color: var(--accent);
   background: transparent;
   font-weight: 600;
+}
+
+.sidebar-submenu-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 1.2em;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
 }
 
 /* Main Content */
