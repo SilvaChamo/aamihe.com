@@ -78,11 +78,11 @@ export function rowToProfile(row: ProfileRow): UserProfile {
     lastName: row.last_name,
     alcunha: row.alcunha,
     displayNameType: row.display_name_type,
-    role: row.role,
+    role: normalizeRole(row.role),
     bio: row.bio,
     website: row.website,
     avatar: normalizeAvatarUrl(row.avatar_url),
-    isAdmin: row.role === 'Administrador',
+    isAdmin: normalizeRole(row.role) === 'Administrador',
     telefone: row.telefone,
     profissao: row.profissao,
     cargo: row.cargo,
@@ -93,7 +93,10 @@ export const mapUserToProfile = rowToProfile;
 export const mapUserToListItem = rowToListItem;
 
 function normalizeRole(role?: string): UserRole {
-  return USER_ROLES.includes(role as UserRole) ? (role as UserRole) : 'Subscritor';
+  const trimmed = String(role || '').trim();
+  if (USER_ROLES.includes(trimmed as UserRole)) return trimmed as UserRole;
+  const match = USER_ROLES.find((item) => item.toLowerCase() === trimmed.toLowerCase());
+  return match || 'Subscritor';
 }
 
 

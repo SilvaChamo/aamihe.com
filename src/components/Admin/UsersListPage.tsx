@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAdminBase } from '@/lib/admin-base';
 import { SkeletonTableRow } from '@/components/Admin/Skeleton';
 import { adminFetch } from '@/lib/admin-auth';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
+import { useSessionUser } from '@/hooks/useSessionUser';
 import { getGravatarUrl } from '@/lib/gravatar';
 import { resolveAvatarUrl } from '@/lib/supabase-asset-url';
 import { useLanguage } from '@/context/LanguageContext';
@@ -122,19 +125,26 @@ const ROLES = ['Administrador', 'Editor', 'Actor', 'Contribuidor'];
 
 export default function UsersListPage() {
   const base = useAdminBase();
+  const router = useRouter();
   const { locale } = useLanguage();
   const t = copy[locale];
+  const { loading: sessionLoading } = useSessionUser();
+  const { canManageUsers } = useAdminPermissions();
 
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await adminFetch('/api/admin/users/list?scope=staff', { cache: 'no-store' });
       const data = await res.json();
+      if (res.status === 401) {
+        router.replace('/dashboard/login');
+        return;
+      }
       if (!res.ok) throw new Error(data.error);
       setUsers(data.users || []);
     } catch (err: unknown) {
@@ -142,11 +152,16 @@ export default function UsersListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, t.errLoad]);
 
   useEffect(() => {
+    if (sessionLoading) return;
+    if (!canManageUsers) {
+      setLoading(false);
+      return;
+    }
     loadUsers();
-  }, []);
+  }, [sessionLoading, canManageUsers, loadUsers]);
 
   const filteredUsers = users.filter((user) => {
     const q = searchQuery.toLowerCase();

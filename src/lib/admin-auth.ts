@@ -74,6 +74,15 @@ async function getAccessToken(): Promise<string | null> {
   }
 
   const supabase = getSupabaseBrowserClient();
+  const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+  if (!refreshError && refreshed.session?.access_token) {
+    cachedAccessToken = refreshed.session.access_token;
+    cachedTokenExpiresAtMs = refreshed.session.expires_at
+      ? refreshed.session.expires_at * 1000
+      : now + 3_600_000;
+    return cachedAccessToken;
+  }
+
   const {
     data: { user },
     error: userError,

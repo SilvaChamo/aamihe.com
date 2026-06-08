@@ -36,13 +36,13 @@ export function SessionUserProvider({ children }: { children: ReactNode }) {
     const cached = getSessionProfile();
     if (cached) setUser(cached);
 
-    if (isSessionProfileCacheFresh()) {
+    const hadCachedProfile = Boolean(cached);
+    const cacheLooksFresh = isSessionProfileCacheFresh();
+    if (cacheLooksFresh) {
       setLoading(false);
-      return;
     }
 
     let cancelled = false;
-    const hadCachedProfile = Boolean(getSessionProfile());
 
     (async () => {
       try {
@@ -54,7 +54,7 @@ export function SessionUserProvider({ children }: { children: ReactNode }) {
           const nextUser = (data.user as UserProfile | null) ?? null;
           setUser(nextUser);
           setSessionProfile(nextUser);
-        } else if (!hadCachedProfile) {
+        } else {
           setUser(null);
           setIsAdminSecret(false);
           setSessionProfile(null);

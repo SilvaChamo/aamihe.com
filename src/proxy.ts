@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { clearStaleSupabaseAuthCookiesFromRequest } from '@/lib/supabase-auth-cookies';
 
 function shouldSkipSession(pathname: string): boolean {
+  if (pathname.startsWith('/api/admin') || pathname.startsWith('/api/auth')) {
+    return false;
+  }
   return (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/') ||
@@ -14,7 +17,9 @@ function needsSessionRefresh(pathname: string): boolean {
   return (
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin') ||
-    pathname.startsWith('/auth')
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/admin') ||
+    pathname.startsWith('/api/auth')
   );
 }
 

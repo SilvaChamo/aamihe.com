@@ -1,8 +1,17 @@
+import { createClient } from '@supabase/supabase-js';
 import type { UserProfile } from '@/lib/user-types';
 import { isSubscriberRole } from '@/lib/user-types';
 import { getUserById } from '@/lib/users';
 import { getSupabaseAdmin } from '@/lib/supabase/server';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
+
+function resolveSupabaseAnonKey(): string {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    ''
+  );
+}
 
 export function extractBearerToken(request: Request) {
   const header = request.headers.get('authorization') || '';
@@ -13,13 +22,24 @@ export type SessionUser = { type: 'user'; user: UserProfile };
 
 async function resolveUserFromAccessToken(token: string): Promise<UserProfile | null> {
   const admin = getSupabaseAdmin();
-  if (!admin) return null;
+  if (admin) {
+    const { data, error } = await admin.auth.getUser(token);
+    if (!error && data.user) {
+      return getUserById(data.user.id);
+    }
+  }
 
-  const { data, error } = await admin.auth.getUser(token);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anonKey = resolveSupabaseAnonKey();
+  if (!url || !anonKey) return null;
+
+  const anon = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await anon.auth.getUser(token);
   if (error || !data.user) return null;
 
-  const profile = await getUserById(data.user.id);
-  return profile;
+  return getUserById(data.user.id);
 }
 
 export async function resolveSessionUser(request: Request): Promise<SessionUser | null> {
@@ -30,9 +50,14 @@ export async function resolveSessionUser(request: Request): Promise<SessionUser 
   }
 
   const supabase = await createSupabaseServerClient();
-  const {
+  let {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!user) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    user = refreshed.session?.user ?? null;
+  }
 
   if (!user) return null;
 
